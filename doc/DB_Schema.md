@@ -1,6 +1,6 @@
 # gBOAR - Database Schema Specification
 
-### 1. Table: `edge_device`
+## 1. Table: `edge_device`
 
 _Top-level entity representing the physical computing nodes._
 
@@ -10,9 +10,7 @@ _Top-level entity representing the physical computing nodes._
 | `name`        | `VARCHAR`          |        | Human-readable name for the device.                                               |
 | `location`    | `POINT` or `TEXT`  |        | Geographic location of the device (could be coordinates or a descriptive string). |
 
----
-
-### 2. Table: `camera`
+## 2. Table: `camera`
 
 _Represents imaging hardware. Child of `edge_device`._
 
@@ -28,9 +26,7 @@ _Represents imaging hardware. Child of `edge_device`._
 | `temperature`           | `NUMERIC`          |        | Telemetry: Internal or ambient temperature.                                               |
 | `battery_level`         | `INTEGER`          |        | Telemetry: Battery percentage (0-100).                                                    |
 
----
-
-### 3. Table: `dataset_store`
+## 3. Table: `dataset_store`
 
 _Represents a captured image event. Child of `camera`._
 
@@ -43,9 +39,7 @@ _Represents a captured image event. Child of `camera`._
 | `image_path`        | `TEXT`        |        | Local file system path to the raw image.                          |
 | `event_coordinates` | `POINT`       |        | Specific location data associated with the event/detection frame. |
 
----
-
-### 4. Table: `animal_detected`
+## 4. Table: `animal_detected`
 
 _Represents specific AI inference results. Child of `dataset_store`._
 
@@ -58,10 +52,8 @@ _Represents specific AI inference results. Child of `dataset_store`._
 | `size_estimate`         | `VARCHAR` / `NUMERIC` |        | Approximate size (can be a bounding box area or categorical size). |
 | `confidence`            | `NUMERIC`             |        | AI Confidence score (typically 0.0 to 1.0).                        |
 
----
+## Relationship Overview
 
-### Relationship Overview
-
-1.  **`edge_device`** _(1)_ `---<` _(Many)_ **`camera`**
-2.  **`camera`** _(1)_ `---<` _(Many)_ **`dataset_store`**
-3.  **`dataset_store`** _(1)_ `---<` _(Many)_ **`animal_detected`**
+1. **`edge_device`** - 1:N - **`camera`**
+2. **`camera`** - 1:N - **`dataset_store`**
+3. **`dataset_store`** - 1:N - **`animal_detected`**
