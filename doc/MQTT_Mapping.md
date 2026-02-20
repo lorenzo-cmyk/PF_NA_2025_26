@@ -171,3 +171,12 @@ Root structure: `wildlife/{edge_id}/{camera_id}/...`
 - **Topic:** `wildlife/{edge_id}/{camera_id}/telemetry`
 - **Payload:** `{"status": "offline", ...}`
 - **DB Action:** Update **`camera`** table set `status` = 'offline'.
+
+## Message Bridging
+
+The following MQTT topic MUST be bridged as follows:
+
+- Edge → Cloud: "Birth", "Telemetry", "Event", "Upload Status".
+- Cloud → Edge: "Upload Command".
+
+Note: The "local/" prefix is used for internal inter-domain communication and MUST NEVER be bridged.
