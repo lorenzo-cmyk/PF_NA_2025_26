@@ -1,0 +1,17 @@
+services:
+  postgresql:
+    image: postgres
+    container_name: edge-postgresql
+    environment:
+      POSTGRES_DB: gBOAR
+      POSTGRES_USER: gBOAR
+      POSTGRES_PASSWORD: gBOAR
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ../../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+
+volumes:
+  pgdata:

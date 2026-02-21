@@ -1,10 +1,4 @@
 -- gBOAR Database Initialization Script
--- Create the database
-CREATE DATABASE "gBOAR";
-
--- Connect to it
-\c "gBOAR"
-
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
