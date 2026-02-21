@@ -13,5 +13,16 @@ services:
       - ../../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     restart: unless-stopped
 
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: edge-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  mosquitto-data:
