@@ -38,6 +38,9 @@ def init(cfg: Config, mqtt_client: MQTTClient, scenes: list[dict[str, Any]]) -> 
     # Register a callback so incoming commands appear in the log
     _mqtt.on_command(_on_incoming_command)
 
+    # Register structured log callback for SYSTEM events (connect/disconnect/subscribe/LWT)
+    _mqtt.on_log_event(_on_mqtt_log_event)
+
 
 app = FastAPI(title="Camera Emulator Dashboard")
 
@@ -47,18 +50,44 @@ app = FastAPI(title="Camera Emulator Dashboard")
 # --------------------------------------------------------------------------- #
 
 
-def _log_event(direction: str, topic: str, payload: dict) -> None:
+def _log_event(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    direction: str,
+    topic: str,
+    payload: dict,
+    operation_type: str = "",
+    trigger_reason: str = "",
+    qos: int | None = None,
+    retain: bool | None = None,
+) -> None:
+    """Append a structured entry to the in-memory event log."""
     entry = {
         "ts": datetime.now(timezone.utc).isoformat(),
         "dir": direction,
         "topic": topic,
         "payload": payload,
+        "operation_type": operation_type,
+        "trigger_reason": trigger_reason,
+        "qos": qos,
+        "retain": retain,
     }
     _event_log.appendleft(entry)
 
 
-def _on_incoming_command(topic: str, payload: dict) -> None:
-    _log_event("IN", topic, payload)
+def _on_incoming_command(_topic: str, _payload: dict) -> None:
+    """Handle incoming command (logging already covered by _on_mqtt_log_event)."""
+
+
+def _on_mqtt_log_event(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    direction: str,
+    topic: str,
+    payload: dict,
+    operation_type: str,
+    trigger_reason: str,
+    qos: int | None,
+    retain: bool | None,
+) -> None:
+    """Forward MQTT-layer events into the dashboard log."""
+    _log_event(direction, topic, payload, operation_type, trigger_reason, qos, retain)
 
 
 def _now_iso() -> str:
@@ -104,8 +133,7 @@ async def send_birth(request: Request):
             "technical_params_json", {"iso": 800, "res": "2160x3840"}
         ),
     }
-    _mqtt.publish_birth(payload)
-    _log_event("OUT", f"{_cfg.topic_prefix()}/lifecycle/birth", payload)
+    _mqtt.publish_birth(payload, trigger="Manual: /api/birth")
     return {"status": "ok", "payload": payload}
 
 
@@ -119,8 +147,7 @@ async def send_telemetry(request: Request):
         "temperature": body.get("temperature", 20.0),
         "battery_level": body.get("battery_level", 100),
     }
-    _mqtt.publish_telemetry(payload)
-    _log_event("OUT", f"{_cfg.topic_prefix()}/telemetry", payload)
+    _mqtt.publish_telemetry(payload, trigger="Manual: /api/telemetry")
     return {"status": "ok", "payload": payload}
 
 
@@ -146,8 +173,12 @@ async def send_event(request: Request):
         ),
         "detections": scene.get("detections", []),
     }
-    _mqtt.publish_event(payload)
-    _log_event("OUT", f"{_cfg.topic_prefix()}/event", payload)
+    trigger = (
+        f"Scene #{scene_idx} ({scene.get('name', 'unnamed')})"
+        if scene_idx is not None and 0 <= scene_idx < len(_scenes)
+        else "Custom event via /api/event"
+    )
+    _mqtt.publish_event(payload, trigger=trigger)
     return {"status": "ok", "payload": payload}
 
 
@@ -172,8 +203,10 @@ async def send_upload_status(request: Request):
             "status": "ERROR",
             "message": body.get("message", "Emulated upload error"),
         }
-    _mqtt.publish_upload_status(payload)
-    _log_event("OUT", f"{_cfg.topic_prefix()}/event/upload_status", payload)
+    status_label = "SUCCESS" if success else "ERROR"
+    _mqtt.publish_upload_status(
+        payload, trigger=f"Manual: /api/upload_status ({status_label})"
+    )
     return {"status": "ok", "payload": payload}
 
 
@@ -181,8 +214,7 @@ async def send_upload_status(request: Request):
 async def graceful_disconnect():
     """Publish an offline telemetry then disconnect."""
     payload = {"timestamp": _now_iso(), "status": "offline"}
-    _mqtt.publish_telemetry(payload)
-    _log_event("OUT", f"{_cfg.topic_prefix()}/telemetry", payload)
+    _mqtt.publish_telemetry(payload, trigger="Manual: /api/disconnect (offline)")
     _mqtt.stop()
     return {"status": "ok", "detail": "Disconnected gracefully (offline published)."}
 
@@ -191,7 +223,7 @@ async def graceful_disconnect():
 async def reconnect():
     """Reconnect to the MQTT broker."""
     try:
-        _mqtt.start()
+        _mqtt.start(trigger="Manual: /api/reconnect")
         return {"status": "ok", "detail": "Reconnecting…"}
     except OSError as exc:
         return {"status": "error", "detail": str(exc)}

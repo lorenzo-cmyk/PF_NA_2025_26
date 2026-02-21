@@ -48,7 +48,7 @@ def main() -> None:
 
     # Start MQTT
     try:
-        mqtt.start()
+        mqtt.start(trigger="Auto: application startup")
     except OSError:
         log.exception("Could not connect to MQTT broker – dashboard will start anyway")
 
