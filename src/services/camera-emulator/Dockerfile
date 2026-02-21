@@ -5,13 +5,13 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
 
 # Install dependencies first (cache-friendly layer)
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-install-project
+COPY pyproject.toml ./
+RUN uv sync --no-install-project
 
 # Copy application code
 COPY camera_emulator/ camera_emulator/
 COPY scenes.json README.md ./
-RUN uv sync --frozen
+RUN uv sync
 
 EXPOSE 8080
 
