@@ -23,7 +23,7 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
     "camera_type": "BOAR_CAMERA_V3",
     "camera_coords": "POINT(43.76797, 10.324982)",
     "elevation": 30,
-    "technical_params": {
+    "technical_params_json": {
       "iso": 800,
       "res": "2160x3840",
     }
@@ -64,7 +64,7 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
       {
         "animal_type": "boar",
         "distance": 15.5,
-        "size": "big",
+        "size_estimate": "big",
         "confidence": 0.92
       }
     ]
