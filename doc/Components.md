@@ -83,3 +83,10 @@
 - **Object Storage (RustFS) [ENDPOINT]**: Central storage for all captured images.
 - **Cloud Processing Service**: Ingests cloud messages (`cloud/#`), saves events centrally on the DB, and issues upload commands back to the Edge via `cloud/{edge_id}/{camera_id}/cmd/upload`. Exposes an HTTP endpoint to allow the Dashboard to retrieve images (fetching them from the Cloud Object Storage or requesting them from the Edge).
 - **Dashboard [ENDPOINT]**: A blackbox module provided by ItalTel (not Grafana) for data visualization and system monitoring.
+
+## BIM
+
+- Mosquitto: [DockerHub](https://hub.docker.com/_/eclipse-mosquitto)
+- PostgreSQL: [DockerHub](https://hub.docker.com/_/postgres)
+- RustFS: [DockerHub](https://hub.docker.com/r/rustfs/rustfs)
+  - RustFS is used due to MinIO deprecation.
