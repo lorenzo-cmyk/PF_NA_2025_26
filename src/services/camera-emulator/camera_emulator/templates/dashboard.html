@@ -173,33 +173,30 @@
                 <!-- Column headers -->
                 <div
                     class="flex gap-2.5 px-2 py-1 border-b border-gray-700 text-[10px] uppercase tracking-wider text-gray-500 font-semibold select-none">
-                    <span class="min-w-[64px]">Time</span>
-                    <span class="min-w-[52px]">Dir</span>
-                    <span class="min-w-[80px]">Op</span>
-                    <span class="min-w-[200px]">Topic</span>
-                    <span class="min-w-[190px]">Trigger</span>
-                    <span class="min-w-[56px]">QoS</span>
-                    <span class="min-w-[46px]">Ret</span>
-                    <span class="flex-1">Payload</span>
+                    <span class="w-[64px] shrink-0">Time</span>
+                    <span class="w-[52px] shrink-0">Dir</span>
+                    <span class="w-[80px] shrink-0">Op</span>
+                    <span class="w-[200px] shrink-0">Topic</span>
+                    <span class="w-[190px] shrink-0">Trigger</span>
+                    <span class="w-[44px] shrink-0">QoS</span>
+                    <span class="w-[30px] shrink-0">Ret</span>
+                    <span class="flex-1 min-w-0">Payload</span>
                 </div>
                 <div id="log-list" class="max-h-[360px] overflow-y-auto font-mono text-xs">
                     {% for e in log %}
                     <div class="flex gap-2.5 px-2 py-1 border-b border-gray-800 hover:bg-indigo-500/5">
-                        <span class="text-gray-500 whitespace-nowrap min-w-[64px]">{{ e.ts[11:19] }}</span>
+                        <span class="text-gray-500 w-[64px] shrink-0 truncate">{{ e.ts[11:19] }}</span>
                         <span
-                            class="font-bold min-w-[52px] {% if e.dir == 'OUT' %}text-blue-500{% elif e.dir == 'IN' %}text-green-500{% else %}text-yellow-500{% endif %}">{{
+                            class="font-bold w-[52px] shrink-0 truncate {% if e.dir == 'OUT' %}text-blue-500{% elif e.dir == 'IN' %}text-green-500{% else %}text-yellow-500{% endif %}">{{
                             e.dir }}</span>
-                        <span class="text-amber-400 min-w-[80px] whitespace-nowrap">{{ e.operation_type or '' }}</span>
-                        <span class="text-indigo-500 min-w-[200px] whitespace-nowrap">{{ e.topic }}</span>
-                        <span class="text-gray-400 min-w-[190px] whitespace-nowrap overflow-hidden text-ellipsis">{{
-                            e.trigger_reason or '' }}</span>
-                        <span class="text-gray-500 min-w-[56px]">{% if e.qos is not none %}QoS={{ e.qos }}{% endif
-                            %}</span>
-                        <span class="text-gray-500 min-w-[46px]">{% if e.retain is not none %}{{ '✓' if e.retain else
-                            '✗' }}{% endif %}</span>
-                        <span class="text-gray-500 flex-1 whitespace-nowrap overflow-hidden text-ellipsis">{{ e.payload
-                            |
-                            tojson }}</span>
+                        <span class="text-amber-400 w-[80px] shrink-0 truncate">{{ e.operation_type or '' }}</span>
+                        <span class="text-indigo-500 w-[200px] shrink-0 truncate">{{ e.topic }}</span>
+                        <span class="text-gray-400 w-[190px] shrink-0 truncate">{{ e.trigger_reason or '' }}</span>
+                        <span class="text-gray-500 w-[44px] shrink-0 truncate">{% if e.qos is not none %}QoS={{ e.qos
+                            }}{% endif %}</span>
+                        <span class="text-gray-500 w-[30px] shrink-0 truncate">{% if e.retain is not none %}{{ '✓' if
+                            e.retain else '✗' }}{% endif %}</span>
+                        <span class="text-gray-500 flex-1 min-w-0 truncate">{{ e.payload | tojson }}</span>
                     </div>
                     {% endfor %}
                 </div>
@@ -283,14 +280,14 @@
                 const qosStr = e.qos != null ? `QoS=${e.qos}` : '';
                 const retStr = e.retain != null ? (e.retain ? '✓' : '✗') : '';
                 return `<div class="flex gap-2.5 px-2 py-1 border-b border-gray-800 hover:bg-indigo-500/5">
-    <span class="text-gray-500 whitespace-nowrap min-w-[64px]">${e.ts.substring(11, 19)}</span>
-    <span class="font-bold min-w-[52px] ${dirColor}">${e.dir}</span>
-    <span class="text-amber-400 min-w-[80px] whitespace-nowrap">${e.operation_type || ''}</span>
-    <span class="text-indigo-500 min-w-[200px] whitespace-nowrap">${e.topic}</span>
-    <span class="text-gray-400 min-w-[190px] whitespace-nowrap overflow-hidden text-ellipsis">${e.trigger_reason || ''}</span>
-    <span class="text-gray-500 min-w-[56px]">${qosStr}</span>
-    <span class="text-gray-500 min-w-[46px]">${retStr}</span>
-    <span class="text-gray-500 flex-1 whitespace-nowrap overflow-hidden text-ellipsis">${JSON.stringify(e.payload)}</span>
+    <span class="text-gray-500 w-[64px] shrink-0 truncate">${e.ts.substring(11, 19)}</span>
+    <span class="font-bold w-[52px] shrink-0 truncate ${dirColor}">${e.dir}</span>
+    <span class="text-amber-400 w-[80px] shrink-0 truncate">${e.operation_type || ''}</span>
+    <span class="text-indigo-500 w-[200px] shrink-0 truncate">${e.topic}</span>
+    <span class="text-gray-400 w-[190px] shrink-0 truncate">${e.trigger_reason || ''}</span>
+    <span class="text-gray-500 w-[44px] shrink-0 truncate">${qosStr}</span>
+    <span class="text-gray-500 w-[30px] shrink-0 truncate">${retStr}</span>
+    <span class="text-gray-500 flex-1 min-w-0 truncate">${JSON.stringify(e.payload)}</span>
   </div>`;
             }).join('');
         }
