@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>gBOAR — Camera Emulator</title>
+</head>
+
+<body class="bg-gray-950 text-gray-200 font-sans leading-relaxed">
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="flex items-center justify-between py-4 border-b border-gray-800 mb-6">
+            <h1 class="text-xl font-bold"><span class="text-indigo-500">gBOAR</span> Camera Emulator</h1>
+            <div>
+                <span id="conn-badge"
+                    class="text-xs px-2.5 py-0.5 rounded-full font-semibold {{ 'bg-green-500/15 text-green-500' if connected else 'bg-red-500/15 text-red-500' }}">
+                    {{ "CONNECTED" if connected else "DISCONNECTED" }}
+                </span>
+            </div>
+        </header>
+
+        <div class="flex gap-4 flex-wrap text-sm text-gray-500 mb-4">
+            <div>Broker: <strong class="text-gray-200">{{ cfg.mqtt_host }}:{{ cfg.mqtt_port }}</strong></div>
+            <div>Edge: <strong class="text-gray-200">{{ cfg.edge_id }}</strong></div>
+            <div>Camera: <strong class="text-gray-200">{{ cfg.camera_id }}</strong></div>
+            <div>Prefix: <strong class="text-gray-200">{{ cfg.topic_prefix() }}</strong></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- 1. Birth / Registration -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">📡</span> Birth / Registration
+                </h2>
+                <div class="flex gap-2">
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Edge Name</label><input
+                            id="birth-name" value="EMULATED_EDGE"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Camera Type</label><input
+                            id="birth-type" value="BOAR_CAMERA_V3"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Edge
+                            Location</label><input id="birth-eloc" value="POINT(43.76794, 10.324979)"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Camera
+                            Coords</label><input id="birth-coords" value="POINT(43.76797, 10.324982)"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Elevation
+                            (m)</label><input id="birth-elev" type="number" value="30"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">ISO</label><input
+                            id="birth-iso" type="number" value="800"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Resolution</label><input
+                            id="birth-res" value="2160x3840"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                </div>
+                <button
+                    class="w-full mt-3 cursor-pointer rounded py-2 px-4 text-sm font-semibold bg-green-500 text-black hover:opacity-85 transition-opacity"
+                    onclick="sendBirth()">Send Birth</button>
+            </div>
+
+            <!-- 2. Telemetry -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">💓</span> Telemetry / Heartbeat
+                </h2>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs text-gray-500 mb-0.5 mt-2">Status</label>
+                        <select id="tele-status"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                            <option>active</option>
+                            <option>maintenance</option>
+                            <option>offline</option>
+                        </select>
+                    </div>
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Temperature
+                            °C</label><input id="tele-temp" type="number" step="0.1" value="20.0"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                    <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Battery %</label><input
+                            id="tele-bat" type="number" min="0" max="100" value="100"
+                            class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    </div>
+                </div>
+                <button
+                    class="w-full mt-3 cursor-pointer rounded py-2 px-4 text-sm font-semibold bg-blue-500 text-white hover:opacity-85 transition-opacity"
+                    onclick="sendTelemetry()">Send Telemetry</button>
+            </div>
+
+            <!-- 3. Event / Scene -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">🎬</span> Event Detection
+                    (Scenes)</h2>
+                <label class="block text-xs text-gray-500 mb-0.5 mt-2">Select a Scene</label>
+                <select id="scene-select"
+                    class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                    {% for s in scenes %}
+                    <option value="{{ loop.index0 }}">{{ s.name }} — {{ s.description }}</option>
+                    {% endfor %}
+                    <option value="-1">Custom (fill below)</option>
+                </select>
+                <label class="block text-xs text-gray-500 mb-0.5 mt-2">Custom Detections JSON</label>
+                <textarea id="ev-custom"
+                    placeholder='[{"animal_type":"boar","distance":10,"size_estimate":"big","confidence":0.95}]'
+                    class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm font-mono resize-y min-h-[60px]"></textarea>
+                <label class="block text-xs text-gray-500 mb-0.5 mt-2">Event Coordinates</label>
+                <input id="ev-coords" value="POINT(43.76797, 10.324982)"
+                    class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                <button
+                    class="w-full mt-3 cursor-pointer rounded py-2 px-4 text-sm font-semibold bg-indigo-500 text-white hover:opacity-85 transition-opacity"
+                    onclick="sendEvent()">Fire Event</button>
+            </div>
+
+            <!-- 4. Upload Status -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">📤</span> Upload Status</h2>
+                <label class="block text-xs text-gray-500 mb-0.5 mt-2">Event ID</label>
+                <input id="up-evid" placeholder="EVT_...  (leave blank for auto)"
+                    class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+                <div class="flex gap-2 mt-2">
+                    <button
+                        class="flex-1 cursor-pointer rounded py-2 px-4 text-sm font-semibold bg-green-500 text-black hover:opacity-85 transition-opacity"
+                        onclick="sendUploadStatus(true)">Success</button>
+                    <button
+                        class="flex-1 cursor-pointer rounded py-2 px-4 text-sm font-semibold bg-red-500 text-white hover:opacity-85 transition-opacity"
+                        onclick="sendUploadStatus(false)">Failure</button>
+                </div>
+                <label class="block text-xs text-gray-500 mb-0.5 mt-2">Error message (if failure)</label>
+                <input id="up-msg" value="HTTP 503 Service Unavailable"
+                    class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
+            </div>
+
+            <!-- 5. Connection control -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">🔌</span> Connection Control
+                </h2>
+                <p class="text-sm text-gray-500 mb-3">
+                    Graceful disconnect publishes <code class="text-gray-400">{"status":"offline"}</code> before
+                    disconnecting.
+                    An <em>ungraceful</em> drop relies on the LWT to notify the broker.
+                </p>
+                <div class="flex gap-2">
+                    <button
+                        class="flex-1 cursor-pointer rounded py-2 px-4 text-sm font-semibold bg-red-500 text-white hover:opacity-85 transition-opacity"
+                        onclick="doDisconnect()">Graceful Disconnect</button>
+                    <button
+                        class="flex-1 cursor-pointer rounded py-2 px-4 text-sm font-semibold bg-green-500 text-black hover:opacity-85 transition-opacity"
+                        onclick="doReconnect()">Reconnect</button>
+                </div>
+            </div>
+
+            <!-- 6. Log -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 col-span-1 md:col-span-2" id="log-panel">
+                <h2 class="text-base mb-3 flex items-center gap-2">
+                    <span class="text-lg">📋</span> Message Log
+                    <button
+                        class="ml-auto cursor-pointer rounded py-1 px-2.5 text-xs font-semibold bg-indigo-500 text-white hover:opacity-85 transition-opacity"
+                        onclick="refreshLog()">Refresh</button>
+                </h2>
+                <div id="log-list" class="max-h-[360px] overflow-y-auto font-mono text-xs">
+                    {% for e in log %}
+                    <div class="flex gap-2.5 px-2 py-1 border-b border-gray-800 hover:bg-indigo-500/5">
+                        <span class="text-gray-500 whitespace-nowrap min-w-[80px]">{{ e.ts[11:19] }}</span>
+                        <span
+                            class="font-bold min-w-[30px] {{ 'text-blue-500' if e.dir == 'OUT' else 'text-green-500' }}">{{
+                            e.dir }}</span>
+                        <span class="text-indigo-500 min-w-[200px] whitespace-nowrap">{{ e.topic }}</span>
+                        <span class="text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">{{ e.payload |
+                            tojson }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div><!-- /grid -->
+    </div>
+
+    <div id="toast"
+        class="fixed bottom-6 right-6 bg-gray-900 border border-gray-800 rounded-lg px-5 py-3 text-sm opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+    </div>
+
+    <script>
+        const API = '';
+
+        function toast(msg, ok = true) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.borderColor = ok ? '#22c55e' : '#ef4444';
+            t.classList.remove('opacity-0', 'pointer-events-none');
+            t.classList.add('opacity-100', 'pointer-events-auto');
+            setTimeout(() => { t.classList.add('opacity-0', 'pointer-events-none'); t.classList.remove('opacity-100', 'pointer-events-auto'); }, 2500);
+        }
+
+        async function post(url, body) {
+            const r = await fetch(API + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            const j = await r.json();
+            if (j.status === 'ok') toast('Published ✓');
+            else toast('Error: ' + (j.detail || JSON.stringify(j)), false);
+            refreshLog();
+            refreshStatus();
+            return j;
+        }
+
+        function sendBirth() {
+            post('/api/birth', {
+                edge_name: document.getElementById('birth-name').value,
+                edge_location: document.getElementById('birth-eloc').value,
+                camera_type: document.getElementById('birth-type').value,
+                camera_coords: document.getElementById('birth-coords').value,
+                elevation: +document.getElementById('birth-elev').value,
+                technical_params_json: { iso: +document.getElementById('birth-iso').value, res: document.getElementById('birth-res').value },
+            });
+        }
+
+        function sendTelemetry() {
+            post('/api/telemetry', {
+                status: document.getElementById('tele-status').value,
+                temperature: +document.getElementById('tele-temp').value,
+                battery_level: +document.getElementById('tele-bat').value,
+            });
+        }
+
+        function sendEvent() {
+            const idx = +document.getElementById('scene-select').value;
+            if (idx >= 0) {
+                post('/api/event', { scene_index: idx });
+            } else {
+                let dets;
+                try { dets = JSON.parse(document.getElementById('ev-custom').value || '[]'); } catch { toast('Invalid JSON', false); return; }
+                post('/api/event', { detections: dets, count: dets.length, event_coordinates: document.getElementById('ev-coords').value });
+            }
+        }
+
+        function sendUploadStatus(success) {
+            const evid = document.getElementById('up-evid').value || undefined;
+            const body = { event_id: evid, success };
+            if (!success) body.message = document.getElementById('up-msg').value;
+            post('/api/upload_status', body);
+        }
+
+        function doDisconnect() { post('/api/disconnect', {}); }
+        function doReconnect() { post('/api/reconnect', {}); }
+
+        async function refreshLog() {
+            const r = await fetch(API + '/api/log');
+            const log = await r.json();
+            const el = document.getElementById('log-list');
+            el.innerHTML = log.map(e => `<div class="flex gap-2.5 px-2 py-1 border-b border-gray-800 hover:bg-indigo-500/5">
+    <span class="text-gray-500 whitespace-nowrap min-w-[80px]">${e.ts.substring(11, 19)}</span>
+    <span class="font-bold min-w-[30px] ${e.dir === 'OUT' ? 'text-blue-500' : 'text-green-500'}">${e.dir}</span>
+    <span class="text-indigo-500 min-w-[200px] whitespace-nowrap">${e.topic}</span>
+    <span class="text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">${JSON.stringify(e.payload)}</span>
+  </div>`).join('');
+        }
+
+        async function refreshStatus() {
+            const r = await fetch(API + '/api/status');
+            const s = await r.json();
+            const b = document.getElementById('conn-badge');
+            b.textContent = s.connected ? 'CONNECTED' : 'DISCONNECTED';
+            b.className = 'text-xs px-2.5 py-0.5 rounded-full font-semibold ' + (s.connected ? 'bg-green-500/15 text-green-500' : 'bg-red-500/15 text-red-500');
+        }
+
+        // Auto-refresh every 5s
+        setInterval(() => { refreshStatus(); refreshLog(); }, 5000);
+    </script>
+</body>
+
+</html>

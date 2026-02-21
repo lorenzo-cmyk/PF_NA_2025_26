@@ -1,0 +1,134 @@
+[
+    {
+        "name": "Single boar – close range",
+        "description": "One large boar detected at 10 m with high confidence",
+        "event_coordinates": "POINT(43.76797, 10.324982)",
+        "count": 1,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 10.0,
+                "size_estimate": "big",
+                "confidence": 0.97
+            }
+        ],
+        "photo": null
+    },
+    {
+        "name": "Boar pack – 3 animals",
+        "description": "Group of three boars at medium distance",
+        "event_coordinates": "POINT(43.76801, 10.324990)",
+        "count": 3,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 25.0,
+                "size_estimate": "big",
+                "confidence": 0.94
+            },
+            {
+                "animal_type": "boar",
+                "distance": 27.5,
+                "size_estimate": "medium",
+                "confidence": 0.89
+            },
+            {
+                "animal_type": "boar",
+                "distance": 30.0,
+                "size_estimate": "small",
+                "confidence": 0.85
+            }
+        ],
+        "photo": null
+    },
+    {
+        "name": "Deer sighting",
+        "description": "Single deer at long range, lower confidence",
+        "event_coordinates": "POINT(43.76810, 10.325010)",
+        "count": 1,
+        "detections": [
+            {
+                "animal_type": "deer",
+                "distance": 55.0,
+                "size_estimate": "big",
+                "confidence": 0.72
+            }
+        ],
+        "photo": null
+    },
+    {
+        "name": "Mixed – boar + deer",
+        "description": "Boar and deer detected in the same frame",
+        "event_coordinates": "POINT(43.76795, 10.324975)",
+        "count": 2,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 18.0,
+                "size_estimate": "medium",
+                "confidence": 0.91
+            },
+            {
+                "animal_type": "deer",
+                "distance": 40.0,
+                "size_estimate": "big",
+                "confidence": 0.78
+            }
+        ],
+        "photo": null
+    },
+    {
+        "name": "False positive – low confidence",
+        "description": "Uncertain detection — possibly a bush or shadow",
+        "event_coordinates": "POINT(43.76790, 10.324960)",
+        "count": 1,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 60.0,
+                "size_estimate": "small",
+                "confidence": 0.35
+            }
+        ],
+        "photo": null
+    },
+    {
+        "name": "Night – boar pack large",
+        "description": "Large pack of five boars detected at night",
+        "event_coordinates": "POINT(43.76805, 10.325000)",
+        "count": 5,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 12.0,
+                "size_estimate": "big",
+                "confidence": 0.93
+            },
+            {
+                "animal_type": "boar",
+                "distance": 14.0,
+                "size_estimate": "big",
+                "confidence": 0.90
+            },
+            {
+                "animal_type": "boar",
+                "distance": 16.0,
+                "size_estimate": "medium",
+                "confidence": 0.88
+            },
+            {
+                "animal_type": "boar",
+                "distance": 20.0,
+                "size_estimate": "medium",
+                "confidence": 0.84
+            },
+            {
+                "animal_type": "boar",
+                "distance": 22.0,
+                "size_estimate": "small",
+                "confidence": 0.80
+            }
+        ],
+        "photo": null
+    }
+]

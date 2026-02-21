@@ -1,0 +1,21 @@
+[project]
+name = "camera-emulator"
+version = "0.1.0"
+description = "Camera trap emulator for the gBOAR system – simulates the full MQTT lifecycle of an extreme-edge camera."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "paho-mqtt>=2.1",
+    "jinja2>=3.1",
+    "pylint>=4.0.5",
+    "black>=26.1.0",
+]
+
+[project.scripts]
+camera-emulator = "camera_emulator.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
