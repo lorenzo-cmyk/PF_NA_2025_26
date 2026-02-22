@@ -99,7 +99,22 @@ services:
       "
     restart: "no"
 
+  grafana:
+    image: grafana/grafana
+    container_name: edge-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: gBOAR
+      GF_SECURITY_ADMIN_USER: gBOAR
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - postgresql
+    restart: unless-stopped
+
 volumes:
   pgdata:
   mosquitto-data:
   objectdata:
+  grafana-storage:
