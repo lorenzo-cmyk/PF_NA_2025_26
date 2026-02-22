@@ -49,6 +49,7 @@ class Config:  # pylint: disable=too-many-instance-attributes
     s3_bucket: str = field(
         default_factory=lambda: os.getenv("S3_BUCKET", "gboar-images")
     )
+    s3_public_url: str = field(default_factory=lambda: os.getenv("S3_PUBLIC_URL", ""))
 
     # HTTP server
     web_host: str = field(default_factory=lambda: os.getenv("WEB_HOST", "0.0.0.0"))

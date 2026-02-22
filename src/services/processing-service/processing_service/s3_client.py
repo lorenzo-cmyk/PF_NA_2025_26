@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 
 import boto3
@@ -30,7 +31,13 @@ class S3Client:
             ),
         )
         self._bucket = cfg.s3_bucket
+        self._public_base = (
+            cfg.s3_public_url.rstrip("/")
+            if cfg.s3_public_url
+            else cfg.object_storage_url.rstrip("/")
+        )
         self._ensure_bucket()
+        self._set_public_read_policy()
 
     def _ensure_bucket(self) -> None:
         """Create the bucket if it doesn't exist."""
@@ -44,6 +51,30 @@ class S3Client:
                 log.info("S3 bucket '%s' created", self._bucket)
             except ClientError:
                 log.exception("Failed to create S3 bucket '%s'", self._bucket)
+
+    def _set_public_read_policy(self) -> None:
+        """Apply an anonymous-read (public) policy to the bucket."""
+        policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": f"arn:aws:s3:::{self._bucket}/*",
+                }
+            ],
+        }
+        try:
+            self._client.put_bucket_policy(
+                Bucket=self._bucket,
+                Policy=json.dumps(policy),
+            )
+            log.info("Bucket '%s' set to public-read", self._bucket)
+        except ClientError:
+            log.exception(
+                "Failed to set public-read policy on bucket '%s'", self._bucket
+            )
 
     def generate_presigned_upload_url(
         self, object_key: str, expires_in: int = 3600
@@ -86,5 +117,5 @@ class S3Client:
             return None
 
     def get_object_url(self, object_key: str) -> str:
-        """Return the direct URL of an object (non-presigned)."""
-        return f"{self._cfg.object_storage_url}/{self._bucket}/{object_key}"
+        """Return the public URL of an object (no credentials)."""
+        return f"{self._public_base}/{self._bucket}/{object_key}"

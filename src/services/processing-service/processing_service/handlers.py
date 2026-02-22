@@ -206,7 +206,7 @@ class MessageHandler:
                     session.add(camera)
 
                 session.commit()
-                log.info("Birth processed OK for edge=%s cam=%s", edge_id, camera_id)
+                log.info("Birth processed OK for edge=%s camera=%s", edge_id, camera_id)
         except Exception:  # pylint: disable=broad-exception-caught
             log.exception("Failed to process birth message")
 
@@ -320,6 +320,11 @@ class MessageHandler:
             return
 
         log.info("Upload success for %s → %s", event_id, remote_path)
+        # Derive the clean public URL (no credentials) from the event_id
+        if self._s3:
+            public_url = self._s3.get_object_url(f"{event_id}.jpg")
+        else:
+            public_url = remote_path
         try:
             with get_session(self._engine) as session:
                 ds = session.get(DatasetStore, event_id)
@@ -329,9 +334,9 @@ class MessageHandler:
                         event_id,
                     )
                     return
-                ds.image_path = remote_path
+                ds.image_path = public_url
                 session.add(ds)
                 session.commit()
-                log.info("image_path updated for event %s", event_id)
+                log.info("Image path updated for event %s", event_id)
         except Exception:  # pylint: disable=broad-exception-caught
             log.exception("Failed to update image_path for %s", event_id)
