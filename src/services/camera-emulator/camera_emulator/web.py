@@ -149,9 +149,10 @@ def _do_photo_upload(event_id: str, upload_url: str, trigger: str) -> None:
 
     try:
         with photo_path.open("rb") as f:
-            resp = http_requests.post(
+            resp = http_requests.put(
                 upload_url,
-                files={"file": (photo_name, f, "image/jpeg")},
+                data=f,
+                headers={"Content-Type": "image/jpeg"},
                 timeout=30,
             )
         resp.raise_for_status()
