@@ -1,0 +1,24 @@
+[project]
+name = "processing-service"
+version = "0.1.0"
+description = "Unified Edge/Cloud processing service for the gBOAR wildlife detection system."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "paho-mqtt>=2.1",
+    "sqlmodel>=0.0.22",
+    "psycopg2-binary>=2.9",
+    "requests>=2.31",
+    "boto3>=1.35",
+    "black>=26.1.0",
+    "pylint>=4.0.5",
+]
+
+[project.scripts]
+processing-service = "processing_service.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
