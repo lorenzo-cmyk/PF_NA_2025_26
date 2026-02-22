@@ -31,7 +31,8 @@
 
             <!-- 1. Birth / Registration -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">📡</span> Birth / Registration
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">📡</span> 1. Birth /
+                    Registration
                 </h2>
                 <div class="flex gap-2">
                     <div class="flex-1"><label class="block text-xs text-gray-500 mb-0.5 mt-2">Edge Name</label><input
@@ -74,7 +75,8 @@
 
             <!-- 2. Telemetry -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">💓</span> Telemetry / Heartbeat
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">💓</span> 2. Telemetry /
+                    Heartbeat
                 </h2>
                 <div class="flex gap-2">
                     <div class="flex-1">
@@ -102,7 +104,7 @@
 
             <!-- 3. Event / Scene -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">🎬</span> Event Detection
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">🎬</span> 3. Event Detection
                     (Scenes)</h2>
                 <label class="block text-xs text-gray-500 mb-0.5 mt-2">Select a Scene</label>
                 <select id="scene-select" onchange="updateScenePreview()"
@@ -133,7 +135,7 @@
 
             <!-- 4. Upload Status -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">📤</span> Upload Status</h2>
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">📤</span> 4. Upload Status</h2>
                 <label class="block text-xs text-gray-500 mb-0.5 mt-2">Event ID</label>
                 <input id="up-evid" placeholder="EVT_...  (leave blank for auto)"
                     class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm">
@@ -152,7 +154,7 @@
 
             <!-- 5. Emulate Upload Command -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">📥</span> Emulate Upload
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">📥</span> 5. Emulate Upload
                     Command</h2>
                 <p class="text-sm text-gray-500 mb-3">
                     Simulate receiving a <code class="text-gray-400">cmd/upload</code> MQTT message.
@@ -171,7 +173,7 @@
 
             <!-- 6. Connection control -->
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">🔌</span> Connection Control
+                <h2 class="text-base mb-3 flex items-center gap-2"><span class="text-lg">🔌</span> 6. Connection Control
                 </h2>
                 <p class="text-sm text-gray-500 mb-3">
                     Graceful disconnect publishes <code class="text-gray-400">{"status":"offline"}</code> before
