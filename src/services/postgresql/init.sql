@@ -42,6 +42,6 @@ CREATE TABLE
         event_id VARCHAR REFERENCES dataset_store (event_id),
         animal_type VARCHAR,
         distance NUMERIC,
-        size_estimate NUMERIC,
+        size_estimate VARCHAR,
         confidence NUMERIC CHECK (confidence BETWEEN 0.0 AND 1.0)
     );
