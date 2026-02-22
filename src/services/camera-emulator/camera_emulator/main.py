@@ -22,29 +22,44 @@ logging.basicConfig(
 log = logging.getLogger("camera-emulator")
 
 
-def _load_scenes(path: str) -> list[dict]:
+def _load_scenes(path: str) -> tuple[list[dict], Path | None]:
+    """Load scenes from *path* and resolve photo references.
+
+    Returns ``(scenes, scenes_dir)`` where *scenes_dir* is the directory
+    containing the scenes file (used to locate photo files).
+    """
     p = Path(path)
     if not p.is_absolute():
         # Resolve relative to the project root (where pyproject.toml lives)
         p = Path(__file__).resolve().parent.parent / p
     if not p.exists():
         log.warning("Scenes file %s not found – starting with no scenes.", p)
-        return []
+        return [], None
     with p.open(encoding="utf-8") as f:
         scenes = json.load(f)
+    scenes_dir = p.resolve().parent
+    # Resolve photo paths relative to the scenes file directory
+    for scene in scenes:
+        photo = scene.get("photo")
+        if photo:
+            photo_path = scenes_dir / photo
+            if not photo_path.exists():
+                log.warning(
+                    "Photo %s not found for scene '%s'", photo_path, scene.get("name")
+                )
     log.info("Loaded %d scene(s) from %s", len(scenes), p)
-    return scenes
+    return scenes, scenes_dir
 
 
 def main() -> None:
     """Boot the camera-emulator: MQTT client + HTTP dashboard."""
     cfg = Config()
-    scenes = _load_scenes(cfg.scenes_file)
+    scenes, scenes_dir = _load_scenes(cfg.scenes_file)
 
     mqtt = MQTTClient(cfg)
 
     # Wire the web module
-    web.init(cfg, mqtt, scenes)
+    web.init(cfg, mqtt, scenes, scenes_dir)
 
     # Start MQTT
     try:

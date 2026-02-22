@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import logging
+import re
+import threading
 import uuid
 from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import requests as http_requests
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from camera_emulator.config import Config
@@ -25,15 +28,22 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 _cfg: Config
 _mqtt: MQTTClient
 _scenes: list[dict[str, Any]] = []
+_scenes_dir: Path | None = None
 _event_log: deque[dict[str, Any]] = deque(maxlen=200)
 
 
-def init(cfg: Config, mqtt_client: MQTTClient, scenes: list[dict[str, Any]]) -> None:
+def init(
+    cfg: Config,
+    mqtt_client: MQTTClient,
+    scenes: list[dict[str, Any]],
+    scenes_dir: Path | None = None,
+) -> None:
     """Wire up shared state before the app starts."""
-    global _cfg, _mqtt, _scenes  # pylint: disable=global-statement
+    global _cfg, _mqtt, _scenes, _scenes_dir  # pylint: disable=global-statement
     _cfg = cfg
     _mqtt = mqtt_client
     _scenes = scenes
+    _scenes_dir = scenes_dir
 
     # Register a callback so incoming commands appear in the log
     _mqtt.on_command(_on_incoming_command)
@@ -73,8 +83,141 @@ def _log_event(  # pylint: disable=too-many-arguments,too-many-positional-argume
     _event_log.appendleft(entry)
 
 
+def _scene_index_from_event_id(event_id: str) -> int | None:
+    """Extract the 1-based scene number from an event ID like ``EVT_2_ABCDEF``."""
+    m = re.match(r"EVT_(\d+)_", event_id)
+    if m:
+        return int(m.group(1)) - 1  # convert to 0-based index
+    return None
+
+
+def _do_photo_upload(event_id: str, upload_url: str, trigger: str) -> None:
+    """Upload the photo for *event_id* to *upload_url* via HTTP POST.
+
+    Runs in a background thread so the MQTT callback isn't blocked.
+    """
+    scene_idx = _scene_index_from_event_id(event_id)
+    if scene_idx is None or scene_idx < 0 or scene_idx >= len(_scenes):
+        log.warning("Cannot resolve scene for event_id=%s", event_id)
+        _log_event(
+            "LOCAL",
+            upload_url,
+            {"event_id": event_id, "error": "Unknown scene index"},
+            "UPLOAD_FAIL",
+            trigger,
+        )
+        return
+
+    scene = _scenes[scene_idx]
+    photo_name = scene.get("photo")
+    if not photo_name or _scenes_dir is None:
+        log.warning("No photo configured for scene #%d", scene_idx + 1)
+        _log_event(
+            "LOCAL",
+            upload_url,
+            {"event_id": event_id, "error": "No photo file"},
+            "UPLOAD_FAIL",
+            trigger,
+        )
+        return
+
+    photo_path = _scenes_dir / photo_name
+    if not photo_path.is_file():
+        log.warning("Photo file %s does not exist", photo_path)
+        _log_event(
+            "LOCAL",
+            upload_url,
+            {"event_id": event_id, "error": f"File not found: {photo_name}"},
+            "UPLOAD_FAIL",
+            trigger,
+        )
+        return
+
+    log.info(
+        "Uploading photo %s for event %s → %s",
+        photo_name,
+        event_id,
+        upload_url,
+    )
+    _log_event(
+        "LOCAL",
+        upload_url,
+        {"event_id": event_id, "photo": photo_name, "status": "UPLOADING"},
+        "UPLOAD_START",
+        trigger,
+    )
+
+    try:
+        with photo_path.open("rb") as f:
+            resp = http_requests.post(
+                upload_url,
+                files={"file": (photo_name, f, "image/jpeg")},
+                timeout=30,
+            )
+        resp.raise_for_status()
+        log.info(
+            "Upload SUCCESS for %s → %s (HTTP %d)",
+            event_id,
+            upload_url,
+            resp.status_code,
+        )
+        _log_event(
+            "LOCAL",
+            upload_url,
+            {
+                "event_id": event_id,
+                "photo": photo_name,
+                "status": "SUCCESS",
+                "http_code": resp.status_code,
+            },
+            "UPLOAD_DONE",
+            trigger,
+        )
+        # Publish upload_status SUCCESS via MQTT
+        _mqtt.publish_upload_status(
+            {
+                "event_id": event_id,
+                "status": "SUCCESS",
+                "remote_path": upload_url,
+            },
+            trigger=f"Auto: photo uploaded for {event_id}",
+        )
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        log.exception("Upload FAILED for %s → %s", event_id, upload_url)
+        _log_event(
+            "LOCAL",
+            upload_url,
+            {
+                "event_id": event_id,
+                "photo": photo_name,
+                "status": "ERROR",
+                "error": str(exc),
+            },
+            "UPLOAD_FAIL",
+            trigger,
+        )
+        _mqtt.publish_upload_status(
+            {
+                "event_id": event_id,
+                "status": "ERROR",
+                "message": str(exc),
+            },
+            trigger=f"Auto: upload failed for {event_id}",
+        )
+
+
 def _on_incoming_command(_topic: str, _payload: dict) -> None:
-    """Handle incoming command (logging already covered by _on_mqtt_log_event)."""
+    """Handle incoming cmd/upload: upload the photo in a background thread."""
+    event_id = _payload.get("event_id", "")
+    upload_url = _payload.get("upload_url", "")
+    if not event_id or not upload_url:
+        log.warning("cmd/upload missing event_id or upload_url: %s", _payload)
+        return
+    threading.Thread(
+        target=_do_photo_upload,
+        args=(event_id, upload_url, f"MQTT cmd/upload: {event_id}"),
+        daemon=True,
+    ).start()
 
 
 def _on_mqtt_log_event(  # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -112,6 +255,19 @@ async def dashboard(request: Request):
             "log": list(_event_log),
         },
     )
+
+
+@app.get("/photos/{filename}")
+async def serve_photo(filename: str):
+    """Serve a scene photo from the scenes directory."""
+    if _scenes_dir is None:
+        return {"error": "No scenes directory configured"}
+    # Sanitise: only allow plain filenames (no path traversal)
+    safe = Path(filename).name
+    photo_path = _scenes_dir / safe
+    if not photo_path.is_file():
+        return {"error": f"Photo {safe} not found"}
+    return FileResponse(photo_path)
 
 
 # --------------------------------------------------------------------------- #
@@ -163,7 +319,13 @@ async def send_event(request: Request):
     else:
         scene = body
 
-    event_id = f"EVT_{uuid.uuid4().hex[:12].upper()}"
+    # Event ID: EVT_{scene_num}_{UUID} — scene_num is 1-based
+    scene_num = (
+        (scene_idx + 1)
+        if (scene_idx is not None and 0 <= scene_idx < len(_scenes))
+        else 0
+    )
+    event_id = f"EVT_{scene_num}_{uuid.uuid4().hex[:8].upper()}"
     payload = {
         "event_id": event_id,
         "capture_time": _now_iso(),
@@ -208,6 +370,36 @@ async def send_upload_status(request: Request):
         payload, trigger=f"Manual: /api/upload_status ({status_label})"
     )
     return {"status": "ok", "payload": payload}
+
+
+@app.post("/api/emulate_upload_cmd")
+async def emulate_upload_cmd(request: Request):
+    """Simulate receiving an MQTT cmd/upload command."""
+    body = await request.json()
+    event_id = body.get("event_id", "")
+    upload_url = body.get("upload_url", "")
+    if not event_id or not upload_url:
+        return {"status": "error", "detail": "event_id and upload_url are required"}
+
+    # Log the emulated incoming command in the dashboard
+    _log_event(
+        "IN",
+        f"{_cfg.topic_prefix()}/cmd/upload",
+        {"event_id": event_id, "upload_url": upload_url},
+        "RECEIVED",
+        "Emulated: /api/emulate_upload_cmd",
+        qos=1,
+        retain=False,
+    )
+    log.info("Emulated cmd/upload for %s → %s", event_id, upload_url)
+
+    # Trigger upload in background (same path as real MQTT command)
+    threading.Thread(
+        target=_do_photo_upload,
+        args=(event_id, upload_url, f"Emulated cmd/upload: {event_id}"),
+        daemon=True,
+    ).start()
+    return {"status": "ok", "event_id": event_id, "upload_url": upload_url}
 
 
 @app.post("/api/disconnect")

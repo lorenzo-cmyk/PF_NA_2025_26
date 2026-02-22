@@ -9,6 +9,7 @@ dependencies = [
     "uvicorn[standard]>=0.34",
     "paho-mqtt>=2.1",
     "jinja2>=3.1",
+    "requests>=2.31",
     "pylint>=4.0.5",
     "black>=26.1.0",
 ]

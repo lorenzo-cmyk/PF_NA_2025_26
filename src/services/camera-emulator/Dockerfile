@@ -10,7 +10,8 @@ RUN uv sync --no-install-project
 
 # Copy application code
 COPY camera_emulator/ camera_emulator/
-COPY scenes.json README.md ./
+COPY demo_scenes/ demo_scenes/
+COPY README.md ./
 RUN uv sync
 
 EXPOSE 8080

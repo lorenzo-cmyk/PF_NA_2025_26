@@ -33,7 +33,7 @@ class Config:  # pylint: disable=too-many-instance-attributes
 
     # Scenes file
     scenes_file: str = field(
-        default_factory=lambda: os.getenv("SCENES_FILE", "scenes.json")
+        default_factory=lambda: os.getenv("SCENES_FILE", "demo_scenes/scenes.json")
     )
 
     # --- derived helpers -------------------------------------------------- #
