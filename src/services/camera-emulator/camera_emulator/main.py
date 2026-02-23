@@ -19,7 +19,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
 )
-log = logging.getLogger("camera-emulator")
+log = logging.getLogger(__name__)
 
 
 def _load_scenes(path: str) -> tuple[list[dict], Path | None]:

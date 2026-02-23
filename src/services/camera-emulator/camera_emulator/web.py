@@ -92,7 +92,7 @@ def _scene_index_from_event_id(event_id: str) -> int | None:
 
 
 def _do_photo_upload(event_id: str, upload_url: str, trigger: str) -> None:
-    """Upload the photo for *event_id* to *upload_url* via HTTP POST.
+    """Upload the photo for *event_id* to *upload_url* via HTTP PUT.
 
     Runs in a background thread so the MQTT callback isn't blocked.
     """
@@ -337,7 +337,7 @@ async def send_event(request: Request):
         "detections": scene.get("detections", []),
     }
     trigger = (
-        f"Scene #{scene_idx} ({scene.get('name', 'unnamed')})"
+        f"Scene #{scene_num} ({scene.get('name', 'unnamed')})"
         if scene_idx is not None and 0 <= scene_idx < len(_scenes)
         else "Custom event via /api/event"
     )

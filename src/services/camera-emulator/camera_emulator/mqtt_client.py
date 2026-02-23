@@ -13,7 +13,7 @@ import paho.mqtt.client as mqtt
 from camera_emulator.config import Config
 
 log = logging.getLogger(__name__)
-mqtt_log = logging.getLogger("mqtt_event")
+mqtt_log = logging.getLogger(f"{__name__}.events")
 
 
 def _ts() -> str:
@@ -52,8 +52,8 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
             retain=True,
         )
         mqtt_log.info(
-            "[MQTT_EVENT] %s | LWT_SET | %s | QoS=1, Retained=True | "
-            'payload={"status":"offline"}',
+            "%s | LWT_SET | %s | QoS=1, Retained=True | "
+            'payload={"status":"offline"} | trigger=Auto: MQTT client init',
             _ts(),
             lwt_topic,
         )
@@ -167,14 +167,14 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         data = json.dumps(payload)
         info = self._client.publish(topic, data, qos=qos, retain=retain)
         mqtt_log.info(
-            "[MQTT_EVENT] %s | PUBLISH | %s | QoS=%d, Retained=%s | RC=%s",
+            "%s | PUBLISH | %s | QoS=%d, Retained=%s | RC=%s | trigger=%s",
             _ts(),
             topic,
             qos,
             retain,
             info.rc,
+            trigger,
         )
-        mqtt_log.info("[TRIGGER] %s", trigger)
         self._emit_log("OUT", topic, payload, "PUBLISH", trigger, qos, retain)
 
     def _emit_log(  # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -205,13 +205,13 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         trigger = self._connect_trigger or "Auto: connected"
         self._connect_trigger = None
         mqtt_log.info(
-            "[MQTT_EVENT] %s | CONNECT | broker=%s:%s | RC=%s",
+            "%s | CONNECT | broker=%s:%s | RC=%s | trigger=%s",
             _ts(),
             self._cfg.mqtt_host,
             self._cfg.mqtt_port,
             rc,
+            trigger,
         )
-        mqtt_log.info("[TRIGGER] %s", trigger)
         with self._lock:
             self._connected = True
         self._emit_log(
@@ -224,8 +224,11 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         # Subscribe to incoming upload commands
         cmd_topic = f"{self._prefix}/cmd/upload"
         client.subscribe(cmd_topic, qos=1)
-        mqtt_log.info("[MQTT_EVENT] %s | SUBSCRIBE | %s | QoS=1", _ts(), cmd_topic)
-        mqtt_log.info("[TRIGGER] Auto: on_connect")
+        mqtt_log.info(
+            "%s | SUBSCRIBE | %s | QoS=1 | trigger=Auto: on_connect",
+            _ts(),
+            cmd_topic,
+        )
         self._emit_log(
             "SYSTEM",
             cmd_topic,
@@ -243,20 +246,20 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         rc: Any,
         _properties: Any = None,
     ) -> None:
-        mqtt_log.info(
-            "[MQTT_EVENT] %s | DISCONNECT | broker=%s:%s | RC=%s",
-            _ts(),
-            self._cfg.mqtt_host,
-            self._cfg.mqtt_port,
-            rc,
-        )
         graceful = str(rc) == "Normal disconnection"
         trigger = (
             "Manual: graceful disconnect"
             if graceful
             else "LWT: Ungraceful disconnect detected"
         )
-        mqtt_log.info("[TRIGGER] %s", trigger)
+        mqtt_log.info(
+            "%s | DISCONNECT | broker=%s:%s | RC=%s | trigger=%s",
+            _ts(),
+            self._cfg.mqtt_host,
+            self._cfg.mqtt_port,
+            rc,
+            trigger,
+        )
         with self._lock:
             self._connected = False
         self._emit_log(
@@ -283,14 +286,13 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         summary = " | ".join(summary_parts) if summary_parts else str(msg.payload[:200])
 
         mqtt_log.info(
-            "[MQTT_EVENT] %s | RECEIVED | %s | QoS=%d, Retained=%s | %s",
+            "%s | RECEIVED | %s | QoS=%d, Retained=%s | %s | trigger=Received cmd/upload from broker",
             _ts(),
             msg.topic,
             msg.qos,
             bool(msg.retain),
             summary,
         )
-        mqtt_log.info("[TRIGGER] Received cmd/upload from broker")
         self._emit_log(
             "IN",
             msg.topic,
