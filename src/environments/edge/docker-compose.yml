@@ -109,6 +109,9 @@ services:
       - "3000:3000"
     volumes:
       - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
     depends_on:
       - postgresql
     restart: unless-stopped
