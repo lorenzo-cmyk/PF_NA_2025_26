@@ -1,0 +1,274 @@
+services:
+  # =============================================================
+  # EXTREME-EDGE — Camera Emulators (2x)
+  # =============================================================
+
+  camera-emulator-1:
+    build:
+      context: ../services/camera-emulator
+    container_name: extreme-edge-camera-01
+    environment:
+      MQTT_HOST: edge-mosquitto
+      MQTT_PORT: 1883
+      EDGE_ID: edge_01
+      CAMERA_ID: cam_01
+      MQTT_CLIENT_ID: camera-emulator-01
+    ports:
+      - "8080:8080"
+    networks:
+      - edge-net
+    depends_on:
+      - edge-mosquitto
+    restart: unless-stopped
+
+  camera-emulator-2:
+    build:
+      context: ../services/camera-emulator
+    container_name: extreme-edge-camera-02
+    environment:
+      MQTT_HOST: edge-mosquitto
+      MQTT_PORT: 1883
+      EDGE_ID: edge_01
+      CAMERA_ID: cam_02
+      MQTT_CLIENT_ID: camera-emulator-02
+    ports:
+      - "8081:8080"
+    networks:
+      - edge-net
+    depends_on:
+      - edge-mosquitto
+    restart: unless-stopped
+
+  # =============================================================
+  # EDGE SITE
+  # =============================================================
+
+  edge-mosquitto:
+    image: eclipse-mosquitto
+    container_name: edge-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - edge-mosquitto-data:/mosquitto/data
+      - ./edge/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - edge-net
+      - cloud-net
+    depends_on:
+      - cloud-mosquitto
+    restart: unless-stopped
+
+  edge-postgresql:
+    image: postgres
+    container_name: edge-postgresql
+    environment:
+      POSTGRES_DB: gBOAR
+      POSTGRES_USER: gBOAR
+      POSTGRES_PASSWORD: gBOAR
+    ports:
+      - "5432:5432"
+    volumes:
+      - edge-pgdata:/var/lib/postgresql
+      - ../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - edge-net
+    restart: unless-stopped
+
+  edge-object-storage-init:
+    image: alpine
+    container_name: edge-object-storage-init
+    volumes:
+      - edge-objectdata:/data
+    command: >
+      sh -c "
+        chown -R 10001:10001 /data &&
+        echo 'Volume permissions fixed' &&
+        exit 0
+      "
+    restart: "no"
+
+  edge-object-storage:
+    image: rustfs/rustfs:latest
+    container_name: edge-object-storage
+    security_opt:
+      - "no-new-privileges:true"
+    environment:
+      RUSTFS_VOLUMES: /data/rustfs
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_ACCESS_KEY: gBOAR
+      RUSTFS_SECRET_KEY: gBOAR
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - edge-objectdata:/data/rustfs
+    networks:
+      - edge-net
+    depends_on:
+      edge-object-storage-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  edge-processing-service:
+    build:
+      context: ../services/processing-service
+    container_name: edge-processing-service
+    environment:
+      SERVICE_MODE: EDGE
+      MQTT_BROKER_URL: mqtt://edge-mosquitto:1883
+      DATABASE_URL: postgresql://gBOAR:gBOAR@edge-postgresql:5432/gBOAR
+      OBJECT_STORAGE_URL: http://edge-object-storage:9000
+      S3_ACCESS_KEY: gBOAR
+      S3_SECRET_KEY: gBOAR
+      S3_BUCKET: gboar-images
+      MQTT_CLIENT_ID: edge-processing-service
+    ports:
+      - "8000:8000"
+    networks:
+      - edge-net
+      - cloud-net
+    depends_on:
+      - edge-mosquitto
+      - edge-postgresql
+      - edge-object-storage
+    restart: unless-stopped
+
+  edge-grafana:
+    image: grafana/grafana
+    container_name: edge-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: gBOAR
+      GF_SECURITY_ADMIN_USER: gBOAR
+    ports:
+      - "3000:3000"
+    volumes:
+      - edge-grafana-storage:/var/lib/grafana
+      - ./edge/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./edge/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./edge/grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
+    networks:
+      - edge-net
+    depends_on:
+      - edge-postgresql
+    restart: unless-stopped
+
+  # =============================================================
+  # CLOUD SITE
+  # =============================================================
+
+  cloud-mosquitto:
+    image: eclipse-mosquitto
+    container_name: cloud-mosquitto
+    ports:
+      - "1884:1883"
+    volumes:
+      - cloud-mosquitto-data:/mosquitto/data
+      - ./cloud/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  cloud-postgresql:
+    image: postgres
+    container_name: cloud-postgresql
+    environment:
+      POSTGRES_DB: gBOAR
+      POSTGRES_USER: gBOAR
+      POSTGRES_PASSWORD: gBOAR
+    ports:
+      - "5433:5432"
+    volumes:
+      - cloud-pgdata:/var/lib/postgresql
+      - ../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  cloud-object-storage-init:
+    image: alpine
+    container_name: cloud-object-storage-init
+    volumes:
+      - cloud-objectdata:/data
+    command: >
+      sh -c "
+        chown -R 10001:10001 /data &&
+        echo 'Volume permissions fixed' &&
+        exit 0
+      "
+    restart: "no"
+
+  cloud-object-storage:
+    image: rustfs/rustfs:latest
+    container_name: cloud-object-storage
+    security_opt:
+      - "no-new-privileges:true"
+    environment:
+      RUSTFS_VOLUMES: /data/rustfs
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_ACCESS_KEY: gBOAR
+      RUSTFS_SECRET_KEY: gBOAR
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    volumes:
+      - cloud-objectdata:/data/rustfs
+    networks:
+      - cloud-net
+    depends_on:
+      cloud-object-storage-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  cloud-processing-service:
+    build:
+      context: ../services/processing-service
+    container_name: cloud-processing-service
+    environment:
+      SERVICE_MODE: CLOUD
+      MQTT_BROKER_URL: mqtt://cloud-mosquitto:1883
+      DATABASE_URL: postgresql://gBOAR:gBOAR@cloud-postgresql:5432/gBOAR
+      OBJECT_STORAGE_URL: http://cloud-object-storage:9000
+      S3_ACCESS_KEY: gBOAR
+      S3_SECRET_KEY: gBOAR
+      S3_BUCKET: gboar-images
+      MQTT_CLIENT_ID: cloud-processing-service
+    ports:
+      - "8001:8000"
+    networks:
+      - cloud-net
+    depends_on:
+      - cloud-mosquitto
+      - cloud-postgresql
+      - cloud-object-storage
+    restart: unless-stopped
+
+networks:
+  edge-net:
+    name: gboar-edge
+  cloud-net:
+    name: gboar-cloud
+
+volumes:
+  edge-pgdata:
+  edge-mosquitto-data:
+  edge-objectdata:
+  edge-grafana-storage:
+  cloud-pgdata:
+  cloud-mosquitto-data:
+  cloud-objectdata:
