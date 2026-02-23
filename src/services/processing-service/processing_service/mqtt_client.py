@@ -82,7 +82,7 @@ class MQTTClient:
         """Publish a JSON payload to the given topic."""
         data = json.dumps(payload)
         info = self._client.publish(topic, data, qos=qos, retain=retain)
-        log.info(
+        log.debug(
             "PUBLISH %s (QoS=%d, retain=%s, rc=%s)",
             topic,
             qos,

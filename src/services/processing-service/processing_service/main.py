@@ -21,7 +21,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
 )
-log = logging.getLogger("processing-service")
+log = logging.getLogger(__name__)
 
 
 def main() -> None:

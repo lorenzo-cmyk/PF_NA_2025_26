@@ -6,6 +6,8 @@ import logging
 import re
 from typing import Any
 
+import requests as http_requests
+
 from processing_service.config import Config
 from processing_service.database import (
     AnimalDetected,
@@ -43,7 +45,7 @@ class MessageHandler:
     """Routes incoming MQTT messages to the appropriate handler."""
 
     def __init__(
-        self, cfg: Config, mqtt: MQTTClient, engine: Any, s3: S3Client
+        self, cfg: Config, mqtt: MQTTClient, engine: Any, s3: S3Client | None
     ) -> None:
         self._cfg = cfg
         self._mqtt = mqtt
@@ -109,16 +111,80 @@ class MessageHandler:
 
         # Relay processed edge messages to cloud namespace
         cloud_topic = f"cloud/{edge_id}/{camera_id}/{rest}"
-        self._mqtt.publish(cloud_topic, payload, qos=1)
+        retain = rest in ("lifecycle/birth", "telemetry")
+        self._mqtt.publish(cloud_topic, payload, qos=1, retain=retain)
         log.info("Relayed edge → cloud: %s", cloud_topic)
 
     def _edge_route_cloud_cmd(
         self, edge_id: str, camera_id: str, payload: dict[str, Any]
     ) -> None:
-        """Re-publish a cloud upload command down to the extreme-edge."""
-        edge_topic = f"edge/{edge_id}/{camera_id}/cmd/upload"
-        self._mqtt.publish(edge_topic, payload, qos=1)
-        log.info("Routed cloud cmd → edge: %s", edge_topic)
+        """Fetch image from local S3 and upload it to the cloud presigned URL."""
+        event_id = payload.get("event_id")
+        upload_url = payload.get("upload_url")
+        if not event_id or not upload_url:
+            log.warning("Cloud cmd/upload missing event_id or upload_url – skipping")
+            return
+
+        object_key = f"{event_id}.jpg"
+        status_topic = f"cloud/{edge_id}/{camera_id}/event/upload_status"
+
+        # Download image from local edge S3
+        if not self._s3:
+            log.error("S3 client not available – cannot fulfil upload command")
+            self._mqtt.publish(
+                status_topic,
+                {
+                    "event_id": event_id,
+                    "status": "ERROR",
+                    "message": "S3 client unavailable",
+                },
+                qos=1,
+            )
+            return
+
+        image_bytes = self._s3.get_object(object_key)
+        if image_bytes is None:
+            log.warning("Image %s not found in local S3 – cannot upload", object_key)
+            self._mqtt.publish(
+                status_topic,
+                {
+                    "event_id": event_id,
+                    "status": "ERROR",
+                    "message": f"Image {object_key} not found in local storage",
+                },
+                qos=1,
+            )
+            return
+
+        # HTTP PUT the image to the cloud presigned URL
+        try:
+            resp = http_requests.put(
+                upload_url,
+                data=image_bytes,
+                headers={"Content-Type": "image/jpeg"},
+                timeout=30,
+            )
+            resp.raise_for_status()
+        except http_requests.RequestException as exc:
+            log.error("Failed to upload %s to cloud: %s", object_key, exc)
+            self._mqtt.publish(
+                status_topic,
+                {"event_id": event_id, "status": "ERROR", "message": str(exc)},
+                qos=1,
+            )
+            return
+
+        # Report success
+        log.info("Uploaded %s to cloud storage", object_key)
+        self._mqtt.publish(
+            status_topic,
+            {
+                "event_id": event_id,
+                "status": "SUCCESS",
+                "remote_path": upload_url.split("?")[0],
+            },
+            qos=1,
+        )
 
     # ====================================================================== #
     #  CLOUD MODE
@@ -143,6 +209,10 @@ class MessageHandler:
             self._handle_event(edge_id, camera_id, payload)
         elif rest == "event/upload_status":
             self.handle_upload_status(payload)
+        elif rest == "cmd/upload":
+            # cmd/upload on cloud/ are outgoing commands to the edge;
+            # the cloud service itself publishes these – ignore.
+            log.debug("Ignoring own cmd/upload on cloud topic")
         else:
             log.debug("Unhandled cloud topic rest=%s", rest)
 

@@ -144,7 +144,7 @@ async def get_image(event_id: str) -> Response:
         log.info("Requested image upload: %s", cmd_topic)
 
         # Wait for upload_status to arrive (up to 30 seconds)
-        completed = await asyncio.get_event_loop().run_in_executor(
+        completed = await asyncio.get_running_loop().run_in_executor(
             None, upload_event.wait, 30.0
         )
         if not completed:
