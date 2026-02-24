@@ -109,6 +109,12 @@ class MessageHandler:
             log.debug("Unhandled edge topic rest=%s", rest)
             return
 
+        # upload_status is about edge-local S3; the cloud has its own
+        # upload flow triggered by cmd/upload, so don't relay it.
+        if rest == "event/upload_status":
+            log.debug("Not relaying edge upload_status to cloud")
+            return
+
         # Relay processed edge messages to cloud namespace
         cloud_topic = f"cloud/{edge_id}/{camera_id}/{rest}"
         retain = rest in ("lifecycle/birth", "telemetry")
