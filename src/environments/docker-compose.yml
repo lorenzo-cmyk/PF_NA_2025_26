@@ -258,6 +258,25 @@ services:
       - cloud-object-storage
     restart: unless-stopped
 
+  cloud-grafana:
+    image: grafana/grafana
+    container_name: cloud-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: gBOAR
+      GF_SECURITY_ADMIN_USER: gBOAR
+    ports:
+      - "3001:3000"
+    volumes:
+      - cloud-grafana-storage:/var/lib/grafana
+      - ./cloud/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./cloud/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./cloud/grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
+    networks:
+      - cloud-net
+    depends_on:
+      - cloud-postgresql
+    restart: unless-stopped
+
 networks:
   edge-net:
     name: gboar-edge
@@ -272,3 +291,4 @@ volumes:
   cloud-pgdata:
   cloud-mosquitto-data:
   cloud-objectdata:
+  cloud-grafana-storage:
