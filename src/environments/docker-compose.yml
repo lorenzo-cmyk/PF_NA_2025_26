@@ -1,5 +1,26 @@
 services:
   # =============================================================
+  # HOMEPAGE
+  # =============================================================
+
+  homepage:
+    build:
+      context: ../services/homepage
+    container_name: gboar-homepage
+    environment:
+      CAMERA_EMULATOR_1_URL: http://localhost:8080
+      CAMERA_EMULATOR_2_URL: http://localhost:8081
+      EDGE_PROCESSING_URL: http://localhost:8000/health
+      EDGE_GRAFANA_URL: http://localhost:3000
+      EDGE_RUSTFS_CONSOLE_URL: http://localhost:9001
+      CLOUD_PROCESSING_URL: http://localhost:8001/health
+      CLOUD_GRAFANA_URL: http://localhost:3001
+      CLOUD_RUSTFS_CONSOLE_URL: http://localhost:9003
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+
+  # =============================================================
   # EXTREME-EDGE — Camera Emulators (2x)
   # =============================================================
 
