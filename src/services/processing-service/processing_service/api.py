@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
+import uuid as _uuid
 from typing import Any
 
 import requests as http_requests
@@ -92,14 +93,19 @@ async def get_image(event_id: str) -> Response:
         )
 
     # Look up the event in the DB
+    try:
+        event_uuid = _uuid.UUID(event_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid UUID: {event_id}")
+
     with get_session(_engine) as session:
-        ds = session.get(DatasetStore, event_id)
+        ds = session.get(DatasetStore, event_uuid)
 
     if ds is None:
         raise HTTPException(status_code=404, detail=f"Event {event_id} not found")
 
-    # Try to fetch from cloud object storage if image_path exists
-    if ds.image_path:
+    # Try to fetch from cloud object storage if imagepath exists
+    if ds.imagepath:
         object_key = f"{event_id}.jpg"
         if _s3 and _s3.object_exists(object_key):
             image_bytes = _s3.get_object(object_key)
@@ -153,24 +159,24 @@ async def get_image(event_id: str) -> Response:
                 detail=f"Timeout waiting for image upload for event {event_id}",
             )
 
-        # Re-read image_path from DB
+        # Re-read imagepath from DB
         with get_session(_engine) as session:
-            ds = session.get(DatasetStore, event_id)
+            ds = session.get(DatasetStore, event_uuid)
 
-        if ds is None or not ds.image_path:
+        if ds is None or not ds.imagepath:
             raise HTTPException(
                 status_code=500,
-                detail=f"Upload completed but image_path not set for {event_id}",
+                detail=f"Upload completed but imagepath not set for {event_id}",
             )
 
         object_key = f"{event_id}.jpg"
         image_bytes = _s3.get_object(object_key) if _s3 else None
         if image_bytes is None:
-            image_bytes = _try_fetch_image(ds.image_path)
+            image_bytes = _try_fetch_image(ds.imagepath)
         if image_bytes is None:
             raise HTTPException(
                 status_code=502,
-                detail=f"Could not fetch image from storage: {ds.image_path}",
+                detail=f"Could not fetch image from storage: {ds.imagepath}",
             )
 
         return Response(

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import logging
 import re
+import uuid
 from typing import Any
 
 import requests as http_requests
+from sqlalchemy import text as sa_text
 
 from processing_service.config import Config
 from processing_service.database import (
@@ -21,24 +23,32 @@ from processing_service.s3_client import S3Client
 
 log = logging.getLogger(__name__)
 
+# Project namespace for deterministic UUID generation from MQTT identifiers
+_GBOAR_NS = uuid.UUID("6742f0a1-e5d6-4b87-9c3a-f1d2e3a4b5c6")
+
 # Regex patterns to extract edge_id and camera_id from topics
 # Matches: {prefix}/{edge_id}/{camera_id}/{rest...}
 _TOPIC_RE = re.compile(
     r"^(?P<prefix>edge|cloud)/(?P<edge_id>[^/]+)/(?P<camera_id>[^/]+)/(?P<rest>.+)$"
 )
 
-# Regex to convert "POINT(lat, lon)" → "(lat, lon)" for PostgreSQL POINT type
-_POINT_RE = re.compile(r"^POINT\((.+)\)$", re.IGNORECASE)
+# Regex to extract coordinates from "POINT(lon, lat)" or "POINT(lon lat)"
+_POINT_RE = re.compile(r"^POINT\(\s*([-\d.]+)[,\s]+([-\d.]+)\s*\)$", re.IGNORECASE)
 
 
-def _normalize_point(value: str | None) -> str | None:
-    """Convert 'POINT(x, y)' to '(x, y)' for PostgreSQL POINT columns."""
+def _str_to_uuid(name: str) -> uuid.UUID:
+    """Derive a deterministic UUID from a human-readable MQTT identifier."""
+    return uuid.uuid5(_GBOAR_NS, name)
+
+
+def _parse_point(value: str | None) -> tuple[float, float] | None:
+    """Extract (longitude, latitude) from 'POINT(lon, lat)' or 'POINT(lon lat)'."""
     if value is None:
         return None
     m = _POINT_RE.match(value.strip())
     if m:
-        return f"({m.group(1)})"
-    return value
+        return float(m.group(1)), float(m.group(2))
+    return None
 
 
 class MessageHandler:
@@ -231,14 +241,16 @@ class MessageHandler:
     ) -> None:
         """Insert/update edge_device and camera tables."""
         log.info("Processing birth: edge=%s camera=%s", edge_id, camera_id)
+        edge_uuid = _str_to_uuid(edge_id)
+        camera_uuid = _str_to_uuid(camera_id)
         try:
             with get_session(self._engine) as session:
                 # Upsert edge_device (parent – must exist before camera)
-                device = session.get(EdgeDevice, edge_id)
+                device = session.get(EdgeDevice, edge_uuid)
                 if device is None:
                     device = EdgeDevice(
-                        edge_id=edge_id,
-                        name=payload.get("edge_name"),
+                        edge_id=edge_uuid,
+                        name=payload.get("edge_name", edge_id),
                         location=payload.get("edge_location"),
                     )
                     session.add(device)
@@ -253,33 +265,43 @@ class MessageHandler:
                 session.flush()
 
                 # Upsert camera (child)
-                camera = session.get(Camera, camera_id)
+                camera = session.get(Camera, camera_uuid)
                 if camera is None:
                     camera = Camera(
-                        camera_id=camera_id,
-                        edge_id=edge_id,
+                        camera_id=camera_uuid,
+                        edge_id=edge_uuid,
                         type=payload.get("camera_type"),
-                        location_coordinates=_normalize_point(
-                            payload.get("camera_coords")
-                        ),
                         technical_params_json=payload.get("technical_params_json"),
                         elevation=payload.get("elevation"),
-                        status="active",
+                        status="Online",
                     )
                     session.add(camera)
                 else:
                     if "camera_type" in payload:
                         camera.type = payload["camera_type"]
-                    if "camera_coords" in payload:
-                        camera.location_coordinates = _normalize_point(
-                            payload["camera_coords"]
-                        )
                     if "technical_params_json" in payload:
                         camera.technical_params_json = payload["technical_params_json"]
                     if "elevation" in payload:
                         camera.elevation = payload["elevation"]
-                    camera.status = "active"
+                    camera.status = "Online"
                     session.add(camera)
+
+                session.flush()
+
+                # Update location_coordinates via raw SQL (PostGIS GEOGRAPHY)
+                coords = payload.get("camera_coords")
+                if coords:
+                    lonlat = _parse_point(coords)
+                    if lonlat:
+                        lon, lat = lonlat
+                        session.execute(
+                            sa_text(
+                                "UPDATE camera SET location_coordinates = "
+                                "ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography "
+                                "WHERE camera_id = :cid"
+                            ),
+                            {"lon": lon, "lat": lat, "cid": str(camera_uuid)},
+                        )
 
                 session.commit()
                 log.info("Birth processed OK for edge=%s camera=%s", edge_id, camera_id)
@@ -289,9 +311,10 @@ class MessageHandler:
     def _handle_telemetry(self, camera_id: str, payload: dict[str, Any]) -> None:
         """Update camera status/temperature/battery."""
         log.info("Processing telemetry: camera=%s", camera_id)
+        camera_uuid = _str_to_uuid(camera_id)
         try:
             with get_session(self._engine) as session:
-                camera = session.get(Camera, camera_id)
+                camera = session.get(Camera, camera_uuid)
                 if camera is None:
                     log.warning(
                         "Telemetry for unknown camera %s – skipping",
@@ -313,33 +336,38 @@ class MessageHandler:
     def _handle_event(
         self, edge_id: str, camera_id: str, payload: dict[str, Any]
     ) -> None:
-        """Insert dataset_store row and animal_detected rows; send upload cmd."""
+        """Insert datasetstore row and animaldetected rows; send upload cmd."""
         event_id = payload.get("event_id")
         if not event_id:
             log.warning("Event message missing event_id – skipping")
             return
 
+        try:
+            event_uuid = uuid.UUID(str(event_id))
+        except ValueError:
+            log.warning("Invalid UUID event_id: %s – skipping", event_id)
+            return
+
+        camera_uuid = _str_to_uuid(camera_id)
         log.info("Processing event: %s camera=%s", event_id, camera_id)
         try:
             with get_session(self._engine) as session:
                 # Check for duplicate event
-                existing = session.get(DatasetStore, event_id)
+                existing = session.get(DatasetStore, event_uuid)
                 if existing is not None:
                     log.warning("Duplicate event %s – skipping", event_id)
                     return
 
-                # Insert dataset_store first (parent)
+                # Insert datasetstore first (parent)
                 ds = DatasetStore(
-                    event_id=event_id,
-                    camera_id=camera_id,
+                    event_id=event_uuid,
+                    camera_id=camera_uuid,
                     time=payload.get("capture_time"),
-                    count=payload.get("count"),
-                    event_coordinates=_normalize_point(
-                        payload.get("event_coordinates")
-                    ),
+                    count=payload.get("count", 0),
+                    imagepath="",
                 )
                 session.add(ds)
-                # Flush to ensure dataset_store row exists before FK-dependent inserts
+                # Flush to ensure datasetstore row exists before FK-dependent inserts
                 session.flush()
 
                 # Insert detections (children)
@@ -375,7 +403,7 @@ class MessageHandler:
             log.info("Upload command sent: %s", cmd_topic)
 
     def handle_upload_status(self, payload: dict[str, Any]) -> None:
-        """Update dataset_store.image_path on successful upload."""
+        """Update datasetstore.imagepath on successful upload."""
         event_id = payload.get("event_id")
         status = payload.get("status", "").upper()
         if not event_id:
@@ -396,6 +424,13 @@ class MessageHandler:
             return
 
         log.info("Upload success for %s → %s", event_id, remote_path)
+
+        try:
+            event_uuid = uuid.UUID(str(event_id))
+        except ValueError:
+            log.warning("Invalid UUID event_id in upload_status: %s", event_id)
+            return
+
         # Derive the clean public URL (no credentials) from the event_id
         if self._s3:
             public_url = self._s3.get_object_url(f"{event_id}.jpg")
@@ -403,16 +438,16 @@ class MessageHandler:
             public_url = remote_path
         try:
             with get_session(self._engine) as session:
-                ds = session.get(DatasetStore, event_id)
+                ds = session.get(DatasetStore, event_uuid)
                 if ds is None:
                     log.warning(
                         "Upload status for unknown event %s – skipping",
                         event_id,
                     )
                     return
-                ds.image_path = public_url
+                ds.imagepath = public_url
                 session.add(ds)
                 session.commit()
                 log.info("Image path updated for event %s", event_id)
         except Exception:  # pylint: disable=broad-exception-caught
-            log.exception("Failed to update image_path for %s", event_id)
+            log.exception("Failed to update imagepath for %s", event_id)
