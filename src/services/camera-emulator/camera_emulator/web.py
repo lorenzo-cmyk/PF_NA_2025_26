@@ -30,6 +30,7 @@ _mqtt: MQTTClient
 _scenes: list[dict[str, Any]] = []
 _scenes_dir: Path | None = None
 _event_log: deque[dict[str, Any]] = deque(maxlen=200)
+_event_scene_map: dict[str, int] = {}  # event_id → scene index
 
 
 def init(
@@ -98,11 +99,8 @@ def _log_event(  # pylint: disable=too-many-arguments,too-many-positional-argume
 
 
 def _scene_index_from_event_id(event_id: str) -> int | None:
-    """Extract the 1-based scene number from an event ID like ``EVT_2_ABCDEF``."""
-    m = re.match(r"EVT_(\d+)_", event_id)
-    if m:
-        return int(m.group(1)) - 1  # convert to 0-based index
-    return None
+    """Look up the scene index for an event from the in-memory mapping."""
+    return _event_scene_map.get(event_id)
 
 
 def _do_photo_upload(event_id: str, upload_url: str, trigger: str) -> None:
@@ -314,7 +312,7 @@ async def send_telemetry(request: Request):
     body = await request.json()
     payload = {
         "timestamp": _now_iso(),
-        "status": body.get("status", "active"),
+        "status": body.get("status", "Online"),
         "temperature": body.get("temperature", 20.0),
         "battery_level": body.get("battery_level", 100),
     }
@@ -334,20 +332,22 @@ async def send_event(request: Request):
     else:
         scene = body
 
-    # Event ID: EVT_{scene_num}_{UUID} — scene_num is 1-based
+    # Event ID: UUID v4
     scene_num = (
         (scene_idx + 1)
         if (scene_idx is not None and 0 <= scene_idx < len(_scenes))
         else 0
     )
-    event_id = f"EVT_{scene_num}_{uuid.uuid4().hex[:8].upper()}"
+    event_id = str(uuid.uuid4())
+
+    # Track event→scene mapping for photo upload resolution
+    if scene_idx is not None and 0 <= scene_idx < len(_scenes):
+        _event_scene_map[event_id] = scene_idx
+
     payload = {
         "event_id": event_id,
         "capture_time": _now_iso(),
         "count": scene.get("count", len(scene.get("detections", []))),
-        "event_coordinates": scene.get(
-            "event_coordinates", "POINT(43.76797, 10.324982)"
-        ),
         "detections": scene.get("detections", []),
     }
     trigger = (
@@ -363,7 +363,7 @@ async def send_event(request: Request):
 async def send_upload_status(request: Request):
     """Report upload success or failure for an event."""
     body = await request.json()
-    event_id = body.get("event_id", f"EVT_{uuid.uuid4().hex[:12].upper()}")
+    event_id = body.get("event_id", str(uuid.uuid4()))
     success = body.get("success", True)
     if success:
         payload = {
@@ -420,7 +420,7 @@ async def emulate_upload_cmd(request: Request):
 @app.post("/api/disconnect")
 async def graceful_disconnect():
     """Publish an offline telemetry then disconnect."""
-    payload = {"timestamp": _now_iso(), "status": "offline"}
+    payload = {"timestamp": _now_iso(), "status": "Offline"}
     _mqtt.publish_telemetry(payload, trigger="Manual: /api/disconnect (offline)")
     _mqtt.stop()
     return {"status": "ok", "detail": "Disconnected gracefully (offline published)."}
