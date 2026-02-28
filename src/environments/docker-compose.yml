@@ -73,8 +73,9 @@ services:
       - edge-mosquitto-data:/mosquitto/data
       - ./edge/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
-      - edge-net
-      - cloud-net
+      edge-net:
+      cloud-net:
+        ipv4_address: 172.17.0.10
     depends_on:
       - cloud-mosquitto
     restart: unless-stopped
@@ -154,8 +155,9 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - edge-net
-      - cloud-net
+      edge-net:
+      cloud-net:
+        ipv4_address: 172.17.0.11
     depends_on:
       - edge-mosquitto
       - edge-postgresql
@@ -195,7 +197,8 @@ services:
       - cloud-mosquitto-data:/mosquitto/data
       - ./cloud/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
-      - cloud-net
+      cloud-net:
+        ipv4_address: 172.17.0.3
     restart: unless-stopped
 
   cloud-postgresql:
@@ -211,7 +214,8 @@ services:
       - cloud-pgdata:/var/lib/postgresql
       - ../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      - cloud-net
+      cloud-net:
+        ipv4_address: 172.17.0.2
     restart: unless-stopped
 
   cloud-object-storage-init:
@@ -245,7 +249,8 @@ services:
     volumes:
       - cloud-objectdata:/data/rustfs
     networks:
-      - cloud-net
+      cloud-net:
+        ipv4_address: 172.17.0.4
     depends_on:
       cloud-object-storage-init:
         condition: service_completed_successfully
@@ -273,7 +278,8 @@ services:
     ports:
       - "8001:8000"
     networks:
-      - cloud-net
+      cloud-net:
+        ipv4_address: 172.17.0.5
     depends_on:
       - cloud-mosquitto
       - cloud-postgresql
@@ -295,7 +301,8 @@ services:
       - ./cloud/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./cloud/grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
     networks:
-      - cloud-net
+      cloud-net:
+        ipv4_address: 172.17.0.6
     depends_on:
       - cloud-postgresql
     restart: unless-stopped
@@ -305,6 +312,9 @@ networks:
     name: gboar-edge
   cloud-net:
     name: gboar-cloud
+    ipam:
+      config:
+        - subnet: 172.17.0.0/24
 
 volumes:
   edge-pgdata:
