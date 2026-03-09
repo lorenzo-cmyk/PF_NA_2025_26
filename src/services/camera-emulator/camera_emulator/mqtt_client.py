@@ -44,7 +44,7 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
 
         # LWT: if we disconnect ungracefully, the broker publishes this
         lwt_topic = f"{self._prefix}/telemetry"
-        lwt_payload = json.dumps({"status": "offline"})
+        lwt_payload = json.dumps({"status": "Offline"})
         self._client.will_set(
             topic=lwt_topic,
             payload=lwt_payload,
@@ -53,7 +53,7 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         )
         mqtt_log.info(
             "%s | LWT_SET | %s | QoS=1, Retained=True | "
-            'payload={"status":"offline"} | trigger=Auto: MQTT client init',
+            'payload={"status":"Offline"} | trigger=Auto: MQTT client init',
             _ts(),
             lwt_topic,
         )
@@ -71,7 +71,7 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
             (
                 "SYSTEM",
                 lwt_topic,
-                {"status": "offline"},
+                {"status": "Offline"},
                 "LWT_SET",
                 "Auto: MQTT client init",
                 1,

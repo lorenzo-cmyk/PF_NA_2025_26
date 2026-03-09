@@ -1,4 +1,4 @@
-"""SQLModel database models and engine setup for gBOAR."""
+"""SQLModel database models and engine setup for the WatchEdge database."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ class EdgeDevice(SQLModel, table=True):
 
     __tablename__ = "edge_device"
 
-    edge_id: str = Field(primary_key=True)
-    name: str | None = None
+    edge_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str
     location: str | None = None
 
 
@@ -23,44 +23,43 @@ class Camera(SQLModel, table=True):
 
     __tablename__ = "camera"
 
-    camera_id: str = Field(primary_key=True)
-    edge_id: str = Field(foreign_key="edge_device.edge_id")
+    camera_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    edge_id: uuid.UUID = Field(foreign_key="edge_device.edge_id")
     type: str | None = None
-    # POINT stored as text string for SQLModel compatibility
-    location_coordinates: str | None = None
+    # location_coordinates is GEOGRAPHY(Point, 4326) in the DB;
+    # handled via raw SQL, not mapped here.
     technical_params_json: dict | None = Field(default=None, sa_column=Column(JSON))
     elevation: float | None = None
-    status: str | None = None
+    status: str = "Offline"
     temperature: float | None = None
-    battery_level: int | None = None
+    battery_level: float | None = None
 
 
 class DatasetStore(SQLModel, table=True):
     """Captured image event – child of camera."""
 
-    __tablename__ = "dataset_store"
+    __tablename__ = "datasetstore"
 
-    event_id: str = Field(primary_key=True)
-    camera_id: str = Field(foreign_key="camera.camera_id")
+    event_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    camera_id: uuid.UUID = Field(foreign_key="camera.camera_id")
     time: datetime | None = None
-    count: int | None = None
-    image_path: str | None = None
-    event_coordinates: str | None = None
+    count: int = 0
+    imagepath: str = ""
 
 
 class AnimalDetected(SQLModel, table=True):
-    """AI inference result – child of dataset_store."""
+    """AI inference result – child of datasetstore."""
 
-    __tablename__ = "animal_detected"
+    __tablename__ = "animaldetected"
 
-    detection_id_uuid: str = Field(
+    detection_id: uuid.UUID = Field(
+        default_factory=uuid.uuid4,
         primary_key=True,
-        default_factory=lambda: str(uuid.uuid4()),
     )
-    event_id: str = Field(foreign_key="dataset_store.event_id")
+    event_id: uuid.UUID = Field(foreign_key="datasetstore.event_id")
     animal_type: str | None = None
     distance: float | None = None
-    size_estimate: str | None = None
+    size_estimate: float | None = None
     confidence: float | None = None
 
 

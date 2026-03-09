@@ -18,13 +18,12 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 0,
   "links": [],
   "panels": [
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "efe10tuc9mlmof"
+        "uid": "bfejnp2moiyo0d"
       },
       "fieldConfig": {
         "defaults": {
@@ -60,7 +59,9 @@
         "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["count"],
+          "calcs": [
+            "count"
+          ],
           "fields": "",
           "values": false
         },
@@ -68,13 +69,13 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "12.3.3",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
-          "dataset": "gBOAR",
+          "dataset": "watchedge-db",
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "efe10tuc9mlmof"
+            "uid": "bfejnp2moiyo0d"
           },
           "editorMode": "builder",
           "format": "table",
@@ -112,7 +113,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "efe10tuc9mlmof"
+        "uid": "bfejnp2moiyo0d"
       },
       "fieldConfig": {
         "defaults": {
@@ -148,7 +149,9 @@
         "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -156,10 +159,14 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "12.3.3",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
-          "dataset": "gBOAR",
+          "dataset": "watchedge-db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
           "editorMode": "builder",
           "format": "table",
           "rawSql": "SELECT COUNT(camera_id) FROM camera LIMIT 50 ",
@@ -196,7 +203,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "efe10tuc9mlmof"
+        "uid": "bfejnp2moiyo0d"
       },
       "fieldConfig": {
         "defaults": {
@@ -232,7 +239,9 @@
         "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -240,13 +249,17 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "12.3.3",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
-          "dataset": "gBOAR",
+          "dataset": "watchedge-db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
           "editorMode": "builder",
           "format": "table",
-          "rawSql": "SELECT COUNT(event_id) FROM dataset_store LIMIT 50 ",
+          "rawSql": "SELECT COUNT(event_id) FROM datasetstore LIMIT 50 ",
           "refId": "A",
           "sql": {
             "columns": [
@@ -271,7 +284,7 @@
             ],
             "limit": 50
           },
-          "table": "dataset_store"
+          "table": "datasetstore"
         }
       ],
       "title": "Events",
@@ -280,7 +293,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "efe10tuc9mlmof"
+        "uid": "bfejnp2moiyo0d"
       },
       "fieldConfig": {
         "defaults": {
@@ -325,10 +338,14 @@
         "cellHeight": "sm",
         "showHeader": true
       },
-      "pluginVersion": "12.3.3",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
-          "dataset": "gBOAR",
+          "dataset": "watchedge-db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
           "editorMode": "builder",
           "format": "table",
           "rawSql": "SELECT * FROM edge_device LIMIT 50 ",
@@ -364,7 +381,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "efe10tuc9mlmof"
+        "uid": "bfejnp2moiyo0d"
       },
       "fieldConfig": {
         "defaults": {
@@ -409,10 +426,14 @@
         "cellHeight": "sm",
         "showHeader": true
       },
-      "pluginVersion": "12.3.3",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
-          "dataset": "gBOAR",
+          "dataset": "watchedge-db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
           "editorMode": "builder",
           "format": "table",
           "rawSql": "SELECT * FROM camera LIMIT 50 ",
@@ -448,7 +469,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "efe10tuc9mlmof"
+        "uid": "bfejnp2moiyo0d"
       },
       "fieldConfig": {
         "defaults": {
@@ -493,13 +514,17 @@
         "cellHeight": "sm",
         "showHeader": true
       },
-      "pluginVersion": "12.3.3",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
-          "dataset": "gBOAR",
+          "dataset": "watchedge-db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
           "editorMode": "builder",
           "format": "table",
-          "rawSql": "SELECT * FROM dataset_store LIMIT 50 ",
+          "rawSql": "SELECT * FROM datasetstore LIMIT 50 ",
           "refId": "A",
           "sql": {
             "columns": [
@@ -523,7 +548,7 @@
             ],
             "limit": 50
           },
-          "table": "dataset_store"
+          "table": "datasetstore"
         }
       ],
       "title": "Events",
@@ -532,7 +557,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "efe10tuc9mlmof"
+        "uid": "bfejnp2moiyo0d"
       },
       "fieldConfig": {
         "defaults": {
@@ -568,7 +593,9 @@
         "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -576,13 +603,17 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "12.3.3",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
-          "dataset": "gBOAR",
+          "dataset": "watchedge-db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
           "editorMode": "builder",
           "format": "table",
-          "rawSql": "SELECT COUNT(detection_id_uuid) FROM animal_detected LIMIT 50 ",
+          "rawSql": "SELECT COUNT(detection_id) FROM animaldetected LIMIT 50 ",
           "refId": "A",
           "sql": {
             "columns": [
@@ -590,7 +621,7 @@
                 "name": "COUNT",
                 "parameters": [
                   {
-                    "name": "detection_id_uuid",
+                    "name": "detection_id",
                     "type": "functionParameter"
                   }
                 ],
@@ -607,7 +638,7 @@
             ],
             "limit": 50
           },
-          "table": "animal_detected"
+          "table": "animaldetected"
         }
       ],
       "title": "Animals",
@@ -616,7 +647,7 @@
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "efe10tuc9mlmof"
+        "uid": "bfejnp2moiyo0d"
       },
       "fieldConfig": {
         "defaults": {
@@ -661,13 +692,17 @@
         "cellHeight": "sm",
         "showHeader": true
       },
-      "pluginVersion": "12.3.3",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
-          "dataset": "gBOAR",
+          "dataset": "watchedge-db",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
           "editorMode": "builder",
           "format": "table",
-          "rawSql": "SELECT * FROM animal_detected LIMIT 50 ",
+          "rawSql": "SELECT * FROM animaldetected LIMIT 50 ",
           "refId": "A",
           "sql": {
             "columns": [
@@ -691,7 +726,7 @@
             ],
             "limit": 50
           },
-          "table": "animal_detected"
+          "table": "animaldetected"
         }
       ],
       "title": "Animals",
@@ -710,7 +745,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "ItalTel Tech 2.0",
-  "uid": "gbcq6mj",
-  "version": 11
+  "title": "ItalTel Tech 3.0",
+  "uid": "cinghiale",
+  "version": 9,
+  "weekStart": ""
 }

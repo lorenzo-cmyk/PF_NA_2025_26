@@ -32,7 +32,7 @@ class Config:  # pylint: disable=too-many-instance-attributes
     database_url: str = field(
         default_factory=lambda: os.getenv(
             "DATABASE_URL",
-            "postgresql://gBOAR:gBOAR@localhost:5432/gBOAR",
+            "postgresql://watchedge:watchedge@localhost:5432/watchedge-db",
         )
     )
 

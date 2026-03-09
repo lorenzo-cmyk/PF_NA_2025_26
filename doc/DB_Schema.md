@@ -1,59 +1,73 @@
-# gBOAR - Database Schema Specification
+# WatchEdge – Database Schema Specification
+
+> Database: **watchedge-db** · User: **watchedge** · Extensions: `uuid-ossp`, `postgis`
 
 ## 1. Table: `edge_device`
 
 _Top-level entity representing the physical computing nodes._
 
-| Field Name    | Data Type          | Key    | Comments                                                                          |
-| :------------ | :----------------- | :----- | :-------------------------------------------------------------------------------- |
-| **`edge_id`** | `VARCHAR` / `TEXT` | **PK** | Unique identifier for the edge node.                                              |
-| `name`        | `VARCHAR`          |        | Human-readable name for the device.                                               |
-| `location`    | `POINT` or `TEXT`  |        | Geographic location of the device (could be coordinates or a descriptive string). |
+| Field Name    | Data Type | Key    | Constraints       | Comments                         |
+| :------------ | :-------- | :----- | :---------------- | :------------------------------- |
+| **`edge_id`** | `UUID`    | **PK** | DEFAULT `uuid_generate_v4()` | Auto-generated unique identifier. |
+| `name`        | `TEXT`    |        | `NOT NULL`        | Human-readable name.             |
+| `location`    | `TEXT`    |        |                   | Descriptive location string.     |
 
 ## 2. Table: `camera`
 
 _Represents imaging hardware. Child of `edge_device`._
 
-| Field Name              | Data Type          | Key    | Comments                                                                                  |
-| :---------------------- | :----------------- | :----- | :---------------------------------------------------------------------------------------- |
-| **`camera_id`**         | `VARCHAR` / `TEXT` | **PK** | Unique identifier for the camera.                                                         |
-| `edge_id`               | `VARCHAR` / `TEXT` | **FK** | References `edge_device.edge_id`.                                                         |
-| `type`                  | `VARCHAR`          |        | The model or hardware type of the camera.                                                 |
-| `location_coordinates`  | `POINT`            |        | GPS coordinates of the camera sensor (PostgreSQL geometric type).                         |
-| `technical_params_json` | `JSONB`            |        | Configuration parameters (resolution, etc.) stored in Binary JSON for efficient querying. |
-| `elevation`             | `NUMERIC`          |        | Height of installation (in meters).                                                       |
-| `status`                | `VARCHAR`          |        | Operational status (e.g., 'active', 'maintenance').                                       |
-| `temperature`           | `NUMERIC`          |        | Telemetry: Internal or ambient temperature.                                               |
-| `battery_level`         | `INTEGER`          |        | Telemetry: Battery percentage (0-100).                                                    |
+| Field Name              | Data Type                | Key    | Constraints                          | Comments                              |
+| :---------------------- | :----------------------- | :----- | :----------------------------------- | :------------------------------------ |
+| **`camera_id`**         | `UUID`                   | **PK** | DEFAULT `uuid_generate_v4()`         | Auto-generated unique identifier.     |
+| `edge_id`               | `UUID`                   | **FK** | `NOT NULL`, `ON DELETE RESTRICT`     | References `edge_device.edge_id`.     |
+| `type`                  | `TEXT`                   |        |                                      | Camera model or hardware type.        |
+| `location_coordinates`  | `GEOGRAPHY(Point, 4326)` |        |                                      | PostGIS geographic coordinates.       |
+| `technical_params_json` | `JSONB`                  |        | DEFAULT `'{}'::jsonb`                | Configuration parameters (resolution, etc.). |
+| `elevation`             | `DECIMAL(8,2)`           |        |                                      | Height of installation (meters).      |
+| `status`                | `camera_status` (ENUM)   |        | `NOT NULL`, DEFAULT `'Offline'`      | `'Online'` or `'Offline'`.            |
+| `temperature`           | `DECIMAL(5,2)`           |        |                                      | Ambient or internal temperature.      |
+| `battery_level`         | `DECIMAL(5,2)`           |        | `CHECK (0..100)`                     | Battery percentage.                   |
 
-## 3. Table: `dataset_store`
+## 3. Table: `datasetstore`
 
 _Represents a captured image event. Child of `camera`._
 
-| Field Name          | Data Type     | Key    | Comments                                                          |
-| :------------------ | :------------ | :----- | :---------------------------------------------------------------- |
-| **`event_id`**      | `VARCHAR`     | **PK** | Unique ID, typically a composite of Camera ID + Timestamp.        |
-| `camera_id`         | `VARCHAR`     | **FK** | References `camera.camera_id`.                                    |
-| `time`              | `TIMESTAMPTZ` |        | Timestamp of the capture (with Time Zone).                        |
-| `count`             | `INTEGER`     |        | Total number of objects detected in this event.                   |
-| `image_path`        | `TEXT`        |        | Local file system path to the raw image.                          |
-| `event_coordinates` | `POINT`       |        | Specific location data associated with the event/detection frame. |
+| Field Name     | Data Type                      | Key    | Constraints                      | Comments                            |
+| :------------- | :----------------------------- | :----- | :------------------------------- | :---------------------------------- |
+| **`event_id`** | `UUID`                         | **PK** | DEFAULT `uuid_generate_v4()`     | Auto-generated unique identifier.   |
+| `camera_id`    | `UUID`                         | **FK** | `NOT NULL`, `ON DELETE CASCADE`  | References `camera.camera_id`.      |
+| `time`         | `TIMESTAMP WITH TIME ZONE`     |        | `NOT NULL`, DEFAULT `now()`      | Capture timestamp.                  |
+| `count`        | `INT`                          |        | `NOT NULL`, DEFAULT `0`          | Number of detections (trigger-maintained). |
+| `imagepath`    | `TEXT`                         |        | `NOT NULL`                       | Path/URL to the image in object storage.   |
 
-## 4. Table: `animal_detected`
+## 4. Table: `animaldetected`
 
-_Represents specific AI inference results. Child of `dataset_store`._
+_Represents specific AI inference results. Child of `datasetstore`._
 
-| Field Name              | Data Type             | Key    | Comments                                                           |
-| :---------------------- | :-------------------- | :----- | :----------------------------------------------------------------- |
-| **`detection_id_uuid`** | `UUID`                | **PK** | Globally Unique Identifier. Generated via `uuid-ossp` extension.   |
-| `event_id`              | `VARCHAR`             | **FK** | References `dataset_store.event_id`.                               |
-| `animal_type`           | `VARCHAR`             |        | Class of the detected animal (e.g., 'deer', 'boar').               |
-| `distance`              | `NUMERIC`             |        | Estimated distance from the camera (in meters).                    |
-| `size_estimate`         | `VARCHAR` / `NUMERIC` |        | Approximate size (can be a bounding box area or categorical size). |
-| `confidence`            | `NUMERIC`             |        | AI Confidence score (typically 0.0 to 1.0).                        |
+| Field Name       | Data Type      | Key    | Constraints                     | Comments                                  |
+| :--------------- | :------------- | :----- | :------------------------------ | :---------------------------------------- |
+| **`detection_id`** | `UUID`       | **PK** | DEFAULT `uuid_generate_v4()`    | Auto-generated unique identifier.         |
+| `event_id`       | `UUID`         | **FK** | `NOT NULL`, `ON DELETE CASCADE` | References `datasetstore.event_id`.       |
+| `animal_type`    | `TEXT`         |        |                                 | Class of the detected animal.             |
+| `distance`       | `DECIMAL(6,2)` |        |                                 | Estimated distance from camera (meters).  |
+| `size_estimate`  | `DECIMAL(6,2)` |        |                                 | Approximate body size (meters).           |
+| `confidence`     | `DECIMAL(4,3)` |        | `CHECK (0..1)`                  | AI confidence score.                      |
+
+## Indexes
+
+| Index                       | Table            | Column      |
+| :-------------------------- | :--------------- | :---------- |
+| `idx_datasetstore_camera`   | `datasetstore`   | `camera_id` |
+| `idx_animaldetected_event`  | `animaldetected` | `event_id`  |
+
+## Trigger
+
+`trg_refresh_count` — fires `AFTER INSERT OR DELETE` on `animaldetected`.
+Calls `refresh_event_count()` to keep `datasetstore.count` in sync with the
+actual number of child detection rows.
 
 ## Relationship Overview
 
-1. **`edge_device`** - 1:N - **`camera`**
-2. **`camera`** - 1:N - **`dataset_store`**
-3. **`dataset_store`** - 1:N - **`animal_detected`**
+1. **`edge_device`** — 1:N → **`camera`**
+2. **`camera`** — 1:N → **`datasetstore`**
+3. **`datasetstore`** — 1:N → **`animaldetected`**

@@ -8,7 +8,7 @@
             {
                 "animal_type": "boar",
                 "distance": 39.7,
-                "size_estimate": "big",
+                "size_estimate": 1.20,
                 "confidence": 0.96
             }
         ],
@@ -23,13 +23,13 @@
             {
                 "animal_type": "boar",
                 "distance": 17.4,
-                "size_estimate": "big",
+                "size_estimate": 1.20,
                 "confidence": 0.96
             },
             {
                 "animal_type": "boar",
                 "distance": 19.6,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.76
             }
         ],
@@ -44,19 +44,19 @@
             {
                 "animal_type": "boar",
                 "distance": 20.1,
-                "size_estimate": "big",
+                "size_estimate": 1.20,
                 "confidence": 0.99
             },
             {
                 "animal_type": "boar",
                 "distance": 33.3,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.87
             },
             {
                 "animal_type": "boar",
                 "distance": 40.6,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.85
             }
         ],
@@ -71,61 +71,61 @@
             {
                 "animal_type": "boar",
                 "distance": 42.9,
-                "size_estimate": "big",
+                "size_estimate": 1.20,
                 "confidence": 0.8
             },
             {
                 "animal_type": "boar",
                 "distance": 44.0,
-                "size_estimate": "big",
+                "size_estimate": 1.20,
                 "confidence": 0.88
             },
             {
                 "animal_type": "boar",
                 "distance": 47.7,
-                "size_estimate": "big",
+                "size_estimate": 1.20,
                 "confidence": 0.91
             },
             {
                 "animal_type": "boar",
                 "distance": 38.6,
-                "size_estimate": "big",
+                "size_estimate": 1.20,
                 "confidence": 0.86
             },
             {
                 "animal_type": "boar",
                 "distance": 22.1,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.97
             },
             {
                 "animal_type": "boar",
                 "distance": 31.0,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.86
             },
             {
                 "animal_type": "boar",
                 "distance": 21.8,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.89
             },
             {
                 "animal_type": "boar",
                 "distance": 18.0,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.97
             },
             {
                 "animal_type": "boar",
                 "distance": 35.9,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.8
             },
             {
                 "animal_type": "boar",
                 "distance": 20.9,
-                "size_estimate": "small",
+                "size_estimate": 0.60,
                 "confidence": 0.98
             }
         ],
