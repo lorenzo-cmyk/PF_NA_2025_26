@@ -38,7 +38,7 @@ _Represents a captured image event. Child of `camera`._
 | `camera_id`    | `UUID`                         | **FK** | `NOT NULL`, `ON DELETE CASCADE`  | References `camera.camera_id`.      |
 | `time`         | `TIMESTAMP WITH TIME ZONE`     |        | `NOT NULL`, DEFAULT `now()`      | Capture timestamp.                  |
 | `count`        | `INT`                          |        | `NOT NULL`, DEFAULT `0`          | Number of detections (trigger-maintained). |
-| `imagepath`    | `TEXT`                         |        | `NOT NULL`                       | Path/URL to the image in object storage.   |
+| `imagepath`    | `TEXT`                         |        | `NOT NULL`                       | Full URL to the image in object storage.   |
 
 ## 4. Table: `animaldetected`
 
