@@ -40,14 +40,14 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
   ```json
   {
     "timestamp": "2026-03-01T10:00:00Z",
-    "status": "active",
+    "status": "Online",
     "temperature": 17.5,
     "battery_level": 74
   }
   ```
 
 - **QoS:** 1 (Retained)
-- **LWT Configuration:** The Extreme-Edge device MUST configure its MQTT client to automatically publish `{"status": "offline"}` to this topic if it ungracefully disconnects.
+- **LWT Configuration:** The Extreme-Edge device MUST configure its MQTT client to automatically publish `{"status": "Offline"}` to this topic if it ungracefully disconnects.
 
 ### 3. Event Detection
 
@@ -59,12 +59,11 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
     "event_id": "EVT_{UUID}",
     "capture_time": "2026-03-01T12:00:00Z",
     "count": 1,
-    "event_coordinates": "POINT(43.76797, 10.324982)",
     "detections": [
       {
         "animal_type": "boar",
         "distance": 15.5,
-        "size_estimate": "big",
+        "size_estimate": 1.20,
         "confidence": 0.92
       }
     ]
