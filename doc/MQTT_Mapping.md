@@ -1,4 +1,4 @@
-# gBOAR - MQTT Topic Mapping Specification
+# WatchEdge - MQTT Topic Mapping Specification
 
 ## Introduction to the Namespace
 
@@ -19,13 +19,13 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
   ```json
   {
     "edge_name": "SAN_ROSSORE_PACK_01",
-    "edge_location": "POINT(43.76794, 10.324979)",
+    "edge_location": "San Rossore Forest",
     "camera_type": "BOAR_CAMERA_V3",
     "camera_coords": "POINT(43.76797, 10.324982)",
     "elevation": 30,
     "technical_params_json": {
       "iso": 800,
-      "res": "2160x3840",
+      "res": "2160x3840"
     }
   }
   ```
@@ -60,6 +60,10 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
     "capture_time": "2026-03-01T12:00:00Z",
     "count": 1,
     "detections": [
+      // Note: `count` is included for informational purposes only.
+      // The database trigger `trg_refresh_count` always recomputes this value
+      // from the actual number of `animaldetected` child rows, so any value
+      // supplied here will be overwritten.
       {
         "animal_type": "boar",
         "distance": 15.5,
@@ -130,7 +134,7 @@ The Edge Processing Service acts as the intermediary between the Extreme-Edge an
 - **Publishing:** Publishes the processed data to the corresponding `cloud/#` topics on the same local Edge MQTT Broker.
 - **Image Upload (Edge → Extreme-Edge):** On receiving an event on `edge/#`, publishes an `edge/{edge_id}/{camera_id}/cmd/upload` command to the Extreme-Edge so the image is uploaded to the Edge Object Storage.
 - **Image Upload (Edge → Cloud):** On receiving a Cloud command on `cloud/+/+/cmd/upload`, fetches the image from the local Edge Object Storage and uploads it directly to the Cloud Object Storage via HTTP PUT. Publishes the result as `cloud/{edge_id}/{camera_id}/event/upload_status`.
-- **Connection:** Maintains exactly 1 active MQTT session to the local Edge MQTT Broker. It does not connect directly to the Cloud.
+- **Connection:** Maintains exactly 1 active MQTT session to the local Edge MQTT Broker.
 
 ## The Role of Mosquitto Bridging
 

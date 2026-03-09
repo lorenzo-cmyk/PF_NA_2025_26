@@ -1,4 +1,4 @@
-# gBOAR - System Components & Architecture
+# WatchEdge - System Components & Architecture
 
 ## Architecture Diagram
 
@@ -67,14 +67,14 @@
 ### Extreme-Edge
 
 - **Camera Management System & AI Detection Software**: Handles image capture and local AI inference.
-- **gBOAR Library**: Python library enabling the CMS to communicate with the network via MQTT. Publishes lifecycle (`birth`), `telemetry` (with LWT configured), and `event` data to the `edge/{edge_id}/{camera_id}/...` namespace. Accepts commands on `edge/{edge_id}/{camera_id}/cmd/upload` to upload files using HTTP PUT to the Edge Object Storage.
+- **gBOAR Library**: Python library enabling the CMS to communicate with the network via MQTT. Publishes lifecycle (`birth`), `telemetry` (with LWT configured), `event`, and `upload_status` data to the `edge/{edge_id}/{camera_id}/...` namespace. Accepts commands on `edge/{edge_id}/{camera_id}/cmd/upload` to upload files using HTTP PUT to the Edge Object Storage.
 
 ### Edge
 
 - **MQTT Broker (Mosquitto) [ENDPOINT]**: Local broker for Extreme-Edge to Edge communication. Configured to bridge all `cloud/#` topics up to the Cloud MQTT Broker, and bridge `cloud/+/+/cmd/upload` commands from the Cloud down to the Edge without remapping. Manages queuing and mutual TLS autonomously.
 - **SQL Database (PostgreSQL)**: Local persistence for events and metadata. Stores data according to the `edge_device`, `camera`, `datasetstore`, and `animaldetected` schema.
 - **Object Storage (RustFS) [ENDPOINT]**: Local storage for captured images.
-- **Edge Processing Service**: Intermediary service maintaining exactly 1 active MQTT session to the local broker. Subscribes to `edge/#`, ingests, aggregates, validates, and enriches incoming events, then publishes them to `cloud/#` (except `upload_status`, which is a local edge concern). On receiving an event, it sends an `edge/{edge_id}/{camera_id}/cmd/upload` command to the Extreme-Edge so the image is uploaded to the Edge Object Storage. When the Cloud requests an image via `cloud/+/+/cmd/upload`, the Edge Processing Service fetches the image from the local Edge Object Storage and uploads it directly to the Cloud Object Storage via HTTP PUT.
+- **Edge Processing Service**: Intermediary service maintaining exactly 1 active MQTT session to the local broker. Subscribes to `edge/#` and `cloud/+/+/cmd/upload`, ingests, aggregates, validates, and enriches incoming events, then publishes them to `cloud/#` (except `upload_status`, which is a local edge concern). On receiving an event, it sends an `edge/{edge_id}/{camera_id}/cmd/upload` command to the Extreme-Edge so the image is uploaded to the Edge Object Storage. When the Cloud requests an image via `cloud/+/+/cmd/upload`, the Edge Processing Service fetches the image from the local Edge Object Storage and uploads it directly to the Cloud Object Storage via HTTP PUT, then publishes the result as `cloud/{edge_id}/{camera_id}/event/upload_status`.
 
 ### Cloud
 
