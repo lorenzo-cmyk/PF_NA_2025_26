@@ -56,7 +56,7 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "event_id": "EVT_{UUID}",
+    "event_id": "{UUID}",
     "capture_time": "2026-03-01T12:00:00Z",
     "count": 1,
     "detections": [
@@ -79,9 +79,9 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "event_id": "EVT_{UUID}",
+    "event_id": "{UUID}",
     "status": "SUCCESS",
-    "remote_path": "http://object-storage-s3.edge/bucket/evt_{UUID}.jpg"
+    "remote_path": "http://object-storage-s3.edge/bucket/{UUID}.jpg"
   }
   ```
 
@@ -89,7 +89,7 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "event_id": "EVT_{UUID}",
+    "event_id": "{UUID}",
     "status": "ERROR",
     "message": "HTTP 503 Service Unavailable"
   }
@@ -104,8 +104,8 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "event_id": "EVT_{UUID}",
-    "upload_url": "http://object-storage-s3.edge/bucket/evt_{UUID}.jpg"
+    "event_id": "{UUID}",
+    "upload_url": "http://object-storage-s3.edge/bucket/{UUID}.jpg"
   }
   ```
 
@@ -113,13 +113,13 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
 ## Edge -> Cloud Messages
 
-Processed and validated messages intended for the centralized Cloud infrastructure.
+Processed and validated messages intended for the centralized Cloud infrastructure. The Edge Processing Service relays birth, telemetry, and event messages to the `cloud/` namespace. Image upload status (`upload_status`) is **not** relayed — it is a local edge concern between the Extreme-Edge and the Edge Processing Service.
 
 - **Birth / Registration:** `cloud/{edge_id}/{camera_id}/lifecycle/birth`
 - **Telemetry:** `cloud/{edge_id}/{camera_id}/telemetry`
 - **Event Detection:** `cloud/{edge_id}/{camera_id}/event`
-- **Image Upload Status:** `cloud/{edge_id}/{camera_id}/event/upload_status`
 - **Image Upload Command (Cloud -> Edge):** `cloud/{edge_id}/{camera_id}/cmd/upload`
+- **Image Upload Status (Cloud-internal):** `cloud/{edge_id}/{camera_id}/event/upload_status` — published by the Edge Processing Service after it uploads an image to the Cloud Object Storage in response to a `cmd/upload` command.
 
 ## The Role of "Edge Processing Service"
 
@@ -128,7 +128,8 @@ The Edge Processing Service acts as the intermediary between the Extreme-Edge an
 - **Subscription:** Subscribes to `edge/#` and `cloud/+/+/cmd/upload` on the local Edge MQTT Broker.
 - **Processing:** Ingests, aggregates, validates, and enriches incoming Extreme-Edge events.
 - **Publishing:** Publishes the processed data to the corresponding `cloud/#` topics on the same local Edge MQTT Broker.
-- **Command Routing:** Receives Cloud commands on `cloud/+/+/cmd/upload` and republishes them down to the Extreme-Edge on `edge/+/+/cmd/upload`.
+- **Image Upload (Edge → Extreme-Edge):** On receiving an event on `edge/#`, publishes an `edge/{edge_id}/{camera_id}/cmd/upload` command to the Extreme-Edge so the image is uploaded to the Edge Object Storage.
+- **Image Upload (Edge → Cloud):** On receiving a Cloud command on `cloud/+/+/cmd/upload`, fetches the image from the local Edge Object Storage and uploads it directly to the Cloud Object Storage via HTTP PUT. Publishes the result as `cloud/{edge_id}/{camera_id}/event/upload_status`.
 - **Connection:** Maintains exactly 1 active MQTT session to the local Edge MQTT Broker. It does not connect directly to the Cloud.
 
 ## The Role of Mosquitto Bridging
