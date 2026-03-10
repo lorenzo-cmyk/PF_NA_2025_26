@@ -1,7 +1,7 @@
 [project]
 name = "processing-service"
 version = "0.1.0"
-description = "Unified Edge/Cloud processing service for the gBOAR wildlife detection system."
+description = "Unified Edge/Cloud processing service for the WatchEdge wildlife detection system."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -12,6 +12,11 @@ dependencies = [
     "psycopg2-binary>=2.9",
     "requests>=2.31",
     "boto3>=1.35",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = [
     "black>=26.1.0",
     "pylint>=4.0.5",
 ]

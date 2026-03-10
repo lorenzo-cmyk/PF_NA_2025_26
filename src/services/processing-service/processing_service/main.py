@@ -7,6 +7,8 @@ Operates as Edge or Cloud depending on SERVICE_MODE.
 from __future__ import annotations
 
 import logging
+import signal
+import sys
 
 import uvicorn
 
@@ -27,7 +29,7 @@ log = logging.getLogger(__name__)
 def main() -> None:
     """Boot the processing service: MQTT client + HTTP server."""
     cfg = Config()
-    log.info("Starting processing service in %s mode", cfg.service_mode.value)
+    cfg.log()
 
     # Database
     engine = get_engine(cfg.database_url)
@@ -72,6 +74,15 @@ def main() -> None:
 
     # Wire up the API module
     api.init(cfg, mqtt, engine, s3)
+
+    # Graceful shutdown handler
+    def _shutdown(sig: int, _frame: object) -> None:
+        log.info("Shutting down (signal %s)…", signal.Signals(sig).name)
+        mqtt.stop()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, _shutdown)
+    signal.signal(signal.SIGTERM, _shutdown)
 
     # Start MQTT
     try:

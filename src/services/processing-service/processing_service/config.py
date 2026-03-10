@@ -1,10 +1,17 @@
-"""Configuration loaded from environment variables."""
+"""Configuration loaded from a .env file (if present) or environment variables."""
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
 from enum import Enum
+
+from dotenv import load_dotenv
+
+# Load .env from the project root (two levels above this file:
+# processing_service/config.py → processing_service/ → <service root>).
+# If the file does not exist this is a no-op; existing env vars are preserved.
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"), override=False)
 
 
 class ServiceMode(str, Enum):
@@ -91,3 +98,26 @@ class Config:  # pylint: disable=too-many-instance-attributes
         if len(parts) > 1:
             return int(parts[1].split("/")[0])
         return 1883
+
+    def log(self) -> None:
+        """Log the full resolved configuration at INFO level."""
+        import logging  # pylint: disable=import-outside-toplevel
+        _log = logging.getLogger(__name__)
+        _log.info("=== Processing Service Configuration ===")
+        _log.info("  [Mode]")
+        _log.info("    SERVICE_MODE          = %s", self.service_mode.value)
+        _log.info("  [MQTT]")
+        _log.info("    MQTT_BROKER_URL       = %s", self.mqtt_broker_url)
+        _log.info("    MQTT_CLIENT_ID        = %s", self.mqtt_client_id)
+        _log.info("  [Database]")
+        _log.info("    DATABASE_URL          = %s", self.database_url)
+        _log.info("  [Object Storage]")
+        _log.info("    OBJECT_STORAGE_URL    = %s", self.object_storage_url)
+        _log.info("    S3_PUBLIC_URL         = %s", self.s3_public_url or "(same as OBJECT_STORAGE_URL)")
+        _log.info("    S3_ACCESS_KEY         = %s", self.s3_access_key)
+        _log.info("    S3_SECRET_KEY         = %s", "***")
+        _log.info("    S3_BUCKET             = %s", self.s3_bucket)
+        _log.info("  [HTTP Server]")
+        _log.info("    WEB_HOST              = %s", self.web_host)
+        _log.info("    WEB_PORT              = %d", self.web_port)
+        _log.info("=======================================")

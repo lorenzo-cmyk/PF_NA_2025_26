@@ -23,9 +23,6 @@ from processing_service.s3_client import S3Client
 
 log = logging.getLogger(__name__)
 
-# Project namespace for deterministic UUID generation from MQTT identifiers
-_GBOAR_NS = uuid.UUID("6742f0a1-e5d6-4b87-9c3a-f1d2e3a4b5c6")
-
 # Regex patterns to extract edge_id and camera_id from topics
 # Matches: {prefix}/{edge_id}/{camera_id}/{rest...}
 _TOPIC_RE = re.compile(
@@ -34,11 +31,6 @@ _TOPIC_RE = re.compile(
 
 # Regex to extract coordinates from "POINT(lon, lat)" or "POINT(lon lat)"
 _POINT_RE = re.compile(r"^POINT\(\s*([-\d.]+)[,\s]+([-\d.]+)\s*\)$", re.IGNORECASE)
-
-
-def _str_to_uuid(name: str) -> uuid.UUID:
-    """Derive a deterministic UUID from a human-readable MQTT identifier."""
-    return uuid.uuid5(_GBOAR_NS, name)
 
 
 def _parse_point(value: str | None) -> tuple[float, float] | None:
@@ -241,9 +233,9 @@ class MessageHandler:
     ) -> None:
         """Insert/update edge_device and camera tables."""
         log.info("Processing birth: edge=%s camera=%s", edge_id, camera_id)
-        edge_uuid = _str_to_uuid(edge_id)
-        camera_uuid = _str_to_uuid(camera_id)
         try:
+            edge_uuid = uuid.UUID(edge_id)
+            camera_uuid = uuid.UUID(camera_id)
             with get_session(self._engine) as session:
                 # Upsert edge_device (parent – must exist before camera)
                 device = session.get(EdgeDevice, edge_uuid)
@@ -311,8 +303,8 @@ class MessageHandler:
     def _handle_telemetry(self, camera_id: str, payload: dict[str, Any]) -> None:
         """Update camera status/temperature/battery."""
         log.info("Processing telemetry: camera=%s", camera_id)
-        camera_uuid = _str_to_uuid(camera_id)
         try:
+            camera_uuid = uuid.UUID(camera_id)
             with get_session(self._engine) as session:
                 camera = session.get(Camera, camera_uuid)
                 if camera is None:
@@ -348,7 +340,11 @@ class MessageHandler:
             log.warning("Invalid UUID event_id: %s – skipping", event_id)
             return
 
-        camera_uuid = _str_to_uuid(camera_id)
+        try:
+            camera_uuid = uuid.UUID(camera_id)
+        except ValueError:
+            log.warning("Invalid UUID camera_id: %s – skipping", camera_id)
+            return
         log.info("Processing event: %s camera=%s", event_id, camera_id)
         try:
             with get_session(self._engine) as session:
@@ -374,7 +370,7 @@ class MessageHandler:
                 detections = payload.get("detections", [])
                 for det in detections:
                     ad = AnimalDetected(
-                        event_id=event_id,
+                        event_id=event_uuid,
                         animal_type=det.get("animal_type"),
                         distance=det.get("distance"),
                         size_estimate=det.get("size_estimate"),
@@ -418,12 +414,7 @@ class MessageHandler:
             )
             return
 
-        remote_path = payload.get("remote_path")
-        if not remote_path:
-            log.warning("Upload status SUCCESS but no remote_path for %s", event_id)
-            return
-
-        log.info("Upload success for %s → %s", event_id, remote_path)
+        log.info("Upload success for event %s", event_id)
 
         try:
             event_uuid = uuid.UUID(str(event_id))
@@ -431,11 +422,17 @@ class MessageHandler:
             log.warning("Invalid UUID event_id in upload_status: %s", event_id)
             return
 
-        # Derive the clean public URL (no credentials) from the event_id
+        # Derive the clean public URL (no credentials) from the S3 client
         if self._s3:
             public_url = self._s3.get_object_url(f"{event_id}.jpg")
         else:
-            public_url = remote_path
+            public_url = payload.get("remote_path")
+            if not public_url:
+                log.warning(
+                    "No S3 client and no remote_path for %s – cannot update imagepath",
+                    event_id,
+                )
+                return
         try:
             with get_session(self._engine) as session:
                 ds = session.get(DatasetStore, event_uuid)
