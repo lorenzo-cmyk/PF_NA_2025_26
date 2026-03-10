@@ -8,7 +8,7 @@ _Top-level entity representing the physical computing nodes._
 
 | Field Name    | Data Type | Key    | Constraints       | Comments                         |
 | :------------ | :-------- | :----- | :---------------- | :------------------------------- |
-| **`edge_id`** | `UUID`    | **PK** | DEFAULT `uuid_generate_v4()` | Auto-generated unique identifier. |
+| **`edge_id`** | `UUID`    | **PK** | DEFAULT `uuid_generate_v4()` | Unique identifier. In practice the application always supplies this value (provisioned at deployment time); the DB default is a fallback only. |
 | `name`        | `TEXT`    |        | `NOT NULL`        | Human-readable name.             |
 | `location`    | `TEXT`    |        |                   | Descriptive location string.     |
 
@@ -18,7 +18,7 @@ _Represents imaging hardware. Child of `edge_device`._
 
 | Field Name              | Data Type                | Key    | Constraints                          | Comments                              |
 | :---------------------- | :----------------------- | :----- | :----------------------------------- | :------------------------------------ |
-| **`camera_id`**         | `UUID`                   | **PK** | DEFAULT `uuid_generate_v4()`         | Auto-generated unique identifier.     |
+| **`camera_id`**         | `UUID`                   | **PK** | DEFAULT `uuid_generate_v4()`         | Unique identifier. In practice the application always supplies this value (provisioned at deployment time); the DB default is a fallback only. |
 | `edge_id`               | `UUID`                   | **FK** | `NOT NULL`, `ON DELETE RESTRICT`     | References `edge_device.edge_id`.     |
 | `type`                  | `TEXT`                   |        |                                      | Camera model or hardware type.        |
 | `location_coordinates`  | `GEOGRAPHY(Point, 4326)` |        |                                      | PostGIS geographic coordinates.       |

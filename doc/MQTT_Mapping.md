@@ -7,6 +7,8 @@ The MQTT topic architecture separates local edge communication from cloud-bound 
 - **`edge/{edge_id}/{camera_id}/...`**: Extreme-Edge to Edge communication.
 - **`cloud/{edge_id}/{camera_id}/...`**: Edge to Cloud communication.
 
+> **Identity convention:** Both `{edge_id}` and `{camera_id}` are **UUID strings** (e.g. `a3f1b2c4-5678-9abc-def0-1234567890ab`), provisioned at deployment time via environment variables. These UUIDs are used as-is in the database primary keys — no mapping between human-readable names and UUIDs exists.
+
 ## Extreme-Edge -> Edge Messages
 
 Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Broker.
@@ -21,7 +23,7 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
     "edge_name": "SAN_ROSSORE_PACK_01",
     "edge_location": "San Rossore Forest",
     "camera_type": "BOAR_CAMERA_V3",
-    "camera_coords": "POINT(43.76797, 10.324982)",
+    "camera_coords": "POINT(10.324982, 43.76797)",
     "elevation": 30,
     "technical_params_json": {
       "iso": 800,

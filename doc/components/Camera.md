@@ -58,8 +58,8 @@ Frozen dataclass loaded from environment variables. Mirrors the camera-emulator 
 | `mqtt_username` | `str` | `""` | MQTT credentials |
 | `mqtt_password` | `str` | `""` | MQTT credentials |
 | `mqtt_client_id` | `str` | `""` | MQTT client ID |
-| `edge_id` | `str` | `edge_01` | Edge device identifier |
-| `camera_id` | `str` | `cam_01` | Camera identifier |
+| `edge_id` | `UUID` | *(required)* | Edge device UUID (provisioned at deployment time) |
+| `camera_id` | `UUID` | *(required)* | Camera UUID (provisioned at deployment time) |
 | `web_host` | `str` | `0.0.0.0` | WebUI bind address |
 | `web_port` | `int` | `8080` | WebUI bind port |
 | `model_path` | `str` | `model/best_yolov9t_aug.onnx` | Path to ONNX model |
@@ -71,12 +71,13 @@ Frozen dataclass loaded from environment variables. Mirrors the camera-emulator 
 | `default_source` | `str` | `usb` | Initial video source (`usb` or `video`) |
 | `inference_fps` | `int` | `15` | Target inference framerate |
 | `event_throttle_s` | `float` | `5.0` | Minimum seconds between two published detection events |
+| `image_dir` | `str` | `data/images/` | Directory for saving captured frames (created on startup if missing) |
 | `telemetry_interval_s` | `float` | `30.0` | Seconds between telemetry heartbeat publishes |
 | `birth_*` fields | various | — | Camera registration defaults (edge_name, edge_location as plain string, camera_type, camera_coords, elevation, technical_params_json) |
 
 **Helper:**
 
-- `topic_prefix() -> str` — Returns `edge/{edge_id}/{camera_id}`
+- `topic_prefix() -> str` — Returns `edge/{edge_id}/{camera_id}` (both segments are UUIDs, e.g. `edge/a3f1b2c4-...-d5e6/7c8d9e0f-...-a1b2`)
 
 ---
 
@@ -236,14 +237,14 @@ Bridges the Inference Engine output to the MQTT client. Responsible for assembli
 | `_mqtt` | `MQTTClient` | MQTT publishing interface |
 | `_cfg` | `Config` | Camera configuration |
 | `_last_event_time` | `float` | Timestamp of last published event (for throttling) |
-| `_image_store` | `dict[str, bytes]` | Maps `event_id → JPEG bytes` for upload command fulfillment |
+| `_image_dir` | `Path` | Directory where captured frames are saved as `{event_id}.jpg` for upload command fulfillment |
 
 **Methods:**
 
 | Method | Description |
 |:-------|:------------|
-| `handle_detections(detections, frame)` | Registered as the Inference Engine callback. Applies throttling, builds the event payload conforming to the MQTT spec, generates a UUID `event_id` (plain UUID, no prefix), stores the frame for potential upload, and publishes to `{prefix}/event`. The `count` field is included for informational purposes only — the DB trigger `trg_refresh_count` always recomputes it from child rows. |
-| `handle_upload_cmd(event_id, upload_url)` | Called when a `cmd/upload` is received. Retrieves the stored frame by `event_id`, uploads it via HTTP PUT to `upload_url`, and publishes `upload_status` with `remote_path` on success or `message` on error (matching the MQTT_Mapping.md §4 payload). Runs in a background thread to avoid blocking the MQTT callback. |
+| `handle_detections(detections, frame)` | Registered as the Inference Engine callback. Applies throttling, builds the event payload conforming to the MQTT spec, generates a UUID `event_id` (plain UUID, no prefix), saves the frame as `{event_id}.jpg` in `_image_dir`, and publishes to `{prefix}/event`. The `count` field is included for informational purposes only — the DB trigger `trg_refresh_count` always recomputes it from child rows. |
+| `handle_upload_cmd(event_id, upload_url)` | Called when a `cmd/upload` is received. Reads the image file `{event_id}.jpg` from `_image_dir`, uploads it via HTTP PUT to `upload_url`, and publishes `upload_status` with `remote_path` on success or `message` on error (matching the MQTT_Mapping.md §4 payload). Runs in a background thread to avoid blocking the MQTT callback. |
 
 **Event payload** (as per MQTT_Mapping.md):
 
@@ -299,7 +300,7 @@ Reuses the same pattern from the emulator — thin wrapper around `paho.mqtt.cli
     "edge_name": "SAN_ROSSORE_PACK_01",
     "edge_location": "San Rossore Forest",
     "camera_type": "BOAR_CAMERA_V3",
-    "camera_coords": "POINT(43.76797, 10.324982)",
+    "camera_coords": "POINT(10.324982, 43.76797)",
     "elevation": 30,
     "technical_params_json": {
         "iso": 800,
@@ -471,6 +472,8 @@ src/services/camera/
 │   └── videos/
 │       ├── sample_01.mp4            # Pre-recorded sample video(s)
 │       └── ...                      # Additional sample videos
+├── data/
+│   └── images/                      # Captured frames saved as {event_id}.jpg (runtime)
 └── camera/
     ├── __init__.py
     ├── config.py
@@ -539,7 +542,7 @@ VideoSource ──frame──> InferenceEngine ──detections──> EventPipe
                              v                              │               edge/{eid}/{cid}/event
                        Frame Buffer                         │
                        (for /stream)                        v
-                                                   _image_store[event_id] = jpeg
+                                                   _image_dir/{event_id}.jpg
 ```
 
 ### 6.2 Upload Command Flow
@@ -550,7 +553,7 @@ MQTTClient <──cmd/upload── MQTT Broker
      v
 EventPipeline.handle_upload_cmd(event_id, upload_url)
      │
-     ├── Retrieve JPEG from _image_store[event_id]
+     ├── Read JPEG from _image_dir/{event_id}.jpg
      ├── HTTP PUT → Edge Object Storage (upload_url)
      │
      └── MQTTClient.publish_upload_status(event_id, SUCCESS/ERROR)
@@ -746,7 +749,7 @@ classDiagram
         -MQTTClient _mqtt
         -Config _cfg
         -float _last_event_time
-        -dict~str, bytes~ _image_store
+        -Path _image_dir
         +handle_detections(detections: list, frame: ndarray) void
         +handle_upload_cmd(event_id: str, upload_url: str) void
     }
