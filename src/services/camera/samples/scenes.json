@@ -1,0 +1,91 @@
+[
+    {
+        "name": "Demo scene 1",
+        "description": "One large boar",
+        "count": 1,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 39.7,
+                "size_estimate": 1.20,
+                "confidence": 0.96
+            }
+        ]
+    },
+    {
+        "name": "Demo scene 2",
+        "description": "One large boar and one small boar",
+        "count": 2,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 17.4,
+                "size_estimate": 1.20,
+                "confidence": 0.96
+            },
+            {
+                "animal_type": "boar",
+                "distance": 19.6,
+                "size_estimate": 0.60,
+                "confidence": 0.76
+            }
+        ]
+    },
+    {
+        "name": "Demo scene 3",
+        "description": "One large boar and two small boars",
+        "count": 3,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 20.1,
+                "size_estimate": 1.20,
+                "confidence": 0.99
+            },
+            {
+                "animal_type": "boar",
+                "distance": 33.3,
+                "size_estimate": 0.60,
+                "confidence": 0.87
+            },
+            {
+                "animal_type": "boar",
+                "distance": 40.6,
+                "size_estimate": 0.60,
+                "confidence": 0.85
+            }
+        ]
+    },
+    {
+        "name": "Demo scene 4",
+        "description": "Wolf sighting",
+        "count": 1,
+        "detections": [
+            {
+                "animal_type": "wolf",
+                "distance": 25.0,
+                "size_estimate": 0.90,
+                "confidence": 0.88
+            }
+        ]
+    },
+    {
+        "name": "Demo scene 5",
+        "description": "Mixed: boar and deer",
+        "count": 2,
+        "detections": [
+            {
+                "animal_type": "boar",
+                "distance": 15.5,
+                "size_estimate": 1.20,
+                "confidence": 0.92
+            },
+            {
+                "animal_type": "deer",
+                "distance": 30.0,
+                "size_estimate": 0.80,
+                "confidence": 0.84
+            }
+        ]
+    }
+]
