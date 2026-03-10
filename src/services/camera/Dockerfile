@@ -20,6 +20,7 @@ RUN uv pip install --system --no-cache -r pyproject.toml
 # Copy application source
 COPY main.py .
 COPY camera/ camera/
+COPY model/ model/
 COPY samples/ samples/
 
 # Runtime directories (model and images are mounted/provided at runtime)

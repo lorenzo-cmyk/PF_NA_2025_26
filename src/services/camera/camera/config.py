@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import uuid
 from dataclasses import dataclass, field
 
 from dotenv import load_dotenv
@@ -103,6 +104,18 @@ class Config:  # pylint: disable=too-many-instance-attributes
             "BIRTH_TECHNICAL_PARAMS_JSON", '{"iso": 800, "res": "2160x3840"}'
         )
     )
+
+    # --- validation ------------------------------------------------------ #
+
+    def __post_init__(self) -> None:
+        for var, val in (("EDGE_ID", self.edge_id), ("CAMERA_ID", self.camera_id)):
+            try:
+                uuid.UUID(val)
+            except ValueError as exc:
+                raise ValueError(
+                    f"{var}={val!r} is not a valid UUID. "
+                    "Provision a proper UUID (e.g. via uuidgen)."
+                ) from exc
 
     # --- helpers ---------------------------------------------------------- #
 
