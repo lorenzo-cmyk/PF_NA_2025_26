@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 import requests as http_requests
@@ -355,10 +356,23 @@ class MessageHandler:
                     return
 
                 # Insert datasetstore first (parent)
+                capture_time_raw = payload.get("capture_time")
+                capture_time: datetime | None = None
+                if capture_time_raw:
+                    try:
+                        capture_time = datetime.fromisoformat(
+                            capture_time_raw.replace("Z", "+00:00")
+                        )
+                    except ValueError:
+                        log.warning(
+                            "Invalid capture_time format %r for event %s – using None",
+                            capture_time_raw,
+                            event_id,
+                        )
                 ds = DatasetStore(
                     event_id=event_uuid,
                     camera_id=camera_uuid,
-                    time=payload.get("capture_time"),
+                    time=capture_time,
                     count=payload.get("count", 0),
                     imagepath="",
                 )
