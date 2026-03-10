@@ -1,39 +1,19 @@
 services:
   # =============================================================
-  # HOMEPAGE
+  # EXTREME-EDGE — Cameras (2x)
   # =============================================================
 
-  homepage:
+  camera-1:
     build:
-      context: ../services/homepage
-    container_name: gboar-homepage
-    environment:
-      CAMERA_EMULATOR_1_URL: http://localhost:8080
-      CAMERA_EMULATOR_2_URL: http://localhost:8081
-      EDGE_PROCESSING_URL: http://localhost:8000/health
-      EDGE_GRAFANA_URL: http://localhost:3000
-      EDGE_RUSTFS_CONSOLE_URL: http://localhost:9001
-      CLOUD_PROCESSING_URL: http://localhost:8001/health
-      CLOUD_GRAFANA_URL: http://localhost:3001
-      CLOUD_RUSTFS_CONSOLE_URL: http://localhost:9003
-    ports:
-      - "8090:8090"
-    restart: unless-stopped
-
-  # =============================================================
-  # EXTREME-EDGE — Camera Emulators (2x)
-  # =============================================================
-
-  camera-emulator-1:
-    build:
-      context: ../services/camera-emulator
+      context: ../services/camera
+    image: gboar-camera
     container_name: extreme-edge-camera-01
     environment:
       MQTT_HOST: edge-mosquitto
       MQTT_PORT: 1883
-      EDGE_ID: edge_01
-      CAMERA_ID: cam_01
-      MQTT_CLIENT_ID: camera-emulator-01
+      EDGE_ID: a3f1b2c4-0000-0000-0000-000000000001
+      CAMERA_ID: 7c8d9e0f-0000-0000-0000-000000000001
+      MQTT_CLIENT_ID: camera-01
     ports:
       - "8080:8080"
     networks:
@@ -42,16 +22,15 @@ services:
       - edge-mosquitto
     restart: unless-stopped
 
-  camera-emulator-2:
-    build:
-      context: ../services/camera-emulator
+  camera-2:
+    image: gboar-camera
     container_name: extreme-edge-camera-02
     environment:
       MQTT_HOST: edge-mosquitto
       MQTT_PORT: 1883
-      EDGE_ID: edge_01
-      CAMERA_ID: cam_02
-      MQTT_CLIENT_ID: camera-emulator-02
+      EDGE_ID: a3f1b2c4-0000-0000-0000-000000000001
+      CAMERA_ID: 7c8d9e0f-0000-0000-0000-000000000002
+      MQTT_CLIENT_ID: camera-02
     ports:
       - "8081:8080"
     networks:
@@ -73,9 +52,8 @@ services:
       - edge-mosquitto-data:/mosquitto/data
       - ./edge/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
-      edge-net:
-      cloud-net:
-        ipv4_address: 172.17.0.10
+      - edge-net
+      - cloud-net
     depends_on:
       - cloud-mosquitto
     restart: unless-stopped
@@ -120,7 +98,7 @@ services:
       RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
       RUSTFS_CONSOLE_ENABLE: "true"
       RUSTFS_ACCESS_KEY: gBOAR
-      RUSTFS_SECRET_KEY: gBOAR
+      RUSTFS_SECRET_KEY: gBOARpass
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -149,15 +127,14 @@ services:
       DATABASE_URL: postgresql://watchedge:watchedge@edge-postgresql:5432/watchedge-db
       OBJECT_STORAGE_URL: http://edge-object-storage:9000
       S3_ACCESS_KEY: gBOAR
-      S3_SECRET_KEY: gBOAR
+      S3_SECRET_KEY: gBOARpass
       S3_BUCKET: gboar-images
       MQTT_CLIENT_ID: edge-processing-service
     ports:
       - "8000:8000"
     networks:
-      edge-net:
-      cloud-net:
-        ipv4_address: 172.17.0.11
+      - edge-net
+      - cloud-net
     depends_on:
       - edge-mosquitto
       - edge-postgresql
@@ -197,8 +174,7 @@ services:
       - cloud-mosquitto-data:/mosquitto/data
       - ./cloud/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
-      cloud-net:
-        ipv4_address: 172.17.0.3
+      - cloud-net
     restart: unless-stopped
 
   cloud-postgresql:
@@ -214,8 +190,7 @@ services:
       - cloud-pgdata:/var/lib/postgresql
       - ../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      cloud-net:
-        ipv4_address: 172.17.0.2
+      - cloud-net
     restart: unless-stopped
 
   cloud-object-storage-init:
@@ -242,15 +217,14 @@ services:
       RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
       RUSTFS_CONSOLE_ENABLE: "true"
       RUSTFS_ACCESS_KEY: gBOAR
-      RUSTFS_SECRET_KEY: gBOAR
+      RUSTFS_SECRET_KEY: gBOARpass
     ports:
       - "9002:9000"
       - "9003:9001"
     volumes:
       - cloud-objectdata:/data/rustfs
     networks:
-      cloud-net:
-        ipv4_address: 172.17.0.4
+      - cloud-net
     depends_on:
       cloud-object-storage-init:
         condition: service_completed_successfully
@@ -272,14 +246,13 @@ services:
       DATABASE_URL: postgresql://watchedge:watchedge@cloud-postgresql:5432/watchedge-db
       OBJECT_STORAGE_URL: http://cloud-object-storage:9000
       S3_ACCESS_KEY: gBOAR
-      S3_SECRET_KEY: gBOAR
+      S3_SECRET_KEY: gBOARpass
       S3_BUCKET: gboar-images
       MQTT_CLIENT_ID: cloud-processing-service
     ports:
       - "8001:8000"
     networks:
-      cloud-net:
-        ipv4_address: 172.17.0.5
+      - cloud-net
     depends_on:
       - cloud-mosquitto
       - cloud-postgresql
@@ -301,8 +274,7 @@ services:
       - ./cloud/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./cloud/grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
     networks:
-      cloud-net:
-        ipv4_address: 172.17.0.6
+      - cloud-net
     depends_on:
       - cloud-postgresql
     restart: unless-stopped
@@ -312,9 +284,6 @@ networks:
     name: gboar-edge
   cloud-net:
     name: gboar-cloud
-    ipam:
-      config:
-        - subnet: 172.17.0.0/24
 
 volumes:
   edge-pgdata:
