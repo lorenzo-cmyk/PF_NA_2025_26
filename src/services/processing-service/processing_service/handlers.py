@@ -357,7 +357,7 @@ class MessageHandler:
 
                 # Insert datasetstore first (parent)
                 capture_time_raw = payload.get("capture_time")
-                capture_time: datetime | None = None
+                capture_time: datetime = datetime.now(timezone.utc)
                 if capture_time_raw:
                     try:
                         capture_time = datetime.fromisoformat(
@@ -365,7 +365,7 @@ class MessageHandler:
                         )
                     except ValueError:
                         log.warning(
-                            "Invalid capture_time format %r for event %s – using None",
+                            "Invalid capture_time format %r for event %s – using server time",
                             capture_time_raw,
                             event_id,
                         )

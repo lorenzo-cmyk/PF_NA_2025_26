@@ -43,7 +43,7 @@ class DatasetStore(SQLModel, table=True):
 
     event_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     camera_id: uuid.UUID = Field(foreign_key="camera.camera_id")
-    time: datetime | None = None
+    time: datetime
     count: int = 0
     imagepath: str = ""
 
