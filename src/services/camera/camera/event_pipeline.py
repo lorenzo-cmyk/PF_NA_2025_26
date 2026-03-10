@@ -119,7 +119,7 @@ class EventPipeline:
                 )
             resp.raise_for_status()
             log.info("Upload SUCCESS for %s (HTTP %d)", event_id, resp.status_code)
-            self._mqtt.publish_upload_status(event_id, "SUCCESS", upload_url)
+            self._mqtt.publish_upload_status(event_id, "SUCCESS", upload_url.split("?")[0])
         except Exception as exc:  # pylint: disable=broad-exception-caught
             log.exception("Upload FAILED for %s → %s", event_id, upload_url)
             self._mqtt.publish_upload_status(event_id, "ERROR", str(exc))
