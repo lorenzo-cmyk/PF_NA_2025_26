@@ -118,7 +118,7 @@ class InferenceEngine:
 
             if detections and self._on_detection is not None:
                 try:
-                    self._on_detection(detections, frame)
+                    self._on_detection(detections, annotated)
                 except Exception:  # pylint: disable=broad-exception-caught
                     log.exception("Error in on_detection callback.")
 
