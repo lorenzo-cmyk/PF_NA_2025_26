@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -86,9 +87,14 @@ class MessageHandler:
         rest: str,
         payload: dict[str, Any],
     ) -> None:
-        # Route cloud commands down to extreme-edge
+        # Route cloud commands down to extreme-edge – run in a thread so the
+        # MQTT callback thread is not blocked by the HTTP PUT upload.
         if prefix == "cloud" and rest == "cmd/upload":
-            self._edge_route_cloud_cmd(edge_id, camera_id, payload)
+            threading.Thread(
+                target=self._edge_route_cloud_cmd,
+                args=(edge_id, camera_id, payload),
+                daemon=True,
+            ).start()
             return
 
         if prefix != "edge":

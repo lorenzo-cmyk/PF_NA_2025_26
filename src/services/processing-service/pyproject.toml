@@ -12,7 +12,7 @@ dependencies = [
     "psycopg2-binary>=2.9",
     "requests>=2.31",
     "boto3>=1.35",
-    "python-dotenv>=1.0",
+    "pydantic-settings>=2.0",
 ]
 
 [dependency-groups]

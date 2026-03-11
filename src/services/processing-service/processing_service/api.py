@@ -30,7 +30,7 @@ _s3: S3Client | None = None  # pylint: disable=invalid-name
 _upload_events: dict[str, threading.Event] = {}
 _upload_lock = threading.Lock()
 
-app = FastAPI(title="WatchEdge Processing Service")
+app = FastAPI(title="WatchEdge - Processing Service")
 
 
 def init(
