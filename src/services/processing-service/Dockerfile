@@ -4,14 +4,15 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-# Install dependencies first (cache-friendly layer)
-COPY pyproject.toml ./
+# Install dependencies (cache-friendly layer)
+COPY pyproject.toml README.md ./
 RUN uv sync --no-install-project
 
-# Copy application code
+# Copy application source and install the project
 COPY processing_service/ processing_service/
-COPY README.md ./
 RUN uv sync
+
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
