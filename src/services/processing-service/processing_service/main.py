@@ -22,6 +22,7 @@ from processing_service import api
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
+    stream=sys.stdout,
 )
 log = logging.getLogger(__name__)
 
