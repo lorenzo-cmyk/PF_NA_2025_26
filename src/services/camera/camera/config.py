@@ -4,118 +4,93 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import uuid
-from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Literal
 
-from dotenv import load_dotenv
+from pydantic import Field, ValidationInfo, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Load .env from the project root (two levels above this file: camera/config.py
-# → camera/ → <service root>). If the file does not exist, this is a no-op and
-# the existing environment variables are used unchanged.
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"), override=False)
-
-
-def _required(var: str) -> str:
-    val = os.getenv(var)
-    if not val:
-        raise RuntimeError(f"Required environment variable {var!r} is not set.")
-    return val
+# Resolve the .env path relative to this file so it is found regardless of the
+# working directory when the service starts.
+_ENV_FILE = str(Path(__file__).parent.parent / ".env")
 
 
-@dataclass(frozen=True)
-class Config:  # pylint: disable=too-many-instance-attributes
-    """Application configuration populated from environment variables."""
+class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
+    """Application configuration parsed and validated from environment variables."""
+
+    model_config = SettingsConfigDict(
+        env_file=_ENV_FILE,
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+        frozen=True,
+    )
 
     # MQTT Broker
-    mqtt_host: str = field(default_factory=lambda: os.getenv("MQTT_HOST", "localhost"))
-    mqtt_port: int = field(default_factory=lambda: int(os.getenv("MQTT_PORT", "1883")))
-    mqtt_username: str = field(default_factory=lambda: os.getenv("MQTT_USERNAME", ""))
-    mqtt_password: str = field(default_factory=lambda: os.getenv("MQTT_PASSWORD", ""))
-    mqtt_client_id: str = field(
-        default_factory=lambda: os.getenv("MQTT_CLIENT_ID", "")
-    )
+    mqtt_host: str = "localhost"
+    mqtt_port: int = Field(default=1883, ge=1, le=65535)
+    mqtt_username: str = ""
+    mqtt_password: str = ""
+    mqtt_client_id: str = ""
 
     # Camera identity — required UUIDs provisioned at deployment time
-    edge_id: str = field(default_factory=lambda: _required("EDGE_ID"))
-    camera_id: str = field(default_factory=lambda: _required("CAMERA_ID"))
+    edge_id: str
+    camera_id: str
 
     # HTTP WebUI
-    web_host: str = field(default_factory=lambda: os.getenv("WEB_HOST", "0.0.0.0"))
-    web_port: int = field(default_factory=lambda: int(os.getenv("WEB_PORT", "8080")))
+    web_host: str = "0.0.0.0"
+    web_port: int = Field(default=8080, ge=1, le=65535)
 
     # Inference
-    model_path: str = field(
-        default_factory=lambda: os.getenv("MODEL_PATH", "model/best_yolov9t_aug.onnx")
-    )
-    confidence_threshold: float = field(
-        default_factory=lambda: float(os.getenv("CONFIDENCE_THRESHOLD", "0.6"))
-    )
-    iou_threshold: float = field(
-        default_factory=lambda: float(os.getenv("IOU_THRESHOLD", "0.5"))
-    )
-    usb_camera_index: int = field(
-        default_factory=lambda: int(os.getenv("USB_CAMERA_INDEX", "0"))
-    )
+    model_path: str = "model/best_yolov9t_aug.onnx"
+    confidence_threshold: float = Field(default=0.6, ge=0.0, le=1.0)
+    iou_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+    usb_camera_index: int = Field(default=0, ge=0)
 
     # Sample assets
-    samples_dir: str = field(
-        default_factory=lambda: os.getenv("SAMPLES_DIR", "samples/")
-    )
-    scenes_file: str = field(
-        default_factory=lambda: os.getenv("SCENES_FILE", "samples/scenes.json")
-    )
+    samples_dir: str = "samples/"
+    scenes_file: str = "samples/scenes.json"
 
     # Runtime
-    default_source: str = field(
-        default_factory=lambda: os.getenv("DEFAULT_SOURCE", "usb")
-    )
-    inference_fps: int = field(
-        default_factory=lambda: int(os.getenv("INFERENCE_FPS", "15"))
-    )
-    event_throttle_s: float = field(
-        default_factory=lambda: float(os.getenv("EVENT_THROTTLE_S", "5.0"))
-    )
-    image_dir: str = field(
-        default_factory=lambda: os.getenv("IMAGE_DIR", "data/images/")
-    )
-    telemetry_interval_s: float = field(
-        default_factory=lambda: float(os.getenv("TELEMETRY_INTERVAL_S", "30.0"))
-    )
+    default_source: Literal["usb", "video"] = "video"
+    inference_fps: int = Field(default=5, ge=1, le=120)
+    event_throttle_s: float = Field(default=1.0, gt=0.0)
+    image_dir: str = "data/images/"
+    telemetry_interval_s: float = Field(default=30.0, gt=0.0)
 
     # Birth / registration defaults
-    birth_edge_name: str = field(
-        default_factory=lambda: os.getenv("BIRTH_EDGE_NAME", "MY_EDGE")
-    )
-    birth_edge_location: str = field(
-        default_factory=lambda: os.getenv("BIRTH_EDGE_LOCATION", "Unknown Location")
-    )
-    birth_camera_type: str = field(
-        default_factory=lambda: os.getenv("BIRTH_CAMERA_TYPE", "BOAR_CAMERA_V3")
-    )
-    birth_camera_coords: str = field(
-        default_factory=lambda: os.getenv("BIRTH_CAMERA_COORDS", "POINT(0.0, 0.0)")
-    )
-    birth_elevation: int = field(
-        default_factory=lambda: int(os.getenv("BIRTH_ELEVATION", "0"))
-    )
-    birth_technical_params_json: str = field(
-        default_factory=lambda: os.getenv(
-            "BIRTH_TECHNICAL_PARAMS_JSON", '{"iso": 800, "res": "2160x3840"}'
-        )
-    )
+    birth_edge_name: str = "SAN_ROSSORE_PARK"
+    birth_edge_location: str = "San Rossore Park (PI, Italy)"
+    birth_camera_type: str = "EXTREME_EDGE_CAMERA_V8"
+    birth_camera_coords: str = "POINT(43.7233401, 10.3365951)"
+    birth_elevation: int = 20
+    birth_technical_params_json: str = '{"res": "2568x1724"}'
 
-    # --- validation ------------------------------------------------------ #
+    # --- validators ------------------------------------------------------ #
 
-    def __post_init__(self) -> None:
-        for var, val in (("EDGE_ID", self.edge_id), ("CAMERA_ID", self.camera_id)):
-            try:
-                uuid.UUID(val)
-            except ValueError as exc:
-                raise ValueError(
-                    f"{var}={val!r} is not a valid UUID. "
-                    "Provision a proper UUID (e.g. via uuidgen)."
-                ) from exc
+    @field_validator("edge_id", "camera_id")
+    @classmethod
+    def _validate_uuid(cls, v: str, info: ValidationInfo) -> str:
+        try:
+            uuid.UUID(v)
+        except ValueError as exc:
+            raise ValueError(
+                f"{info.field_name.upper()}={v!r} is not a valid UUID. "
+                "Provision a proper UUID (e.g. via uuidgen)."
+            ) from exc
+        return v
+
+    @field_validator("birth_technical_params_json")
+    @classmethod
+    def _validate_json(cls, v: str) -> str:
+        try:
+            json.loads(v)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"BIRTH_TECHNICAL_PARAMS_JSON must be valid JSON: {exc}"
+            ) from exc
+        return v
 
     # --- helpers ---------------------------------------------------------- #
 
