@@ -48,8 +48,12 @@ class VideoSource:
         )
 
         # Open the default source
-        if default_source == "video" and self._available_videos:
-            self._open_video(self._current_video)
+        if default_source == "video":
+            if self._available_videos:
+                self._open_video(self._current_video)
+            else:
+                log.warning("No sample videos available; will serve black frames.")
+                self._source_type = "video"
         else:
             self._open_usb()
 
@@ -82,13 +86,15 @@ class VideoSource:
     def read(self) -> tuple[bool, np.ndarray | None]:
         """Return the next frame.  Thread-safe.
 
-        When the video source reaches EOF, returns a solid black frame
+        When the video source reaches EOF, or no capture is available (USB
+        unavailable / no video files), returns a solid black frame
         (``ok=True``) so the stream goes black rather than failing.
         When paused, returns the last frame without advancing the position.
         """
         with self._lock:
             if self._capture is None:
-                return False, None
+                black = np.zeros((480, 640, 3), dtype=np.uint8)
+                return True, black
 
             if self._paused and self._last_frame is not None:
                 return True, self._last_frame.copy()
@@ -190,7 +196,14 @@ class VideoSource:
     def _open_usb_locked(self) -> None:
         cap = cv2.VideoCapture(self._usb_index)
         if not cap.isOpened():
-            log.warning("Could not open USB camera at index %d", self._usb_index)
+            log.warning(
+                "Could not open USB camera at index %d; will serve black frames.",
+                self._usb_index,
+            )
+            cap.release()
+            self._capture = None
+            self._source_type = "usb"
+            return
         cap.set(cv2.CAP_PROP_FPS, 15)
         actual_fps = cap.get(cv2.CAP_PROP_FPS)
         self._capture = cap
@@ -208,13 +221,16 @@ class VideoSource:
     def _open_video_locked(self, video_name: str) -> None:
         path = self._resolve_video_path(video_name)
         if path is None:
-            log.warning("Sample video %r not found; falling back to USB.", video_name)
-            self._open_usb_locked()
+            log.warning("Sample video %r not found; will serve black frames.", video_name)
+            self._capture = None
+            self._source_type = "video"
             return
         cap = cv2.VideoCapture(str(path))
         if not cap.isOpened():
-            log.warning("Could not open video file %s; falling back to USB.", path)
-            self._open_usb_locked()
+            log.warning("Could not open video file %s; will serve black frames.", path)
+            cap.release()
+            self._capture = None
+            self._source_type = "video"
             return
         self._capture = cap
         self._source_type = "video"
