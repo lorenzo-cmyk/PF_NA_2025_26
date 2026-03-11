@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -32,6 +32,7 @@ class EventPipeline:
         self._last_event_time: float = 0.0
         self._image_dir = Path(cfg.image_dir)
         self._image_dir.mkdir(parents=True, exist_ok=True)
+        self._upload_executor = ThreadPoolExecutor(max_workers=8)
         log.info("EventPipeline: saving frames to %s", self._image_dir)
 
     def handle_detections(
@@ -91,11 +92,7 @@ class EventPipeline:
         if not event_id or not upload_url:
             log.warning("cmd/upload missing event_id or upload_url: %s", cmd_payload)
             return
-        threading.Thread(
-            target=self._do_upload,
-            args=(event_id, upload_url),
-            daemon=True,
-        ).start()
+        self._upload_executor.submit(self._do_upload, event_id, upload_url)
 
     def _do_upload(self, event_id: str, upload_url: str) -> None:
         img_path = self._image_dir / f"{event_id}.jpg"
