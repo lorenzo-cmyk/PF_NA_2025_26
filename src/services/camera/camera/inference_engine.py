@@ -122,9 +122,10 @@ class InferenceEngine:
                 except Exception:  # pylint: disable=broad-exception-caught
                     log.exception("Error in on_detection callback.")
 
-            # Honour the video file's native FPS so playback runs in real time.
-            # For USB cameras get_source_fps() returns None and we fall back to
-            # the configured target_fps as the processing cap.
+            # Cap inference to the source FPS so we never process faster than
+            # the source delivers.  For USB cameras get_source_fps() returns the
+            # driver-reported FPS (after requesting 15 FPS on open).  Falls back
+            # to target_fps only if the driver cannot report a valid FPS.
             source_fps = self._video_source.get_source_fps()
             effective_fps = (
                 min(self._target_fps, source_fps)

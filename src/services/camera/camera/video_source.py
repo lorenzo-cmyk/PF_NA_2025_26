@@ -161,13 +161,13 @@ class VideoSource:
     def get_source_fps(self) -> float | None:
         """Return the native FPS of the current source.
 
-        For a video file, this is the value encoded in the container (e.g. 2 FPS
-        for a 2-FPS timelapse).  For a USB camera, returns ``None`` — the camera
-        hardware controls its own capture rate and we rely on ``inference_fps``
-        as the processing cap.
+        For a video file this is the value encoded in the container.  For a USB
+        camera this is the FPS reported by the driver after we requested 15 FPS
+        on open (the driver may or may not honour the request).
+        Returns ``None`` only if the capture is not open or the driver reports 0.
         """
         with self._lock:
-            if self._source_type != "video" or self._capture is None:
+            if self._capture is None:
                 return None
             fps = self._capture.get(cv2.CAP_PROP_FPS)
             return fps if fps > 0 else None
@@ -191,9 +191,15 @@ class VideoSource:
         cap = cv2.VideoCapture(self._usb_index)
         if not cap.isOpened():
             log.warning("Could not open USB camera at index %d", self._usb_index)
+        cap.set(cv2.CAP_PROP_FPS, 15)
+        actual_fps = cap.get(cv2.CAP_PROP_FPS)
         self._capture = cap
         self._source_type = "usb"
-        log.info("VideoSource → USB camera (index=%d)", self._usb_index)
+        log.info(
+            "VideoSource → USB camera (index=%d, requested_fps=15, actual_fps=%.2f)",
+            self._usb_index,
+            actual_fps,
+        )
 
     def _open_video(self, video_name: str) -> None:
         with self._lock:
