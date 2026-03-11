@@ -1,6 +1,6 @@
 [
     {
-        "name": "Demo scene 1",
+        "name": "Demo Scene 1",
         "description": "One large boar",
         "count": 1,
         "detections": [
@@ -13,7 +13,7 @@
         ]
     },
     {
-        "name": "Demo scene 2",
+        "name": "Demo Scene 2",
         "description": "One large boar and one small boar",
         "count": 2,
         "detections": [
@@ -32,7 +32,7 @@
         ]
     },
     {
-        "name": "Demo scene 3",
+        "name": "Demo Scene 3",
         "description": "One large boar and two small boars",
         "count": 3,
         "detections": [
@@ -57,7 +57,7 @@
         ]
     },
     {
-        "name": "Demo scene 4",
+        "name": "Demo Scene 4",
         "description": "Wolf sighting",
         "count": 1,
         "detections": [
@@ -70,7 +70,7 @@
         ]
     },
     {
-        "name": "Demo scene 5",
+        "name": "Demo Scene 5",
         "description": "Mixed: boar and deer",
         "count": 2,
         "detections": [

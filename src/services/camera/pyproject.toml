@@ -1,7 +1,7 @@
 [project]
 name = "camera"
 version = "0.1.0"
-description = "WatchEdge camera service – real inference and management WebUI for the gBOAR system."
+description = "WatchEdge camera service – real inference and management WebUI."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
