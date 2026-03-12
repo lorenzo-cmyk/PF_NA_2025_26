@@ -59,16 +59,18 @@ class WebUI:
         retain: bool | None = None,
     ) -> None:
         """Append a structured MQTT event to the in-memory log."""
-        self._event_log.appendleft({
-            "ts": datetime.now(timezone.utc).isoformat(),
-            "dir": direction,
-            "topic": topic,
-            "payload": payload,
-            "operation_type": operation_type,
-            "trigger_reason": trigger_reason,
-            "qos": qos,
-            "retain": retain,
-        })
+        self._event_log.appendleft(
+            {
+                "ts": datetime.now(timezone.utc).isoformat(),
+                "dir": direction,
+                "topic": topic,
+                "payload": payload,
+                "operation_type": operation_type,
+                "trigger_reason": trigger_reason,
+                "qos": qos,
+                "retain": retain,
+            }
+        )
 
     # -- routes ------------------------------------------------------------ #
 
@@ -79,7 +81,11 @@ class WebUI:
         async def homepage(request: Request):
             return templates.TemplateResponse(
                 "homepage.html",
-                {"request": request, "cfg": self._cfg, "connected": self._mqtt.connected},
+                {
+                    "request": request,
+                    "cfg": self._cfg,
+                    "connected": self._mqtt.connected,
+                },
             )
 
         @app.get("/configuration", response_class=HTMLResponse)
@@ -123,8 +129,6 @@ class WebUI:
             if frame_bytes:
                 yield (
                     b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n"
-                    + frame_bytes
-                    + b"\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
                 )
             await asyncio.sleep(_STREAM_INTERVAL)

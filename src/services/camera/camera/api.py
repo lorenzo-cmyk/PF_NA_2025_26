@@ -96,7 +96,9 @@ class WebAPI:
             source = body.get("source", "usb")
             video_name = body.get("video_name")
             if source not in ("usb", "video"):
-                raise HTTPException(status_code=400, detail="source must be 'usb' or 'video'")
+                raise HTTPException(
+                    status_code=400, detail="source must be 'usb' or 'video'"
+                )
             self._video.switch(source, video_name)
             return {"success": True, "source": source}
 
@@ -165,6 +167,7 @@ class WebAPI:
         @r.post("/api/birth")
         async def send_birth(request: Request):
             import json as _json
+
             body = await request.json()
             try:
                 tech = _json.loads(body.get("technical_params_json", "{}"))
@@ -172,9 +175,13 @@ class WebAPI:
                 tech = {}
             payload = {
                 "edge_name": body.get("edge_name", self._cfg.birth_edge_name),
-                "edge_location": body.get("edge_location", self._cfg.birth_edge_location),
+                "edge_location": body.get(
+                    "edge_location", self._cfg.birth_edge_location
+                ),
                 "camera_type": body.get("camera_type", self._cfg.birth_camera_type),
-                "camera_coords": body.get("camera_coords", self._cfg.birth_camera_coords),
+                "camera_coords": body.get(
+                    "camera_coords", self._cfg.birth_camera_coords
+                ),
                 "elevation": body.get("elevation", self._cfg.birth_elevation),
                 "technical_params_json": tech,
             }

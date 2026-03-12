@@ -23,3 +23,6 @@ camera = "camera.main:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["black>=26.3.1", "pylint>=4.0.5"]

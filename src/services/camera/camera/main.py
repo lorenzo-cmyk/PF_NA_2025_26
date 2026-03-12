@@ -86,7 +86,9 @@ def main() -> None:
     mqtt.on_command(event_pipeline.handle_upload_cmd)
 
     # 9. Create WebUI and WebAPI
-    web_ui = WebUI(cfg=cfg, mqtt=mqtt, inference_engine=inference_engine, video_source=video_source)
+    web_ui = WebUI(
+        cfg=cfg, mqtt=mqtt, inference_engine=inference_engine, video_source=video_source
+    )
     web_api = WebAPI(
         inference_engine=inference_engine,
         mqtt=mqtt,
@@ -124,9 +126,12 @@ def main() -> None:
             log.exception("MQTT connection attempt %d/3 failed", attempt)
             if attempt < 3:
                 import time
+
                 time.sleep(10)
     else:
-        log.warning("Could not connect to MQTT after 3 attempts – WebUI will start anyway")
+        log.warning(
+            "Could not connect to MQTT after 3 attempts – WebUI will start anyway"
+        )
 
     # 14. Start FastAPI/Uvicorn (blocks on main thread)
     log.info("WebUI → http://%s:%s", cfg.web_host, cfg.web_port)

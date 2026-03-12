@@ -221,7 +221,9 @@ class VideoSource:
     def _open_video_locked(self, video_name: str) -> None:
         path = self._resolve_video_path(video_name)
         if path is None:
-            log.warning("Sample video %r not found; will serve black frames.", video_name)
+            log.warning(
+                "Sample video %r not found; will serve black frames.", video_name
+            )
             self._capture = None
             self._source_type = "video"
             return

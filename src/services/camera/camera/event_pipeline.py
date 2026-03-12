@@ -35,9 +35,7 @@ class EventPipeline:
         self._upload_executor = ThreadPoolExecutor(max_workers=8)
         log.info("EventPipeline: saving frames to %s", self._image_dir)
 
-    def handle_detections(
-        self, detections: list[dict], frame: np.ndarray
-    ) -> None:
+    def handle_detections(self, detections: list[dict], frame: np.ndarray) -> None:
         """Callback registered with InferenceEngine.
 
         Applies throttling, builds the MQTT payload, saves the frame as JPEG,
@@ -77,9 +75,7 @@ class EventPipeline:
             log.exception("Failed to save frame for event %s", event_id)
 
         self._mqtt.publish_event(payload, trigger=f"Auto: detection event {event_id}")
-        log.info(
-            "Event published: event_id=%s, animals=%d", event_id, len(detections)
-        )
+        log.info("Event published: event_id=%s, animals=%d", event_id, len(detections))
 
     def handle_upload_cmd(self, _topic: str, cmd_payload: dict) -> None:
         """Called when a ``cmd/upload`` message arrives.
@@ -116,7 +112,9 @@ class EventPipeline:
                 )
             resp.raise_for_status()
             log.info("Upload SUCCESS for %s (HTTP %d)", event_id, resp.status_code)
-            self._mqtt.publish_upload_status(event_id, "SUCCESS", upload_url.split("?")[0])
+            self._mqtt.publish_upload_status(
+                event_id, "SUCCESS", upload_url.split("?")[0]
+            )
         except Exception as exc:  # pylint: disable=broad-exception-caught
             log.exception("Upload FAILED for %s → %s", event_id, upload_url)
             self._mqtt.publish_upload_status(event_id, "ERROR", str(exc))

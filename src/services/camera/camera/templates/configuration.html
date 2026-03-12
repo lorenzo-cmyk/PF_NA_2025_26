@@ -10,24 +10,31 @@
   <body class="bg-gray-950 text-gray-200 font-sans leading-relaxed">
     <div class="max-w-3xl mx-auto p-6">
       <!-- Header -->
-      <header class="flex items-center justify-between py-4 border-b border-gray-800 mb-6">
+      <header
+        class="flex items-center justify-between py-4 border-b border-gray-800 mb-6"
+      >
         <h1 class="text-xl font-bold">
           <span class="text-indigo-500">WatchEdge</span> — Camera Configuration
         </h1>
-        <a href="/" class="text-xs text-indigo-400 hover:underline">‹ Live View</a>
+        <a href="/" class="text-xs text-indigo-400 hover:underline"
+          >‹ Live View</a
+        >
       </header>
 
       <div class="space-y-5">
-
         <!-- 1. Software Restart -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <h2 class="text-base font-semibold mb-3">🔄 Software Restart</h2>
-          <p class="text-xs text-gray-500 mb-3">Stops the Inference Engine and MQTT client, then restarts them.</p>
+          <p class="text-xs text-gray-500 mb-3">
+            Stops the Inference Engine and MQTT client, then restarts them.
+          </p>
           <button
             id="btn-restart"
             onclick="doRestart()"
             class="px-4 py-2 rounded text-sm font-semibold bg-red-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
-          >Restart Camera Software</button>
+          >
+            Restart Camera Software
+          </button>
           <span id="restart-msg" class="ml-3 text-xs text-gray-400"></span>
         </div>
 
@@ -38,11 +45,15 @@
             <button
               onclick="mqttAction('disconnect')"
               class="px-4 py-2 rounded text-sm font-semibold bg-gray-700 text-white hover:opacity-85 transition-opacity cursor-pointer"
-            >Disconnect</button>
+            >
+              Disconnect
+            </button>
             <button
               onclick="mqttAction('reconnect')"
               class="px-4 py-2 rounded text-sm font-semibold bg-indigo-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
-            >Reconnect</button>
+            >
+              Reconnect
+            </button>
           </div>
           <div id="mqtt-msg" class="mt-2 text-xs text-gray-400"></div>
         </div>
@@ -52,11 +63,23 @@
           <h2 class="text-base font-semibold mb-3">🎥 Video Source</h2>
           <div class="flex gap-4 mb-4">
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="source" value="usb" id="src-usb" onchange="switchSource()" />
+              <input
+                type="radio"
+                name="source"
+                value="usb"
+                id="src-usb"
+                onchange="switchSource()"
+              />
               <span class="text-sm">USB Camera</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="source" value="video" id="src-video" onchange="switchSource()" />
+              <input
+                type="radio"
+                name="source"
+                value="video"
+                id="src-video"
+                onchange="switchSource()"
+              />
               <span class="text-sm">Pre-recorded Video</span>
             </label>
           </div>
@@ -64,7 +87,9 @@
           <!-- Video controls (shown only when video source selected) -->
           <div id="video-controls" class="hidden space-y-3">
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Sample Video</label>
+              <label class="block text-xs text-gray-500 mb-1"
+                >Sample Video</label
+              >
               <select
                 id="video-select"
                 onchange="changeVideo()"
@@ -76,14 +101,19 @@
                 id="btn-playpause"
                 onclick="togglePlayPause()"
                 class="px-4 py-1.5 rounded text-sm font-semibold bg-gray-700 text-white hover:opacity-85 transition-opacity cursor-pointer"
-              >⏸ Pause</button>
+              >
+                ⏸ Pause
+              </button>
               <span class="text-xs text-gray-500" id="pos-label">0:00 / —</span>
             </div>
             <div>
               <input
                 type="range"
                 id="seek-slider"
-                min="0" max="100" value="0" step="0.1"
+                min="0"
+                max="100"
+                value="0"
+                step="0.1"
                 class="w-full accent-indigo-500"
                 oninput="onSliderInput()"
                 onchange="doSeek()"
@@ -109,14 +139,20 @@
               <button
                 onclick="injectScene()"
                 class="px-4 py-1.5 rounded text-sm font-semibold bg-green-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
-              >Send</button>
+              >
+                Send
+              </button>
             </div>
             <div id="scene-desc" class="mt-1 text-xs text-gray-500"></div>
           </div>
 
           <!-- Custom event form (collapsible) -->
           <details class="border border-gray-800 rounded-lg">
-            <summary class="px-3 py-2 text-xs text-gray-400 cursor-pointer select-none">Custom Event ›</summary>
+            <summary
+              class="px-3 py-2 text-xs text-gray-400 cursor-pointer select-none"
+            >
+              Custom Event ›
+            </summary>
             <div class="p-3 space-y-3">
               <div id="custom-detections" class="space-y-2">
                 <!-- Detection rows injected by JS -->
@@ -124,59 +160,112 @@
               <button
                 onclick="addDetection()"
                 class="text-xs text-indigo-400 hover:underline cursor-pointer"
-              >+ Add detection</button>
+              >
+                + Add detection
+              </button>
               <button
                 onclick="injectCustom()"
                 class="w-full mt-2 py-1.5 rounded text-sm font-semibold bg-indigo-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
-              >Publish Custom Event</button>
+              >
+                Publish Custom Event
+              </button>
             </div>
           </details>
 
           <!-- Manual Birth / Telemetry -->
           <details class="border border-gray-800 rounded-lg mt-3">
-            <summary class="px-3 py-2 text-xs text-gray-400 cursor-pointer select-none">Birth / Telemetry ›</summary>
+            <summary
+              class="px-3 py-2 text-xs text-gray-400 cursor-pointer select-none"
+            >
+              Birth / Telemetry ›
+            </summary>
             <div class="p-3 space-y-3">
               <div class="grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <label class="text-gray-500">Edge Name</label>
-                  <input id="birth-name" value="{{ cfg.birth_edge_name }}" class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" />
+                  <input
+                    id="birth-name"
+                    value="{{ cfg.birth_edge_name }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
                 </div>
                 <div>
                   <label class="text-gray-500">Camera Type</label>
-                  <input id="birth-type" value="{{ cfg.birth_camera_type }}" class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" />
+                  <input
+                    id="birth-type"
+                    value="{{ cfg.birth_camera_type }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
                 </div>
                 <div>
                   <label class="text-gray-500">Edge Location</label>
-                  <input id="birth-loc" value="{{ cfg.birth_edge_location }}" class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" />
+                  <input
+                    id="birth-loc"
+                    value="{{ cfg.birth_edge_location }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
                 </div>
                 <div>
                   <label class="text-gray-500">Camera Coords</label>
-                  <input id="birth-coords" value="{{ cfg.birth_camera_coords }}" class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" />
+                  <input
+                    id="birth-coords"
+                    value="{{ cfg.birth_camera_coords }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
                 </div>
                 <div>
                   <label class="text-gray-500">Elevation (m)</label>
-                  <input id="birth-elev" type="number" value="{{ cfg.birth_elevation }}" class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" />
+                  <input
+                    id="birth-elev"
+                    type="number"
+                    value="{{ cfg.birth_elevation }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
                 </div>
               </div>
-              <button onclick="sendBirth()" class="w-full py-1.5 rounded text-sm font-semibold bg-green-600 text-white hover:opacity-85 transition-opacity cursor-pointer">Send Birth</button>
+              <button
+                onclick="sendBirth()"
+                class="w-full py-1.5 rounded text-sm font-semibold bg-green-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
+              >
+                Send Birth
+              </button>
 
               <hr class="border-gray-800" />
 
               <div class="grid grid-cols-3 gap-2 text-xs">
                 <div>
                   <label class="text-gray-500">Status</label>
-                  <input id="tele-status" value="Online" class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" />
+                  <input
+                    id="tele-status"
+                    value="Online"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
                 </div>
                 <div>
                   <label class="text-gray-500">Temperature (°C)</label>
-                  <input id="tele-temp" type="number" value="20" class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" />
+                  <input
+                    id="tele-temp"
+                    type="number"
+                    value="20"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
                 </div>
                 <div>
                   <label class="text-gray-500">Battery (%)</label>
-                  <input id="tele-bat" type="number" value="100" class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" />
+                  <input
+                    id="tele-bat"
+                    type="number"
+                    value="100"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
                 </div>
               </div>
-              <button onclick="sendTelemetry()" class="w-full py-1.5 rounded text-sm font-semibold bg-indigo-600 text-white hover:opacity-85 transition-opacity cursor-pointer">Send Telemetry</button>
+              <button
+                onclick="sendTelemetry()"
+                class="w-full py-1.5 rounded text-sm font-semibold bg-indigo-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
+              >
+                Send Telemetry
+              </button>
 
               <div id="lifecycle-msg" class="text-xs text-gray-400"></div>
             </div>
@@ -184,9 +273,10 @@
 
           <div id="inject-msg" class="mt-2 text-xs text-gray-400"></div>
         </div>
-
-      </div><!-- /space-y-5 -->
-    </div><!-- /container -->
+      </div>
+      <!-- /space-y-5 -->
+    </div>
+    <!-- /container -->
 
     <script>
       // ---- state -------------------------------------------------------
@@ -208,9 +298,9 @@
           const r = await fetch("/api/scenes");
           scenes = await r.json();
           const sel = document.getElementById("scene-select");
-          sel.innerHTML = scenes.map((s, i) =>
-            `<option value="${i}">${s.name}</option>`
-          ).join("");
+          sel.innerHTML = scenes
+            .map((s, i) => `<option value="${i}">${s.name}</option>`)
+            .join("");
           updateSceneDesc();
           sel.onchange = updateSceneDesc;
         } catch (_) {}
@@ -219,7 +309,9 @@
       function updateSceneDesc() {
         const i = parseInt(document.getElementById("scene-select").value);
         const s = scenes[i];
-        document.getElementById("scene-desc").textContent = s ? s.description : "";
+        document.getElementById("scene-desc").textContent = s
+          ? s.description
+          : "";
       }
 
       async function loadVideos() {
@@ -228,9 +320,9 @@
           const videos = await r.json();
           const sel = document.getElementById("video-select");
           if (videos.length) {
-            sel.innerHTML = videos.map(v =>
-              `<option value="${v.name}">${v.name}</option>`
-            ).join("");
+            sel.innerHTML = videos
+              .map((v) => `<option value="${v.name}">${v.name}</option>`)
+              .join("");
           } else {
             sel.innerHTML = `<option value="">No sample videos available</option>`;
           }
@@ -242,9 +334,13 @@
           const r = await fetch("/api/source/info");
           videoInfo = await r.json();
           // Sync radio buttons
-          document.getElementById("src-usb").checked = videoInfo.source_type === "usb";
-          document.getElementById("src-video").checked = videoInfo.source_type === "video";
-          document.getElementById("video-controls").classList.toggle("hidden", videoInfo.source_type !== "video");
+          document.getElementById("src-usb").checked =
+            videoInfo.source_type === "usb";
+          document.getElementById("src-video").checked =
+            videoInfo.source_type === "video";
+          document
+            .getElementById("video-controls")
+            .classList.toggle("hidden", videoInfo.source_type !== "video");
 
           // Sync play/pause button
           const btn = document.getElementById("btn-playpause");
@@ -260,13 +356,17 @@
 
           // Position label
           const pos = msToTime(videoInfo.position_ms || 0);
-          const dur = videoInfo.duration_ms ? msToTime(videoInfo.duration_ms) : "—";
+          const dur = videoInfo.duration_ms
+            ? msToTime(videoInfo.duration_ms)
+            : "—";
           document.getElementById("pos-label").textContent = `${pos} / ${dur}`;
 
           // Sync video dropdown
           if (videoInfo.current_video) {
             const sel = document.getElementById("video-select");
-            if ([...sel.options].some(o => o.value === videoInfo.current_video)) {
+            if (
+              [...sel.options].some((o) => o.value === videoInfo.current_video)
+            ) {
               sel.value = videoInfo.current_video;
             }
           }
@@ -281,27 +381,41 @@
 
       // ---- source switching --------------------------------------------
       async function switchSource() {
-        const src = document.querySelector('input[name="source"]:checked').value;
+        const src = document.querySelector(
+          'input[name="source"]:checked',
+        ).value;
         let body = { source: src };
         if (src === "video") {
           const sel = document.getElementById("video-select");
           body.video_name = sel.value || undefined;
         }
         try {
-          await fetch("/api/source/switch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+          await fetch("/api/source/switch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
           setMsg("source-msg", "Source switched to " + src, false);
-        } catch (e) { setMsg("source-msg", "Error: " + e, true); }
+        } catch (e) {
+          setMsg("source-msg", "Error: " + e, true);
+        }
       }
 
       async function changeVideo() {
         const name = document.getElementById("video-select").value;
         try {
-          await fetch("/api/source/switch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source: "video", video_name: name }) });
+          await fetch("/api/source/switch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source: "video", video_name: name }),
+          });
         } catch (_) {}
       }
 
       async function togglePlayPause() {
-        const endpoint = videoInfo.is_paused ? "/api/source/resume" : "/api/source/pause";
+        const endpoint = videoInfo.is_paused
+          ? "/api/source/resume"
+          : "/api/source/pause";
         await fetch(endpoint, { method: "POST" });
         await refreshSourceInfo();
       }
@@ -312,7 +426,11 @@
 
       async function doSeek() {
         const ts = parseFloat(document.getElementById("seek-slider").value);
-        await fetch("/api/source/seek", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ timestamp_ms: ts }) });
+        await fetch("/api/source/seek", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timestamp_ms: ts }),
+        });
         sliderDragging = false;
         await refreshSourceInfo();
       }
@@ -323,26 +441,48 @@
         try {
           const r = await fetch("/api/restart", { method: "POST" });
           const d = await r.json();
-          setMsg("restart-msg", d.success ? "Restarted ✓" : "Failed", !d.success);
-        } catch (e) { setMsg("restart-msg", "Error: " + e, true); }
+          setMsg(
+            "restart-msg",
+            d.success ? "Restarted ✓" : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("restart-msg", "Error: " + e, true);
+        }
       }
 
       async function mqttAction(action) {
         try {
           const r = await fetch(`/api/mqtt/${action}`, { method: "POST" });
           const d = await r.json();
-          setMsg("mqtt-msg", d.success ? `${action} OK ✓` : "Failed", !d.success);
-        } catch (e) { setMsg("mqtt-msg", "Error: " + e, true); }
+          setMsg(
+            "mqtt-msg",
+            d.success ? `${action} OK ✓` : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("mqtt-msg", "Error: " + e, true);
+        }
       }
 
       // ---- event injection ---------------------------------------------
       async function injectScene() {
         const i = parseInt(document.getElementById("scene-select").value);
         try {
-          const r = await fetch("/api/event/inject", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scene_index: i }) });
+          const r = await fetch("/api/event/inject", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ scene_index: i }),
+          });
           const d = await r.json();
-          setMsg("inject-msg", d.success ? `Event sent: ${d.event_id}` : "Failed", !d.success);
-        } catch (e) { setMsg("inject-msg", "Error: " + e, true); }
+          setMsg(
+            "inject-msg",
+            d.success ? `Event sent: ${d.event_id}` : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("inject-msg", "Error: " + e, true);
+        }
       }
 
       function addDetection() {
@@ -367,7 +507,7 @@
 
       async function injectCustom() {
         const rows = document.querySelectorAll("#custom-detections .grid");
-        const detections = [...rows].map(row => ({
+        const detections = [...rows].map((row) => ({
           animal_type: row.querySelector(".det-type").value,
           distance: parseFloat(row.querySelector(".det-dist").value),
           size_estimate: parseFloat(row.querySelector(".det-size").value),
@@ -375,10 +515,20 @@
         }));
         const body = { count: detections.length, detections };
         try {
-          const r = await fetch("/api/event/inject", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+          const r = await fetch("/api/event/inject", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
           const d = await r.json();
-          setMsg("inject-msg", d.success ? `Custom event sent: ${d.event_id}` : "Failed", !d.success);
-        } catch (e) { setMsg("inject-msg", "Error: " + e, true); }
+          setMsg(
+            "inject-msg",
+            d.success ? `Custom event sent: ${d.event_id}` : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("inject-msg", "Error: " + e, true);
+        }
       }
 
       // ---- birth / telemetry -------------------------------------------
@@ -391,10 +541,20 @@
           elevation: parseInt(document.getElementById("birth-elev").value),
         };
         try {
-          const r = await fetch("/api/birth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+          const r = await fetch("/api/birth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
           const d = await r.json();
-          setMsg("lifecycle-msg", d.success ? "Birth sent ✓" : "Failed", !d.success);
-        } catch (e) { setMsg("lifecycle-msg", "Error: " + e, true); }
+          setMsg(
+            "lifecycle-msg",
+            d.success ? "Birth sent ✓" : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("lifecycle-msg", "Error: " + e, true);
+        }
       }
 
       async function sendTelemetry() {
@@ -404,17 +564,28 @@
           battery_level: parseInt(document.getElementById("tele-bat").value),
         };
         try {
-          const r = await fetch("/api/telemetry", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+          const r = await fetch("/api/telemetry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
           const d = await r.json();
-          setMsg("lifecycle-msg", d.success ? "Telemetry sent ✓" : "Failed", !d.success);
-        } catch (e) { setMsg("lifecycle-msg", "Error: " + e, true); }
+          setMsg(
+            "lifecycle-msg",
+            d.success ? "Telemetry sent ✓" : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("lifecycle-msg", "Error: " + e, true);
+        }
       }
 
       // ---- helpers -----------------------------------------------------
       function setMsg(id, text, isError) {
         const el = document.getElementById(id);
         el.textContent = text;
-        el.className = "mt-2 text-xs " + (isError ? "text-red-400" : "text-green-400");
+        el.className =
+          "mt-2 text-xs " + (isError ? "text-red-400" : "text-green-400");
       }
 
       init();

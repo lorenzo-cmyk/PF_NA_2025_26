@@ -18,9 +18,9 @@ _ANIMAL_TYPE_MAP = {
     "Deer": "deer",
 }
 _COLORS = [
-    (255, 100, 50),   # Wild Boar — orange
+    (255, 100, 50),  # Wild Boar — orange
     (100, 100, 255),  # Wolf — blue
-    (50, 200, 50),    # Deer — green
+    (50, 200, 50),  # Deer — green
 ]
 
 
@@ -78,7 +78,9 @@ class Detector:
         img_h, img_w = frame.shape[:2]
         input_data = self._preprocess(frame)
         raw_output = self._session.run(None, {self._input_name: input_data})
-        annotated, detections = self._postprocess(frame.copy(), raw_output, img_w, img_h)
+        annotated, detections = self._postprocess(
+            frame.copy(), raw_output, img_w, img_h
+        )
         return annotated, detections
 
     # -- internals --------------------------------------------------------- #
@@ -87,8 +89,8 @@ class Detector:
         img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, (self._model_w, self._model_h))
         data = img.astype(np.float32) / 255.0
-        data = np.transpose(data, (2, 0, 1))          # HWC → CHW
-        data = np.expand_dims(data, axis=0)            # add batch
+        data = np.transpose(data, (2, 0, 1))  # HWC → CHW
+        data = np.expand_dims(data, axis=0)  # add batch
         return np.ascontiguousarray(data)
 
     def _postprocess(
@@ -99,7 +101,9 @@ class Detector:
         img_h: int,
     ) -> tuple[np.ndarray, list[dict]]:
         # raw_output[0] shape: (1, num_classes+4, num_anchors)
-        outputs = np.transpose(np.squeeze(raw_output[0]))  # → (num_anchors, 4+num_classes)
+        outputs = np.transpose(
+            np.squeeze(raw_output[0])
+        )  # → (num_anchors, 4+num_classes)
         rows = outputs.shape[0]
 
         x_scale = img_w / self._model_w
@@ -126,7 +130,9 @@ class Detector:
         if not boxes:
             return frame, detections
 
-        indices = cv2.dnn.NMSBoxes(boxes, scores, self._confidence_threshold, self._iou_threshold)
+        indices = cv2.dnn.NMSBoxes(
+            boxes, scores, self._confidence_threshold, self._iou_threshold
+        )
         if not len(indices):  # pylint: disable=use-implicit-booleaness-not-len
             return frame, detections
 
@@ -143,16 +149,24 @@ class Detector:
             ly = max(y - 10, lh)
             cv2.rectangle(frame, (x, ly - lh), (x + lw, ly), color, cv2.FILLED)
             cv2.putText(
-                frame, label, (x, ly),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA,
+                frame,
+                label,
+                (x, ly),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 0, 0),
+                1,
+                cv2.LINE_AA,
             )
 
-            detections.append({
-                "animal_type": _ANIMAL_TYPE_MAP.get(class_name, class_name.lower()),
-                "confidence": round(conf, 4),
-                "distance": _estimate_distance(bh, img_h),
-                "size_estimate": _estimate_size(bw, bh, img_w, img_h),
-                "box": [x, y, bw, bh],
-            })
+            detections.append(
+                {
+                    "animal_type": _ANIMAL_TYPE_MAP.get(class_name, class_name.lower()),
+                    "confidence": round(conf, 4),
+                    "distance": _estimate_distance(bh, img_h),
+                    "size_estimate": _estimate_size(bw, bh, img_w, img_h),
+                    "box": [x, y, bw, bh],
+                }
+            )
 
         return frame, detections

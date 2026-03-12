@@ -59,7 +59,9 @@ class InferenceEngine:
                 "InferenceEngine started: source=live-camera, inference_fps=%d",
                 self._target_fps,
             )
-        self._thread = threading.Thread(target=self._loop, daemon=True, name="inference")
+        self._thread = threading.Thread(
+            target=self._loop, daemon=True, name="inference"
+        )
         self._thread.start()
 
     def stop(self) -> None:
@@ -84,9 +86,7 @@ class InferenceEngine:
         with self._frame_lock:
             return list(self._latest_detections)
 
-    def on_detection(
-        self, callback: Callable[[list[dict], np.ndarray], None]
-    ) -> None:
+    def on_detection(self, callback: Callable[[list[dict], np.ndarray], None]) -> None:
         """Register a callback invoked when detections are found (count > 0)."""
         self._on_detection = callback
 

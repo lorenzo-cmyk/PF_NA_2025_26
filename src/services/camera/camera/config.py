@@ -105,7 +105,10 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
         _log.info("    MQTT_HOST                 = %s", self.mqtt_host)
         _log.info("    MQTT_PORT                 = %d", self.mqtt_port)
         _log.info("    MQTT_USERNAME             = %s", self.mqtt_username or "(none)")
-        _log.info("    MQTT_PASSWORD             = %s", "***" if self.mqtt_password else "(none)")
+        _log.info(
+            "    MQTT_PASSWORD             = %s",
+            "***" if self.mqtt_password else "(none)",
+        )
         _log.info("    MQTT_CLIENT_ID            = %s", self.mqtt_client_id or "(auto)")
         _log.info("  [WebUI]")
         _log.info("    WEB_HOST                  = %s", self.web_host)
@@ -130,7 +133,9 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
         _log.info("    BIRTH_CAMERA_TYPE         = %s", self.birth_camera_type)
         _log.info("    BIRTH_CAMERA_COORDS       = %s", self.birth_camera_coords)
         _log.info("    BIRTH_ELEVATION           = %d", self.birth_elevation)
-        _log.info("    BIRTH_TECHNICAL_PARAMS    = %s", self.birth_technical_params_json)
+        _log.info(
+            "    BIRTH_TECHNICAL_PARAMS    = %s", self.birth_technical_params_json
+        )
         _log.info("===================================")
 
     def topic_prefix(self) -> str:

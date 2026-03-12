@@ -59,15 +59,17 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         self._pending_logs: list[tuple] = []
         self._connect_trigger: str | None = None
 
-        self._pending_logs.append((
-            "SYSTEM",
-            lwt_topic,
-            {"status": "Offline"},
-            "LWT_SET",
-            "Auto: MQTT client init",
-            1,
-            True,
-        ))
+        self._pending_logs.append(
+            (
+                "SYSTEM",
+                lwt_topic,
+                {"status": "Offline"},
+                "LWT_SET",
+                "Auto: MQTT client init",
+                1,
+                True,
+            )
+        )
 
         self._telemetry_thread: threading.Thread | None = None
         self._telemetry_stop = threading.Event()
@@ -89,7 +91,9 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
     def start(self, trigger: str = "Auto: initial connect") -> None:
         """Connect to broker, start the network loop, and begin telemetry heartbeat."""
         log.info(
-            "Connecting to MQTT broker %s:%s …", self._cfg.mqtt_host, self._cfg.mqtt_port
+            "Connecting to MQTT broker %s:%s …",
+            self._cfg.mqtt_host,
+            self._cfg.mqtt_port,
         )
         self._connect_trigger = trigger
         self._client.connect(self._cfg.mqtt_host, self._cfg.mqtt_port)
@@ -169,9 +173,7 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         topic = f"{self._prefix}/event"
         self._publish(topic, payload, qos=1, retain=False, trigger=trigger)
 
-    def publish_upload_status(
-        self, event_id: str, status: str, detail: str
-    ) -> None:
+    def publish_upload_status(self, event_id: str, status: str, detail: str) -> None:
         """Publish upload result.
 
         ``status`` is ``"SUCCESS"`` or ``"ERROR"``.
@@ -191,7 +193,13 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
                 "message": detail,
             }
         topic = f"{self._prefix}/event/upload_status"
-        self._publish(topic, payload, qos=1, retain=False, trigger=f"Auto: upload result {event_id}")
+        self._publish(
+            topic,
+            payload,
+            qos=1,
+            retain=False,
+            trigger=f"Auto: upload result {event_id}",
+        )
 
     # -- telemetry loop ---------------------------------------------------- #
 
@@ -231,9 +239,7 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
     def _read_battery() -> int:
         """Read battery level (0-100) if available, otherwise return 100."""
         try:
-            with open(
-                "/sys/class/power_supply/BAT0/capacity", encoding="utf-8"
-            ) as f:
+            with open("/sys/class/power_supply/BAT0/capacity", encoding="utf-8") as f:
                 return int(f.read().strip())
         except OSError:
             return 100
@@ -252,7 +258,12 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         info = self._client.publish(topic, data, qos=qos, retain=retain)
         mqtt_log.info(
             "%s | PUBLISH | %s | QoS=%d, Retained=%s | RC=%s | trigger=%s",
-            _ts(), topic, qos, retain, info.rc, trigger,
+            _ts(),
+            topic,
+            qos,
+            retain,
+            info.rc,
+            trigger,
         )
         self._emit_log("OUT", topic, payload, "PUBLISH", trigger, qos, retain)
 
@@ -284,7 +295,11 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         self._connect_trigger = None
         mqtt_log.info(
             "%s | CONNECT | broker=%s:%s | RC=%s | trigger=%s",
-            _ts(), self._cfg.mqtt_host, self._cfg.mqtt_port, rc, trigger,
+            _ts(),
+            self._cfg.mqtt_host,
+            self._cfg.mqtt_port,
+            rc,
+            trigger,
         )
         with self._lock:
             self._connected = True
@@ -300,7 +315,8 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         client.subscribe(cmd_topic, qos=1)
         mqtt_log.info(
             "%s | SUBSCRIBE | %s | QoS=1 | trigger=Auto: on_connect",
-            _ts(), cmd_topic,
+            _ts(),
+            cmd_topic,
         )
         self._emit_log("SYSTEM", cmd_topic, {}, "SUBSCRIBE", "Auto: on_connect", qos=1)
         # Auto-publish birth on every (re)connect
@@ -322,7 +338,11 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
         )
         mqtt_log.info(
             "%s | DISCONNECT | broker=%s:%s | RC=%s | trigger=%s",
-            _ts(), self._cfg.mqtt_host, self._cfg.mqtt_port, rc, trigger,
+            _ts(),
+            self._cfg.mqtt_host,
+            self._cfg.mqtt_port,
+            rc,
+            trigger,
         )
         with self._lock:
             self._connected = False
@@ -351,7 +371,11 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
 
         mqtt_log.info(
             "%s | RECEIVED | %s | QoS=%d, Retained=%s | %s | trigger=Received cmd/upload from broker",
-            _ts(), msg.topic, msg.qos, bool(msg.retain), summary,
+            _ts(),
+            msg.topic,
+            msg.qos,
+            bool(msg.retain),
+            summary,
         )
         self._emit_log(
             "IN",
