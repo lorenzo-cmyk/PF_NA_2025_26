@@ -78,13 +78,18 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
         _log.info("    MQTT_HOST             = %s", self.mqtt_host)
         _log.info("    MQTT_PORT             = %d", self.mqtt_port)
         _log.info("    MQTT_USERNAME         = %s", self.mqtt_username or "(none)")
-        _log.info("    MQTT_PASSWORD         = %s", "***" if self.mqtt_password else "(none)")
+        _log.info(
+            "    MQTT_PASSWORD         = %s", "***" if self.mqtt_password else "(none)"
+        )
         _log.info("    MQTT_CLIENT_ID        = %s", self.mqtt_client_id or "(auto)")
         _log.info("  [Database]")
         _log.info("    DATABASE_URL          = %s", self.database_url)
         _log.info("  [Object Storage]")
         _log.info("    OBJECT_STORAGE_URL    = %s", self.object_storage_url)
-        _log.info("    S3_PUBLIC_URL         = %s", self.s3_public_url or "(same as OBJECT_STORAGE_URL)")
+        _log.info(
+            "    S3_PUBLIC_URL         = %s",
+            self.s3_public_url or "(same as OBJECT_STORAGE_URL)",
+        )
         _log.info("    S3_ACCESS_KEY         = %s", self.s3_access_key)
         _log.info("    S3_SECRET_KEY         = %s", "***")
         _log.info("    S3_BUCKET             = %s", self.s3_bucket)

@@ -14,7 +14,7 @@ It ingests MQTT messages from the Camera Service, persists data in PostgreSQL, m
 
 ## Architecture
 
-```
+```text
 [Camera Service]
       │ MQTT (edge/#)
       ▼
@@ -33,14 +33,14 @@ It ingests MQTT messages from the Camera Service, persists data in PostgreSQL, m
                                                API (FastAPI)
 ```
 
-| Module | Responsibility |
-|---|---|
-| `config.py` | Loads and validates all settings from `.env` / environment; defines `ServiceMode` |
-| `mqtt_client.py` | paho-mqtt v2 wrapper — subscribe, publish, connection lifecycle |
-| `handlers.py` | MQTT message handlers — Edge & Cloud routing, DB writes, image upload logic |
-| `database.py` | SQLModel ORM models and engine/session factories |
-| `s3_client.py` | boto3 S3-compatible helper — bucket init, presigned URLs, direct upload |
-| `api.py` | FastAPI app — health check and Cloud image retrieval endpoint |
+| Module           | Responsibility                                                                    |
+| ---------------- | --------------------------------------------------------------------------------- |
+| `config.py`      | Loads and validates all settings from `.env` / environment; defines `ServiceMode` |
+| `mqtt_client.py` | paho-mqtt v2 wrapper — subscribe, publish, connection lifecycle                   |
+| `handlers.py`    | MQTT message handlers — Edge & Cloud routing, DB writes, image upload logic       |
+| `database.py`    | SQLModel ORM models and engine/session factories                                  |
+| `s3_client.py`   | boto3 S3-compatible helper — bucket init, presigned URLs, direct upload           |
+| `api.py`         | FastAPI app — health check and Cloud image retrieval endpoint                     |
 
 ## MQTT Topics
 
@@ -48,13 +48,13 @@ All edge topics follow the pattern `edge/{edge_id}/{camera_id}/…` and cloud to
 
 ### Edge mode — subscribes to `edge/#` and `cloud/+/+/cmd/upload`
 
-| Topic | Action | Relayed to cloud? |
-|---|---|:---:|
-| `edge/{eid}/{cid}/lifecycle/birth` | Upsert `edge_device` + `camera` rows | Yes (retained) |
-| `edge/{eid}/{cid}/telemetry` | Update camera status, temperature, battery | Yes (retained) |
-| `edge/{eid}/{cid}/event` | Insert `datasetstore` + `animaldetected` rows; publish `cmd/upload` to camera | Yes |
-| `edge/{eid}/{cid}/event/upload_status` | Update `datasetstore.imagepath` with public URL | No |
-| `cloud/{eid}/{cid}/cmd/upload` | Fetch image from Edge S3, PUT to Cloud S3, publish `upload_status` | — |
+| Topic                                  | Action                                                                        | Relayed to cloud? |
+| -------------------------------------- | ----------------------------------------------------------------------------- | :---------------: |
+| `edge/{eid}/{cid}/lifecycle/birth`     | Upsert `edge_device` + `camera` rows                                          |  Yes (retained)   |
+| `edge/{eid}/{cid}/telemetry`           | Update camera status, temperature, battery                                    |  Yes (retained)   |
+| `edge/{eid}/{cid}/event`               | Insert `datasetstore` + `animaldetected` rows; publish `cmd/upload` to camera |        Yes        |
+| `edge/{eid}/{cid}/event/upload_status` | Update `datasetstore.imagepath` with public URL                               |        No         |
+| `cloud/{eid}/{cid}/cmd/upload`         | Fetch image from Edge S3, PUT to Cloud S3, publish `upload_status`            |         —         |
 
 ### Cloud mode — subscribes to `cloud/#`
 
@@ -64,22 +64,22 @@ Handles the `cloud/` counterparts of birth, telemetry, event, and upload_status 
 
 Settings are read from a `.env` file in the project root (or from environment variables).
 
-| Variable | Default | Description |
-|---|---|---|
-| `SERVICE_MODE` | `EDGE` | Operational mode: `EDGE` or `CLOUD` |
-| `MQTT_HOST` | `localhost` | MQTT broker hostname |
-| `MQTT_PORT` | `1883` | MQTT broker port |
-| `MQTT_USERNAME` | _(none)_ | Broker username; leave empty for anonymous connections |
-| `MQTT_PASSWORD` | _(none)_ | Broker password |
-| `MQTT_CLIENT_ID` | _(auto)_ | MQTT client ID — must differ between Edge and Cloud instances |
-| `DATABASE_URL` | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string |
-| `OBJECT_STORAGE_URL` | `http://localhost:9000` | S3-compatible endpoint (internal, used for presigned URLs) |
-| `S3_PUBLIC_URL` | _(falls back to `OBJECT_STORAGE_URL`)_ | Public base URL for stored images (no credentials) |
-| `S3_ACCESS_KEY` | `watchedge` | S3 access key |
-| `S3_SECRET_KEY` | `watchedge` | S3 secret key |
-| `S3_BUCKET` | `watchedge-images` | S3 bucket name |
-| `WEB_HOST` | `0.0.0.0` | HTTP server bind address |
-| `WEB_PORT` | `8000` | HTTP server port |
+| Variable             | Default                                                        | Description                                                   |
+| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
+| `SERVICE_MODE`       | `EDGE`                                                         | Operational mode: `EDGE` or `CLOUD`                           |
+| `MQTT_HOST`          | `localhost`                                                    | MQTT broker hostname                                          |
+| `MQTT_PORT`          | `1883`                                                         | MQTT broker port                                              |
+| `MQTT_USERNAME`      | _(none)_                                                       | Broker username; leave empty for anonymous connections        |
+| `MQTT_PASSWORD`      | _(none)_                                                       | Broker password                                               |
+| `MQTT_CLIENT_ID`     | _(auto)_                                                       | MQTT client ID — must differ between Edge and Cloud instances |
+| `DATABASE_URL`       | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string                                  |
+| `OBJECT_STORAGE_URL` | `http://localhost:9000`                                        | S3-compatible endpoint (internal, used for presigned URLs)    |
+| `S3_PUBLIC_URL`      | _(falls back to `OBJECT_STORAGE_URL`)_                         | Public base URL for stored images (no credentials)            |
+| `S3_ACCESS_KEY`      | `watchedge`                                                    | S3 access key                                                 |
+| `S3_SECRET_KEY`      | `watchedge`                                                    | S3 secret key                                                 |
+| `S3_BUCKET`          | `watchedge-images`                                             | S3 bucket name                                                |
+| `WEB_HOST`           | `0.0.0.0`                                                      | HTTP server bind address                                      |
+| `WEB_PORT`           | `8000`                                                         | HTTP server port                                              |
 
 Minimal `.env` example:
 
@@ -124,9 +124,9 @@ For a full local environment (both Edge and Cloud stacks) use the Docker Compose
 
 All endpoints are served by the FastAPI app.
 
-| Method | Path | Mode | Description |
-|---|---|---|---|
-| `GET` | `/health` | Both | Returns `{"status": "ok", "mode": …, "mqtt_connected": …}` |
-| `GET` | `/api/v1/images/{event_id}` | Cloud | Retrieve a detection image. Serves from Cloud S3 if available; otherwise requests an on-demand upload from the Edge (synchronous pull, up to 30 s) |
+| Method | Path                        | Mode  | Description                                                                                                                                        |
+| ------ | --------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/health`                   | Both  | Returns `{"status": "ok", "mode": …, "mqtt_connected": …}`                                                                                         |
+| `GET`  | `/api/v1/images/{event_id}` | Cloud | Retrieve a detection image. Serves from Cloud S3 if available; otherwise requests an on-demand upload from the Edge (synchronous pull, up to 30 s) |
 
 Interactive API docs are available at `http://<host>:8000/docs`.
