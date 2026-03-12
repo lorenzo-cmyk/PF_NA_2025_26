@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from sqlalchemy import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine, JSON, Column
 
 
@@ -42,7 +43,7 @@ class DatasetStore(SQLModel, table=True):
 
     event_id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     camera_id: uuid.UUID = Field(foreign_key="camera.camera_id")
-    time: datetime | None = None
+    time: datetime
     count: int = 0
     imagepath: str = ""
 
@@ -63,11 +64,11 @@ class AnimalDetected(SQLModel, table=True):
     confidence: float | None = None
 
 
-def get_engine(database_url: str):
+def get_engine(database_url: str) -> Engine:
     """Create a SQLAlchemy engine from a database URL."""
     return create_engine(database_url, echo=False)
 
 
-def get_session(engine) -> Session:
+def get_session(engine: Engine) -> Session:
     """Create a new database session."""
     return Session(engine)

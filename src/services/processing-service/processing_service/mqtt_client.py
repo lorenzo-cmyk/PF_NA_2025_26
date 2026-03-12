@@ -59,6 +59,12 @@ class MQTTClient:
 
     def start(self) -> None:
         """Connect and start the network loop in a background thread."""
+        if self._cfg.mqtt_username:
+            self._client.username_pw_set(
+                self._cfg.mqtt_username,
+                self._cfg.mqtt_password if self._cfg.mqtt_password else None,
+            )
+            log.info("MQTT authentication enabled (user=%s)", self._cfg.mqtt_username)
         log.info(
             "Connecting to MQTT broker %s:%s …",
             self._cfg.mqtt_host,

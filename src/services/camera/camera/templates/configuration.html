@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>WatchEdge — Camera Configuration</title>
+  </head>
+
+  <body class="bg-gray-950 text-gray-200 font-sans leading-relaxed">
+    <div class="max-w-3xl mx-auto p-6">
+      <!-- Header -->
+      <header
+        class="flex items-center justify-between py-4 border-b border-gray-800 mb-6"
+      >
+        <h1 class="text-xl font-bold">
+          <span class="text-indigo-500">WatchEdge</span> — Camera Configuration
+        </h1>
+        <a href="/" class="text-xs text-indigo-400 hover:underline"
+          >‹ Live View</a
+        >
+      </header>
+
+      <div class="space-y-5">
+        <!-- 1. Software Restart -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h2 class="text-base font-semibold mb-3">🔄 Software Restart</h2>
+          <p class="text-xs text-gray-500 mb-3">
+            Stops the Inference Engine and MQTT client, then restarts them.
+          </p>
+          <button
+            id="btn-restart"
+            onclick="doRestart()"
+            class="px-4 py-2 rounded text-sm font-semibold bg-red-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
+          >
+            Restart Camera Software
+          </button>
+          <span id="restart-msg" class="ml-3 text-xs text-gray-400"></span>
+        </div>
+
+        <!-- 2. MQTT Connection -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h2 class="text-base font-semibold mb-3">📡 MQTT Connection</h2>
+          <div class="flex gap-3">
+            <button
+              onclick="mqttAction('disconnect')"
+              class="px-4 py-2 rounded text-sm font-semibold bg-gray-700 text-white hover:opacity-85 transition-opacity cursor-pointer"
+            >
+              Disconnect
+            </button>
+            <button
+              onclick="mqttAction('reconnect')"
+              class="px-4 py-2 rounded text-sm font-semibold bg-indigo-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
+            >
+              Reconnect
+            </button>
+          </div>
+          <div id="mqtt-msg" class="mt-2 text-xs text-gray-400"></div>
+        </div>
+
+        <!-- 3. Video Source -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h2 class="text-base font-semibold mb-3">🎥 Video Source</h2>
+          <div class="flex gap-4 mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="source"
+                value="usb"
+                id="src-usb"
+                onchange="switchSource()"
+              />
+              <span class="text-sm">USB Camera</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="source"
+                value="video"
+                id="src-video"
+                onchange="switchSource()"
+              />
+              <span class="text-sm">Pre-recorded Video</span>
+            </label>
+          </div>
+
+          <!-- Video controls (shown only when video source selected) -->
+          <div id="video-controls" class="hidden space-y-3">
+            <div>
+              <label class="block text-xs text-gray-500 mb-1"
+                >Sample Video</label
+              >
+              <select
+                id="video-select"
+                onchange="changeVideo()"
+                class="w-full px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm"
+              ></select>
+            </div>
+            <div class="flex items-center gap-3">
+              <button
+                id="btn-playpause"
+                onclick="togglePlayPause()"
+                class="px-4 py-1.5 rounded text-sm font-semibold bg-gray-700 text-white hover:opacity-85 transition-opacity cursor-pointer"
+              >
+                ⏸ Pause
+              </button>
+              <span class="text-xs text-gray-500" id="pos-label">0:00 / —</span>
+            </div>
+            <div>
+              <input
+                type="range"
+                id="seek-slider"
+                min="0"
+                max="100"
+                value="0"
+                step="0.1"
+                class="w-full accent-indigo-500"
+                oninput="onSliderInput()"
+                onchange="doSeek()"
+                disabled
+              />
+            </div>
+          </div>
+          <div id="source-msg" class="mt-2 text-xs text-gray-400"></div>
+        </div>
+
+        <!-- 4. Inject Event -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h2 class="text-base font-semibold mb-3">💉 Inject Event</h2>
+
+          <!-- Scene selector -->
+          <div class="mb-4">
+            <label class="block text-xs text-gray-500 mb-1">Sample Scene</label>
+            <div class="flex gap-2">
+              <select
+                id="scene-select"
+                class="flex-1 px-2.5 py-1.5 rounded border border-gray-800 bg-gray-950 text-gray-200 text-sm"
+              ></select>
+              <button
+                onclick="injectScene()"
+                class="px-4 py-1.5 rounded text-sm font-semibold bg-green-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
+              >
+                Send
+              </button>
+            </div>
+            <div id="scene-desc" class="mt-1 text-xs text-gray-500"></div>
+          </div>
+
+          <!-- Custom event form (collapsible) -->
+          <details class="border border-gray-800 rounded-lg">
+            <summary
+              class="px-3 py-2 text-xs text-gray-400 cursor-pointer select-none"
+            >
+              Custom Event ›
+            </summary>
+            <div class="p-3 space-y-3">
+              <div id="custom-detections" class="space-y-2">
+                <!-- Detection rows injected by JS -->
+              </div>
+              <button
+                onclick="addDetection()"
+                class="text-xs text-indigo-400 hover:underline cursor-pointer"
+              >
+                + Add detection
+              </button>
+              <button
+                onclick="injectCustom()"
+                class="w-full mt-2 py-1.5 rounded text-sm font-semibold bg-indigo-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
+              >
+                Publish Custom Event
+              </button>
+            </div>
+          </details>
+
+          <!-- Manual Birth / Telemetry -->
+          <details class="border border-gray-800 rounded-lg mt-3">
+            <summary
+              class="px-3 py-2 text-xs text-gray-400 cursor-pointer select-none"
+            >
+              Birth / Telemetry ›
+            </summary>
+            <div class="p-3 space-y-3">
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label class="text-gray-500">Edge Name</label>
+                  <input
+                    id="birth-name"
+                    value="{{ cfg.birth_edge_name }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label class="text-gray-500">Camera Type</label>
+                  <input
+                    id="birth-type"
+                    value="{{ cfg.birth_camera_type }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label class="text-gray-500">Edge Location</label>
+                  <input
+                    id="birth-loc"
+                    value="{{ cfg.birth_edge_location }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label class="text-gray-500">Camera Coords</label>
+                  <input
+                    id="birth-coords"
+                    value="{{ cfg.birth_camera_coords }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label class="text-gray-500">Elevation (m)</label>
+                  <input
+                    id="birth-elev"
+                    type="number"
+                    value="{{ cfg.birth_elevation }}"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
+                </div>
+              </div>
+              <button
+                onclick="sendBirth()"
+                class="w-full py-1.5 rounded text-sm font-semibold bg-green-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
+              >
+                Send Birth
+              </button>
+
+              <hr class="border-gray-800" />
+
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div>
+                  <label class="text-gray-500">Status</label>
+                  <input
+                    id="tele-status"
+                    value="Online"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label class="text-gray-500">Temperature (°C)</label>
+                  <input
+                    id="tele-temp"
+                    type="number"
+                    value="20"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
+                </div>
+                <div>
+                  <label class="text-gray-500">Battery (%)</label>
+                  <input
+                    id="tele-bat"
+                    type="number"
+                    value="100"
+                    class="w-full mt-0.5 px-2 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200"
+                  />
+                </div>
+              </div>
+              <button
+                onclick="sendTelemetry()"
+                class="w-full py-1.5 rounded text-sm font-semibold bg-indigo-600 text-white hover:opacity-85 transition-opacity cursor-pointer"
+              >
+                Send Telemetry
+              </button>
+
+              <div id="lifecycle-msg" class="text-xs text-gray-400"></div>
+            </div>
+          </details>
+
+          <div id="inject-msg" class="mt-2 text-xs text-gray-400"></div>
+        </div>
+      </div>
+      <!-- /space-y-5 -->
+    </div>
+    <!-- /container -->
+
+    <script>
+      // ---- state -------------------------------------------------------
+      let scenes = [];
+      let videoInfo = {};
+      let sliderDragging = false;
+
+      // ---- init --------------------------------------------------------
+      async function init() {
+        await loadScenes();
+        await loadVideos();
+        await refreshSourceInfo();
+        addDetection(); // add one default detection row in the custom form
+        setInterval(refreshSourceInfo, 1000);
+      }
+
+      async function loadScenes() {
+        try {
+          const r = await fetch("/api/scenes");
+          scenes = await r.json();
+          const sel = document.getElementById("scene-select");
+          sel.innerHTML = scenes
+            .map((s, i) => `<option value="${i}">${s.name}</option>`)
+            .join("");
+          updateSceneDesc();
+          sel.onchange = updateSceneDesc;
+        } catch (_) {}
+      }
+
+      function updateSceneDesc() {
+        const i = parseInt(document.getElementById("scene-select").value);
+        const s = scenes[i];
+        document.getElementById("scene-desc").textContent = s
+          ? s.description
+          : "";
+      }
+
+      async function loadVideos() {
+        try {
+          const r = await fetch("/api/source/videos");
+          const videos = await r.json();
+          const sel = document.getElementById("video-select");
+          if (videos.length) {
+            sel.innerHTML = videos
+              .map((v) => `<option value="${v.name}">${v.name}</option>`)
+              .join("");
+          } else {
+            sel.innerHTML = `<option value="">No sample videos available</option>`;
+          }
+        } catch (_) {}
+      }
+
+      async function refreshSourceInfo() {
+        try {
+          const r = await fetch("/api/source/info");
+          videoInfo = await r.json();
+          // Sync radio buttons
+          document.getElementById("src-usb").checked =
+            videoInfo.source_type === "usb";
+          document.getElementById("src-video").checked =
+            videoInfo.source_type === "video";
+          document
+            .getElementById("video-controls")
+            .classList.toggle("hidden", videoInfo.source_type !== "video");
+
+          // Sync play/pause button
+          const btn = document.getElementById("btn-playpause");
+          btn.textContent = videoInfo.is_paused ? "▶ Resume" : "⏸ Pause";
+
+          // Sync scrubber
+          const slider = document.getElementById("seek-slider");
+          slider.disabled = !videoInfo.is_paused;
+          if (videoInfo.duration_ms && videoInfo.duration_ms > 0) {
+            slider.max = videoInfo.duration_ms;
+            if (!sliderDragging) slider.value = videoInfo.position_ms || 0;
+          }
+
+          // Position label
+          const pos = msToTime(videoInfo.position_ms || 0);
+          const dur = videoInfo.duration_ms
+            ? msToTime(videoInfo.duration_ms)
+            : "—";
+          document.getElementById("pos-label").textContent = `${pos} / ${dur}`;
+
+          // Sync video dropdown
+          if (videoInfo.current_video) {
+            const sel = document.getElementById("video-select");
+            if (
+              [...sel.options].some((o) => o.value === videoInfo.current_video)
+            ) {
+              sel.value = videoInfo.current_video;
+            }
+          }
+        } catch (_) {}
+      }
+
+      function msToTime(ms) {
+        const s = Math.floor(ms / 1000);
+        const m = Math.floor(s / 60);
+        return `${m}:${String(s % 60).padStart(2, "0")}`;
+      }
+
+      // ---- source switching --------------------------------------------
+      async function switchSource() {
+        const src = document.querySelector(
+          'input[name="source"]:checked',
+        ).value;
+        let body = { source: src };
+        if (src === "video") {
+          const sel = document.getElementById("video-select");
+          body.video_name = sel.value || undefined;
+        }
+        try {
+          await fetch("/api/source/switch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          setMsg("source-msg", "Source switched to " + src, false);
+        } catch (e) {
+          setMsg("source-msg", "Error: " + e, true);
+        }
+      }
+
+      async function changeVideo() {
+        const name = document.getElementById("video-select").value;
+        try {
+          await fetch("/api/source/switch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source: "video", video_name: name }),
+          });
+        } catch (_) {}
+      }
+
+      async function togglePlayPause() {
+        const endpoint = videoInfo.is_paused
+          ? "/api/source/resume"
+          : "/api/source/pause";
+        await fetch(endpoint, { method: "POST" });
+        await refreshSourceInfo();
+      }
+
+      function onSliderInput() {
+        sliderDragging = true;
+      }
+
+      async function doSeek() {
+        const ts = parseFloat(document.getElementById("seek-slider").value);
+        await fetch("/api/source/seek", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timestamp_ms: ts }),
+        });
+        sliderDragging = false;
+        await refreshSourceInfo();
+      }
+
+      // ---- restart / MQTT actions --------------------------------------
+      async function doRestart() {
+        setMsg("restart-msg", "Restarting…", false);
+        try {
+          const r = await fetch("/api/restart", { method: "POST" });
+          const d = await r.json();
+          setMsg(
+            "restart-msg",
+            d.success ? "Restarted ✓" : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("restart-msg", "Error: " + e, true);
+        }
+      }
+
+      async function mqttAction(action) {
+        try {
+          const r = await fetch(`/api/mqtt/${action}`, { method: "POST" });
+          const d = await r.json();
+          setMsg(
+            "mqtt-msg",
+            d.success ? `${action} OK ✓` : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("mqtt-msg", "Error: " + e, true);
+        }
+      }
+
+      // ---- event injection ---------------------------------------------
+      async function injectScene() {
+        const i = parseInt(document.getElementById("scene-select").value);
+        try {
+          const r = await fetch("/api/event/inject", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ scene_index: i }),
+          });
+          const d = await r.json();
+          setMsg(
+            "inject-msg",
+            d.success ? `Event sent: ${d.event_id}` : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("inject-msg", "Error: " + e, true);
+        }
+      }
+
+      function addDetection() {
+        const container = document.getElementById("custom-detections");
+        const idx = container.children.length;
+        const row = document.createElement("div");
+        row.className = "grid grid-cols-5 gap-1 text-xs items-end";
+        row.innerHTML = `
+          <div><label class="text-gray-500">Animal</label>
+            <select class="det-type w-full mt-0.5 px-1 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200">
+              <option value="boar">boar</option><option value="wolf">wolf</option><option value="deer">deer</option>
+            </select></div>
+          <div><label class="text-gray-500">Distance (m)</label>
+            <input class="det-dist w-full mt-0.5 px-1 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" type="number" value="20" step="0.1" /></div>
+          <div><label class="text-gray-500">Size (m)</label>
+            <input class="det-size w-full mt-0.5 px-1 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" type="number" value="1.0" step="0.1" /></div>
+          <div><label class="text-gray-500">Confidence</label>
+            <input class="det-conf w-full mt-0.5 px-1 py-1 rounded border border-gray-800 bg-gray-950 text-gray-200" type="number" value="0.9" min="0" max="1" step="0.01" /></div>
+          <div><button onclick="this.closest('div.grid').remove()" class="w-full py-1 rounded text-xs bg-gray-700 hover:bg-gray-600 cursor-pointer">✕</button></div>`;
+        container.appendChild(row);
+      }
+
+      async function injectCustom() {
+        const rows = document.querySelectorAll("#custom-detections .grid");
+        const detections = [...rows].map((row) => ({
+          animal_type: row.querySelector(".det-type").value,
+          distance: parseFloat(row.querySelector(".det-dist").value),
+          size_estimate: parseFloat(row.querySelector(".det-size").value),
+          confidence: parseFloat(row.querySelector(".det-conf").value),
+        }));
+        const body = { count: detections.length, detections };
+        try {
+          const r = await fetch("/api/event/inject", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const d = await r.json();
+          setMsg(
+            "inject-msg",
+            d.success ? `Custom event sent: ${d.event_id}` : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("inject-msg", "Error: " + e, true);
+        }
+      }
+
+      // ---- birth / telemetry -------------------------------------------
+      async function sendBirth() {
+        const body = {
+          edge_name: document.getElementById("birth-name").value,
+          camera_type: document.getElementById("birth-type").value,
+          edge_location: document.getElementById("birth-loc").value,
+          camera_coords: document.getElementById("birth-coords").value,
+          elevation: parseInt(document.getElementById("birth-elev").value),
+        };
+        try {
+          const r = await fetch("/api/birth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const d = await r.json();
+          setMsg(
+            "lifecycle-msg",
+            d.success ? "Birth sent ✓" : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("lifecycle-msg", "Error: " + e, true);
+        }
+      }
+
+      async function sendTelemetry() {
+        const body = {
+          status: document.getElementById("tele-status").value,
+          temperature: parseFloat(document.getElementById("tele-temp").value),
+          battery_level: parseInt(document.getElementById("tele-bat").value),
+        };
+        try {
+          const r = await fetch("/api/telemetry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const d = await r.json();
+          setMsg(
+            "lifecycle-msg",
+            d.success ? "Telemetry sent ✓" : "Failed",
+            !d.success,
+          );
+        } catch (e) {
+          setMsg("lifecycle-msg", "Error: " + e, true);
+        }
+      }
+
+      // ---- helpers -----------------------------------------------------
+      function setMsg(id, text, isError) {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        el.className =
+          "mt-2 text-xs " + (isError ? "text-red-400" : "text-green-400");
+      }
+
+      init();
+    </script>
+  </body>
+</html>

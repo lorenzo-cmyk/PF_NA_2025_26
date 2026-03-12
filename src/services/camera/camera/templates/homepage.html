@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>WatchEdge — Camera</title>
+  </head>
+
+  <body class="bg-gray-950 text-gray-200 font-sans leading-relaxed">
+    <div class="max-w-5xl mx-auto p-6">
+      <!-- Header -->
+      <header
+        class="flex items-center justify-between py-4 border-b border-gray-800 mb-6"
+      >
+        <h1 class="text-xl font-bold">
+          <span class="text-indigo-500">WatchEdge</span> — Camera
+        </h1>
+        <div class="flex items-center gap-3">
+          <span
+            id="conn-badge"
+            class="text-xs px-2.5 py-0.5 rounded-full font-semibold {{ 'bg-green-500/15 text-green-500' if connected else 'bg-red-500/15 text-red-500' }}"
+            >{{ "CONNECTED" if connected else "DISCONNECTED" }}</span
+          >
+          <a
+            href="/configuration"
+            class="text-xs text-indigo-400 hover:underline"
+            >Configuration ›</a
+          >
+        </div>
+      </header>
+
+      <!-- Status bar -->
+      <div
+        id="status-bar"
+        class="flex gap-4 flex-wrap text-sm text-gray-500 mb-5"
+      >
+        <div>
+          Edge: <strong class="text-gray-200">{{ cfg.edge_id }}</strong>
+        </div>
+        <div>
+          Camera: <strong class="text-gray-200">{{ cfg.camera_id }}</strong>
+        </div>
+        <div>
+          Broker:
+          <strong class="text-gray-200"
+            >{{ cfg.mqtt_host }}:{{ cfg.mqtt_port }}</strong
+          >
+        </div>
+        <div id="source-indicator">
+          Source: <strong class="text-gray-200" id="source-val">—</strong>
+        </div>
+      </div>
+
+      <!-- Live view -->
+      <div
+        class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden mb-5"
+      >
+        <div class="px-4 py-2 border-b border-gray-800 text-sm text-gray-400">
+          Live Inference View
+        </div>
+        <div class="flex items-center justify-center bg-black min-h-48">
+          <img
+            src="/stream"
+            alt="Live camera stream"
+            class="max-w-full"
+            onerror="
+              this.style.display = 'none';
+              document.getElementById('stream-err').style.display = 'flex';
+            "
+          />
+          <div
+            id="stream-err"
+            style="display: none"
+            class="text-gray-600 text-sm p-8"
+          >
+            Stream unavailable
+          </div>
+        </div>
+      </div>
+
+      <!-- System log -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-gray-300">System Log</h2>
+          <button
+            onclick="clearLog()"
+            class="text-xs text-gray-500 hover:text-gray-300"
+          >
+            Clear
+          </button>
+        </div>
+        <div
+          id="log-panel"
+          class="font-mono text-xs space-y-1 max-h-72 overflow-y-auto text-gray-400"
+        >
+          <div class="text-gray-600">Waiting for events…</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const DIR_COLORS = {
+        OUT: "text-green-400",
+        IN: "text-blue-400",
+        SYSTEM: "text-yellow-400",
+        LOCAL: "text-purple-400",
+      };
+
+      let lastLogTs = null;
+
+      async function pollStatus() {
+        try {
+          const r = await fetch("/api/status");
+          const d = await r.json();
+          const badge = document.getElementById("conn-badge");
+          if (d.mqtt_connected) {
+            badge.className =
+              "text-xs px-2.5 py-0.5 rounded-full font-semibold bg-green-500/15 text-green-500";
+            badge.textContent = "CONNECTED";
+          } else {
+            badge.className =
+              "text-xs px-2.5 py-0.5 rounded-full font-semibold bg-red-500/15 text-red-500";
+            badge.textContent = "DISCONNECTED";
+          }
+          const src =
+            d.source_type === "video"
+              ? `video (${d.current_video || "—"})${d.is_paused ? " ⏸" : " ▶"}`
+              : "USB";
+          document.getElementById("source-val").textContent = src;
+        } catch (_) {}
+      }
+
+      async function pollLog() {
+        try {
+          const r = await fetch("/api/log");
+          const entries = await r.json();
+          if (!entries.length) return;
+          const newest = entries[0]?.ts;
+          if (newest === lastLogTs) return;
+          lastLogTs = newest;
+          const panel = document.getElementById("log-panel");
+          panel.innerHTML = entries
+            .map((e) => {
+              const col = DIR_COLORS[e.dir] || "text-gray-400";
+              const ts = new Date(e.ts).toLocaleTimeString([], {
+                hour12: false,
+              });
+              const op = e.operation_type ? `[${e.operation_type}] ` : "";
+              const payload = JSON.stringify(e.payload);
+              const truncated =
+                payload.length > 120 ? payload.slice(0, 120) + "…" : payload;
+              return `<div><span class="text-gray-600">${ts}</span> <span class="${col} font-semibold">${e.dir}</span> ${op}<span class="text-gray-300">${e.topic}</span> <span class="text-gray-500">${truncated}</span></div>`;
+            })
+            .join("");
+        } catch (_) {}
+      }
+
+      function clearLog() {
+        document.getElementById("log-panel").innerHTML =
+          '<div class="text-gray-600">Log cleared.</div>';
+        lastLogTs = null;
+      }
+
+      pollStatus();
+      pollLog();
+      setInterval(pollStatus, 2000);
+      setInterval(pollLog, 3000);
+    </script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-# gBOAR - MQTT Topic Mapping Specification
+# WatchEdge - MQTT Topic Mapping Specification
 
 ## Introduction to the Namespace
 
@@ -6,6 +6,8 @@ The MQTT topic architecture separates local edge communication from cloud-bound 
 
 - **`edge/{edge_id}/{camera_id}/...`**: Extreme-Edge to Edge communication.
 - **`cloud/{edge_id}/{camera_id}/...`**: Edge to Cloud communication.
+
+> **Identity convention:** Both `{edge_id}` and `{camera_id}` are **UUID strings** (e.g. `a3f1b2c4-5678-9abc-def0-1234567890ab`), provisioned at deployment time via environment variables. These UUIDs are used as-is in the database primary keys — no mapping between human-readable names and UUIDs exists.
 
 ## Extreme-Edge -> Edge Messages
 
@@ -19,13 +21,13 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
   ```json
   {
     "edge_name": "SAN_ROSSORE_PACK_01",
-    "edge_location": "POINT(43.76794, 10.324979)",
+    "edge_location": "San Rossore Forest",
     "camera_type": "BOAR_CAMERA_V3",
-    "camera_coords": "POINT(43.76797, 10.324982)",
+    "camera_coords": "POINT(10.324982, 43.76797)",
     "elevation": 30,
     "technical_params_json": {
       "iso": 800,
-      "res": "2160x3840",
+      "res": "2160x3840"
     }
   }
   ```
@@ -40,14 +42,14 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
   ```json
   {
     "timestamp": "2026-03-01T10:00:00Z",
-    "status": "active",
+    "status": "Online",
     "temperature": 17.5,
     "battery_level": 74
   }
   ```
 
 - **QoS:** 1 (Retained)
-- **LWT Configuration:** The Extreme-Edge device MUST configure its MQTT client to automatically publish `{"status": "offline"}` to this topic if it ungracefully disconnects.
+- **LWT Configuration:** The Extreme-Edge device MUST configure its MQTT client to automatically publish `{"status": "Offline"}` to this topic if it ungracefully disconnects.
 
 ### 3. Event Detection
 
@@ -56,15 +58,18 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "event_id": "EVT_{UUID}",
+    "event_id": "{UUID}",
     "capture_time": "2026-03-01T12:00:00Z",
     "count": 1,
-    "event_coordinates": "POINT(43.76797, 10.324982)",
     "detections": [
+      // Note: `count` is included for informational purposes only.
+      // The database trigger `trg_refresh_count` always recomputes this value
+      // from the actual number of `animaldetected` child rows, so any value
+      // supplied here will be overwritten.
       {
         "animal_type": "boar",
         "distance": 15.5,
-        "size_estimate": "big",
+        "size_estimate": 1.20,
         "confidence": 0.92
       }
     ]
@@ -80,9 +85,9 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "event_id": "EVT_{UUID}",
+    "event_id": "{UUID}",
     "status": "SUCCESS",
-    "remote_path": "http://object-storage-s3.edge/bucket/evt_{UUID}.jpg"
+    "remote_path": "http://object-storage-s3.edge/bucket/{UUID}.jpg"
   }
   ```
 
@@ -90,7 +95,7 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "event_id": "EVT_{UUID}",
+    "event_id": "{UUID}",
     "status": "ERROR",
     "message": "HTTP 503 Service Unavailable"
   }
@@ -105,8 +110,8 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "event_id": "EVT_{UUID}",
-    "upload_url": "http://object-storage-s3.edge/bucket/evt_{UUID}.jpg"
+    "event_id": "{UUID}",
+    "upload_url": "http://object-storage-s3.edge/bucket/{UUID}.jpg"
   }
   ```
 
@@ -114,13 +119,13 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
 ## Edge -> Cloud Messages
 
-Processed and validated messages intended for the centralized Cloud infrastructure.
+Processed and validated messages intended for the centralized Cloud infrastructure. The Edge Processing Service relays birth, telemetry, and event messages to the `cloud/` namespace. Image upload status (`upload_status`) is **not** relayed — it is a local edge concern between the Extreme-Edge and the Edge Processing Service.
 
 - **Birth / Registration:** `cloud/{edge_id}/{camera_id}/lifecycle/birth`
 - **Telemetry:** `cloud/{edge_id}/{camera_id}/telemetry`
 - **Event Detection:** `cloud/{edge_id}/{camera_id}/event`
-- **Image Upload Status:** `cloud/{edge_id}/{camera_id}/event/upload_status`
 - **Image Upload Command (Cloud -> Edge):** `cloud/{edge_id}/{camera_id}/cmd/upload`
+- **Image Upload Status (Cloud-internal):** `cloud/{edge_id}/{camera_id}/event/upload_status` — published by the Edge Processing Service after it uploads an image to the Cloud Object Storage in response to a `cmd/upload` command.
 
 ## The Role of "Edge Processing Service"
 
@@ -129,8 +134,9 @@ The Edge Processing Service acts as the intermediary between the Extreme-Edge an
 - **Subscription:** Subscribes to `edge/#` and `cloud/+/+/cmd/upload` on the local Edge MQTT Broker.
 - **Processing:** Ingests, aggregates, validates, and enriches incoming Extreme-Edge events.
 - **Publishing:** Publishes the processed data to the corresponding `cloud/#` topics on the same local Edge MQTT Broker.
-- **Command Routing:** Receives Cloud commands on `cloud/+/+/cmd/upload` and republishes them down to the Extreme-Edge on `edge/+/+/cmd/upload`.
-- **Connection:** Maintains exactly 1 active MQTT session to the local Edge MQTT Broker. It does not connect directly to the Cloud.
+- **Image Upload (Edge → Extreme-Edge):** On receiving an event on `edge/#`, publishes an `edge/{edge_id}/{camera_id}/cmd/upload` command to the Extreme-Edge so the image is uploaded to the Edge Object Storage.
+- **Image Upload (Edge → Cloud):** On receiving a Cloud command on `cloud/+/+/cmd/upload`, fetches the image from the local Edge Object Storage and uploads it directly to the Cloud Object Storage via HTTP PUT. Publishes the result as `cloud/{edge_id}/{camera_id}/event/upload_status`.
+- **Connection:** Maintains exactly 1 active MQTT session to the local Edge MQTT Broker.
 
 ## The Role of Mosquitto Bridging
 

@@ -7,6 +7,9 @@ Operates as Edge or Cloud depending on SERVICE_MODE.
 from __future__ import annotations
 
 import logging
+import signal
+import sys
+import time
 
 import uvicorn
 
@@ -20,6 +23,7 @@ from processing_service import api
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
+    stream=sys.stdout,
 )
 log = logging.getLogger(__name__)
 
@@ -27,17 +31,38 @@ log = logging.getLogger(__name__)
 def main() -> None:
     """Boot the processing service: MQTT client + HTTP server."""
     cfg = Config()
-    log.info("Starting processing service in %s mode", cfg.service_mode.value)
+    cfg.log()
 
     # Database
     engine = get_engine(cfg.database_url)
+    for attempt in range(1, 4):
+        try:
+            with engine.connect():
+                pass
+            log.info("Database connection OK")
+            break
+        except Exception:
+            log.exception("Database connection attempt %d/3 failed", attempt)
+            if attempt < 3:
+                time.sleep(10)
+    else:
+        log.critical("Could not connect to the database after 3 attempts – exiting")
+        sys.exit(1)
 
     # Object Storage (S3)
     s3: S3Client | None = None
-    try:
-        s3 = S3Client(cfg)
-    except Exception:  # pylint: disable=broad-exception-caught
-        log.exception("Failed to initialise S3 client – image features disabled")
+    for attempt in range(1, 4):
+        try:
+            s3 = S3Client(cfg)
+            log.info("S3 connection OK")
+            break
+        except Exception:
+            log.exception("S3 connection attempt %d/3 failed", attempt)
+            if attempt < 3:
+                time.sleep(10)
+    else:
+        log.critical("Could not connect to S3 after 3 attempts – exiting")
+        sys.exit(1)
 
     # MQTT
     mqtt = MQTTClient(cfg)
@@ -73,13 +98,28 @@ def main() -> None:
     # Wire up the API module
     api.init(cfg, mqtt, engine, s3)
 
+    # Graceful shutdown handler
+    def _shutdown(sig: int, _frame: object) -> None:
+        log.info("Shutting down (signal %s)…", signal.Signals(sig).name)
+        mqtt.stop()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, _shutdown)
+    signal.signal(signal.SIGTERM, _shutdown)
+
     # Start MQTT
-    try:
-        mqtt.start()
-    except OSError:
-        log.exception(
-            "Could not connect to MQTT broker – HTTP server will start anyway"
-        )
+    for attempt in range(1, 4):
+        try:
+            mqtt.start()
+            log.info("MQTT connection OK")
+            break
+        except OSError:
+            log.exception("MQTT connection attempt %d/3 failed", attempt)
+            if attempt < 3:
+                time.sleep(10)
+    else:
+        log.critical("Could not connect to MQTT after 3 attempts – exiting")
+        sys.exit(1)
 
     # Start HTTP
     log.info("HTTP server → http://%s:%s", cfg.web_host, cfg.web_port)

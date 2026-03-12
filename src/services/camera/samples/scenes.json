@@ -1,0 +1,91 @@
+[
+  {
+    "name": "Demo scene n.1",
+    "description": "A single large adult boar detected at close range (~40m), moving alone through the field. High-confidence detection with a full-sized body profile.",
+    "count": 1,
+    "detections": [
+      {
+        "animal_type": "boar",
+        "distance": 39.7,
+        "size_estimate": 1.2,
+        "confidence": 0.96
+      }
+    ]
+  },
+  {
+    "name": "Demo scene n.2",
+    "description": "Two boars at close range (~17–20m): one large adult and one smaller juvenile. Both detected with high confidence in the same area.",
+    "count": 2,
+    "detections": [
+      {
+        "animal_type": "boar",
+        "distance": 17.4,
+        "size_estimate": 1.2,
+        "confidence": 0.96
+      },
+      {
+        "animal_type": "boar",
+        "distance": 19.6,
+        "size_estimate": 0.6,
+        "confidence": 0.76
+      }
+    ]
+  },
+  {
+    "name": "Demo scene n.3",
+    "description": "A group of three boars spread across the scene (~20–41m): one large adult leading, followed by two smaller juveniles at greater distance. Very high confidence on the lead animal.",
+    "count": 3,
+    "detections": [
+      {
+        "animal_type": "boar",
+        "distance": 20.1,
+        "size_estimate": 1.2,
+        "confidence": 0.99
+      },
+      {
+        "animal_type": "boar",
+        "distance": 33.3,
+        "size_estimate": 0.6,
+        "confidence": 0.87
+      },
+      {
+        "animal_type": "boar",
+        "distance": 40.6,
+        "size_estimate": 0.6,
+        "confidence": 0.85
+      }
+    ]
+  },
+  {
+    "name": "Demo scene n.4",
+    "description": "Single wolf detected at mid-range (~25m) with a medium-sized body profile. Unusual sighting — no boar activity present in the scene.",
+    "count": 1,
+    "detections": [
+      {
+        "animal_type": "wolf",
+        "distance": 25.0,
+        "size_estimate": 0.9,
+        "confidence": 0.88
+      }
+    ]
+  },
+  {
+    "name": "Demo scene n.5",
+    "description": "Two different species detected: a large boar at close range (~15m) and a deer further back (~30m). Both identified with high confidence, suggesting a shared grazing area.",
+    "count": 2,
+    "detections": [
+      {
+        "animal_type": "boar",
+        "distance": 15.5,
+        "size_estimate": 1.2,
+        "confidence": 0.92
+      },
+      {
+        "animal_type": "deer",
+        "distance": 30.0,
+        "size_estimate": 0.8,
+        "confidence": 0.84
+      }
+    ]
+  }
+]

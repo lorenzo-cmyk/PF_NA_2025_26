@@ -1,95 +1,132 @@
-# Processing Service
+# WatchEdge Processing Service
 
-Unified Edge / Cloud processing service for the **gBOAR** wildlife-detection system.
-It ingests MQTT messages, persists data in PostgreSQL, manages images in S3-compatible object storage, and exposes an HTTP API.
+Dual-mode (Edge / Cloud) processing service for the **WatchEdge** wildlife-detection system.
+It ingests MQTT messages from the Camera Service, persists data in PostgreSQL, manages detection images in S3-compatible object storage, and exposes an HTTP API.
 
-## Architecture Role
+## Features
 
-The same codebase runs in two modes controlled by the `SERVICE_MODE` environment variable:
+- **Dual-mode operation** — the same codebase runs as an Edge processor (next to the cameras) or as a Cloud processor (central aggregator), selected via `SERVICE_MODE`.
+- **MQTT ingestion** — subscribes to camera lifecycle, telemetry, event, and upload-status topics; relays messages across the Edge → Cloud boundary.
+- **Image upload orchestration** — Edge mode triggers the Camera Service to upload JPEG snapshots; Cloud mode fetches images from Edge S3 and stores them centrally.
+- **PostgreSQL persistence** — stores edge devices, cameras, detection events, and animal inference results via SQLModel ORM.
+- **S3-compatible object storage** — presigned PUT URLs keep credentials server-side; stored paths are clean public URLs.
+- **REST API** — health check available in both modes; on-demand image retrieval endpoint in Cloud mode.
 
-| Mode      | Subscribes to                    | Publishes to                             | Key responsibilities                                                                            |
-| --------- | -------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **EDGE**  | `edge/#`, `cloud/+/+/cmd/upload` | `cloud/{edge_id}/{camera_id}/…`          | Ingest extreme-edge messages, persist locally, relay to cloud namespace, route upload commands. |
-| **CLOUD** | `cloud/#`                        | `cloud/{edge_id}/{camera_id}/cmd/upload` | Persist centrally, serve image retrieval API for the Dashboard.                                 |
+## Architecture
 
-## Project Layout
-
+```text
+[Camera Service]
+      │ MQTT (edge/#)
+      ▼
+ MQTTClient ──► Handlers ──► Database (PostgreSQL)
+                   │               │
+                   │        S3Client (MinIO / S3)
+                   │
+                   └──► relay ──► MQTT (cloud/#)
+                                       │
+                                  [Cloud MQTTClient]
+                                       ▼
+                                  Handlers ──► Database (PostgreSQL)
+                                                    │
+                                             S3Client (Cloud S3)
+                                                    │
+                                               API (FastAPI)
 ```
-processing-service/
-├── main.py                          # CLI entry point
-├── pyproject.toml                   # Dependencies & build config
-├── Dockerfile
-└── processing_service/              # Application package
-    ├── main.py                      # Bootstrap (MQTT + HTTP)
-    ├── config.py                    # Env-var configuration
-    ├── mqtt_client.py               # paho-mqtt v2 wrapper
-    ├── handlers.py                  # MQTT message handlers (edge & cloud)
-    ├── database.py                  # SQLModel models & engine setup
-    ├── s3_client.py                 # S3-compatible object-storage helper
-    └── api.py                       # FastAPI endpoints
+
+| Module           | Responsibility                                                                    |
+| ---------------- | --------------------------------------------------------------------------------- |
+| `config.py`      | Loads and validates all settings from `.env` / environment; defines `ServiceMode` |
+| `mqtt_client.py` | paho-mqtt v2 wrapper — subscribe, publish, connection lifecycle                   |
+| `handlers.py`    | MQTT message handlers — Edge & Cloud routing, DB writes, image upload logic       |
+| `database.py`    | SQLModel ORM models and engine/session factories                                  |
+| `s3_client.py`   | boto3 S3-compatible helper — bucket init, presigned URLs, direct upload           |
+| `api.py`         | FastAPI app — health check and Cloud image retrieval endpoint                     |
+
+## MQTT Topics
+
+All edge topics follow the pattern `edge/{edge_id}/{camera_id}/…` and cloud topics follow `cloud/{edge_id}/{camera_id}/…`. See [MQTT_Mapping.md](../../../doc/MQTT_Mapping.md) for full payload definitions.
+
+### Edge mode — subscribes to `edge/#` and `cloud/+/+/cmd/upload`
+
+| Topic                                  | Action                                                                        | Relayed to cloud? |
+| -------------------------------------- | ----------------------------------------------------------------------------- | :---------------: |
+| `edge/{eid}/{cid}/lifecycle/birth`     | Upsert `edge_device` + `camera` rows                                          |  Yes (retained)   |
+| `edge/{eid}/{cid}/telemetry`           | Update camera status, temperature, battery                                    |  Yes (retained)   |
+| `edge/{eid}/{cid}/event`               | Insert `datasetstore` + `animaldetected` rows; publish `cmd/upload` to camera |        Yes        |
+| `edge/{eid}/{cid}/event/upload_status` | Update `datasetstore.imagepath` with public URL                               |        No         |
+| `cloud/{eid}/{cid}/cmd/upload`         | Fetch image from Edge S3, PUT to Cloud S3, publish `upload_status`            |         —         |
+
+### Cloud mode — subscribes to `cloud/#`
+
+Handles the `cloud/` counterparts of birth, telemetry, event, and upload_status with the same DB operations. Does not relay messages.
+
+## Configuration
+
+Settings are read from a `.env` file in the project root (or from environment variables).
+
+| Variable             | Default                                                        | Description                                                   |
+| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
+| `SERVICE_MODE`       | `EDGE`                                                         | Operational mode: `EDGE` or `CLOUD`                           |
+| `MQTT_HOST`          | `localhost`                                                    | MQTT broker hostname                                          |
+| `MQTT_PORT`          | `1883`                                                         | MQTT broker port                                              |
+| `MQTT_USERNAME`      | _(none)_                                                       | Broker username; leave empty for anonymous connections        |
+| `MQTT_PASSWORD`      | _(none)_                                                       | Broker password                                               |
+| `MQTT_CLIENT_ID`     | _(auto)_                                                       | MQTT client ID — must differ between Edge and Cloud instances |
+| `DATABASE_URL`       | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string                                  |
+| `OBJECT_STORAGE_URL` | `http://localhost:9000`                                        | S3-compatible endpoint (internal, used for presigned URLs)    |
+| `S3_PUBLIC_URL`      | _(falls back to `OBJECT_STORAGE_URL`)_                         | Public base URL for stored images (no credentials)            |
+| `S3_ACCESS_KEY`      | `watchedge`                                                    | S3 access key                                                 |
+| `S3_SECRET_KEY`      | `watchedge`                                                    | S3 secret key                                                 |
+| `S3_BUCKET`          | `watchedge-images`                                             | S3 bucket name                                                |
+| `WEB_HOST`           | `0.0.0.0`                                                      | HTTP server bind address                                      |
+| `WEB_PORT`           | `8000`                                                         | HTTP server port                                              |
+
+Minimal `.env` example:
+
+```dotenv
+SERVICE_MODE=EDGE
+MQTT_HOST=mqtt.example.com
+DATABASE_URL=postgresql://watchedge:watchedge@db:5432/watchedge-db
+OBJECT_STORAGE_URL=http://minio:9000
 ```
 
-## Environment Variables
+## Running
 
-| Variable             | Default                                         | Description                        |
-| -------------------- | ----------------------------------------------- | ---------------------------------- |
-| `SERVICE_MODE`       | `EDGE`                                          | `EDGE` or `CLOUD`.                 |
-| `MQTT_BROKER_URL`    | `mqtt://localhost:1883`                         | MQTT broker address.               |
-| `MQTT_CLIENT_ID`     | `processing-service`                            | MQTT client identifier.            |
-| `DATABASE_URL`       | `postgresql://gBOAR:gBOAR@localhost:5432/gBOAR` | PostgreSQL connection string.      |
-| `OBJECT_STORAGE_URL` | `http://localhost:9000`                         | S3-compatible endpoint (internal). |
-| `S3_PUBLIC_URL`      | *(falls back to `OBJECT_STORAGE_URL`)*          | Public base URL for stored images. |
-| `S3_ACCESS_KEY`      | `gBOAR`                                         | S3 access key.                     |
-| `S3_SECRET_KEY`      | `gBOARpass`                                     | S3 secret key.                     |
-| `S3_BUCKET`          | `gboar-images`                                  | S3 bucket name.                    |
-| `WEB_HOST`           | `0.0.0.0`                                       | HTTP listen address.               |
-| `WEB_PORT`           | `8000`                                          | HTTP listen port.                  |
-
-## HTTP Endpoints
-
-| Method | Path                        | Mode  | Description                                                    |
-| ------ | --------------------------- | ----- | -------------------------------------------------------------- |
-| `GET`  | `/health`                   | Both  | Health check returning service mode and MQTT status.           |
-| `GET`  | `/api/v1/images/{event_id}` | Cloud | Retrieve an event image (from storage or on-demand from edge). |
-
-## MQTT Topics Handled
-
-See [MQTT_Mapping.md](../../../doc/MQTT_Mapping.md) for full payload definitions.
-
-### Edge Mode
-
-- **`edge/{edge_id}/{camera_id}/lifecycle/birth`** — Upsert edge device & camera in DB.
-- **`edge/{edge_id}/{camera_id}/telemetry`** — Update camera status / temperature / battery.
-- **`edge/{edge_id}/{camera_id}/event`** — Store detection event + animal records; issue `cmd/upload`.
-- **`edge/{edge_id}/{camera_id}/event/upload_status`** — Update `image_path` with public URL on success.
-- **`cloud/+/+/cmd/upload`** — Route cloud upload commands down to extreme-edge.
-
-All processed `edge/` messages are relayed to the `cloud/` namespace.
-
-### Cloud Mode
-
-Handles `cloud/` counterparts of the above topics with the same DB operations.
-
-## Database
-
-Four tables are used (see [DB_Schema.md](../../../doc/DB_Schema.md)):
-
-1. **`edge_device`** — Physical edge nodes.
-2. **`camera`** — Imaging hardware (child of `edge_device`).
-3. **`dataset_store`** — Captured image events (child of `camera`).
-4. **`animal_detected`** — AI inference results (child of `dataset_store`).
-
-## Object Storage
-
-The bucket is configured as **publicly readable** (anonymous `GetObject`) but **writable only with credentials** (presigned PUT URLs).
-Image paths stored in the database (`dataset_store.image_path`) are clean public URLs without credentials.
-
-## Running Locally
+### Local (development)
 
 ```bash
-# Install dependencies
+# Install dependencies (Python 3.12+)
 uv sync
 
-# Start (requires PostgreSQL, Mosquitto, and S3-compatible storage)
+# Create .env (requires PostgreSQL, Mosquitto, and an S3-compatible storage instance)
+cp .env.example .env   # or write it manually
+
 uv run processing-service
 ```
+
+### Docker
+
+```bash
+docker build -t watchedge-processing-service .
+
+docker run --rm \
+  -e SERVICE_MODE=EDGE \
+  -e MQTT_HOST=mqtt.example.com \
+  -e DATABASE_URL=postgresql://watchedge:watchedge@db:5432/watchedge-db \
+  -e OBJECT_STORAGE_URL=http://minio:9000 \
+  -p 8000:8000 \
+  watchedge-processing-service
+```
+
+For a full local environment (both Edge and Cloud stacks) use the Docker Compose file at [src/environments/docker-compose.yml](../../environments/docker-compose.yml).
+
+## REST API
+
+All endpoints are served by the FastAPI app.
+
+| Method | Path                        | Mode  | Description                                                                                                                                        |
+| ------ | --------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/health`                   | Both  | Returns `{"status": "ok", "mode": …, "mqtt_connected": …}`                                                                                         |
+| `GET`  | `/api/v1/images/{event_id}` | Cloud | Retrieve a detection image. Serves from Cloud S3 if available; otherwise requests an on-demand upload from the Edge (synchronous pull, up to 30 s) |
+
+Interactive API docs are available at `http://<host>:8000/docs`.

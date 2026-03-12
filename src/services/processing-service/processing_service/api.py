@@ -20,8 +20,8 @@ from processing_service.s3_client import S3Client
 log = logging.getLogger(__name__)
 
 # Shared state – set by init()
-_cfg: Config
-_mqtt: MQTTClient
+_cfg: Config | None = None  # pylint: disable=invalid-name
+_mqtt: MQTTClient | None = None  # pylint: disable=invalid-name
 _engine: Any = None  # pylint: disable=invalid-name
 _s3: S3Client | None = None  # pylint: disable=invalid-name
 
@@ -30,7 +30,7 @@ _s3: S3Client | None = None  # pylint: disable=invalid-name
 _upload_events: dict[str, threading.Event] = {}
 _upload_lock = threading.Lock()
 
-app = FastAPI(title="gBOAR Processing Service")
+app = FastAPI(title="WatchEdge - Processing Service")
 
 
 def init(
@@ -206,7 +206,7 @@ def _try_fetch_image(url: str) -> bytes | None:
     return None
 
 
-def _resolve_edge_id(camera_id: str) -> str | None:
+def _resolve_edge_id(camera_id: _uuid.UUID) -> _uuid.UUID | None:
     """Look up the edge_id for a camera."""
     try:
         with get_session(_engine) as session:
