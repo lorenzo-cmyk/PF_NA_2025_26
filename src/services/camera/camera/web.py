@@ -23,9 +23,6 @@ log = logging.getLogger(__name__)
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-_STREAM_FPS = 15
-_STREAM_INTERVAL = 1.0 / _STREAM_FPS
-
 
 class WebUI:
     """Owns the FastAPI app, the MJPEG stream, and the presentation routes."""
@@ -41,6 +38,7 @@ class WebUI:
         self._mqtt = mqtt
         self._engine = inference_engine
         self._video = video_source
+        self._stream_interval = 1.0 / cfg.inference_fps
         self._event_log: deque[dict[str, Any]] = deque(maxlen=200)
 
         self.app = FastAPI(title="WatchEdge Camera")
@@ -131,4 +129,4 @@ class WebUI:
                     b"--frame\r\n"
                     b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
                 )
-            await asyncio.sleep(_STREAM_INTERVAL)
+            await asyncio.sleep(self._stream_interval)
