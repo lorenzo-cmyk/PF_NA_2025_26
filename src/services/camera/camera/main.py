@@ -114,11 +114,19 @@ def main() -> None:
     # 12. Start InferenceEngine
     inference_engine.start()
 
-    # 13. Start MQTT (ignore initial connection errors)
-    try:
-        mqtt.start(trigger="Auto: application startup")
-    except OSError:
-        log.exception("Could not connect to MQTT broker – WebUI will start anyway.")
+    # 13. Start MQTT (retry up to 3 times, proceed without if unavailable)
+    for attempt in range(1, 4):
+        try:
+            mqtt.start(trigger="Auto: application startup")
+            log.info("MQTT connection OK")
+            break
+        except OSError:
+            log.exception("MQTT connection attempt %d/3 failed", attempt)
+            if attempt < 3:
+                import time
+                time.sleep(10)
+    else:
+        log.warning("Could not connect to MQTT after 3 attempts – WebUI will start anyway")
 
     # 14. Start FastAPI/Uvicorn (blocks on main thread)
     log.info("WebUI → http://%s:%s", cfg.web_host, cfg.web_port)

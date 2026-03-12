@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import signal
 import sys
+import time
 
 import uvicorn
 
@@ -34,13 +35,34 @@ def main() -> None:
 
     # Database
     engine = get_engine(cfg.database_url)
+    for attempt in range(1, 4):
+        try:
+            with engine.connect():
+                pass
+            log.info("Database connection OK")
+            break
+        except Exception:
+            log.exception("Database connection attempt %d/3 failed", attempt)
+            if attempt < 3:
+                time.sleep(10)
+    else:
+        log.critical("Could not connect to the database after 3 attempts – exiting")
+        sys.exit(1)
 
     # Object Storage (S3)
     s3: S3Client | None = None
-    try:
-        s3 = S3Client(cfg)
-    except Exception:  # pylint: disable=broad-exception-caught
-        log.exception("Failed to initialise S3 client – image features disabled")
+    for attempt in range(1, 4):
+        try:
+            s3 = S3Client(cfg)
+            log.info("S3 connection OK")
+            break
+        except Exception:
+            log.exception("S3 connection attempt %d/3 failed", attempt)
+            if attempt < 3:
+                time.sleep(10)
+    else:
+        log.critical("Could not connect to S3 after 3 attempts – exiting")
+        sys.exit(1)
 
     # MQTT
     mqtt = MQTTClient(cfg)
@@ -86,12 +108,18 @@ def main() -> None:
     signal.signal(signal.SIGTERM, _shutdown)
 
     # Start MQTT
-    try:
-        mqtt.start()
-    except OSError:
-        log.exception(
-            "Could not connect to MQTT broker – HTTP server will start anyway"
-        )
+    for attempt in range(1, 4):
+        try:
+            mqtt.start()
+            log.info("MQTT connection OK")
+            break
+        except OSError:
+            log.exception("MQTT connection attempt %d/3 failed", attempt)
+            if attempt < 3:
+                time.sleep(10)
+    else:
+        log.critical("Could not connect to MQTT after 3 attempts – exiting")
+        sys.exit(1)
 
     # Start HTTP
     log.info("HTTP server → http://%s:%s", cfg.web_host, cfg.web_port)
