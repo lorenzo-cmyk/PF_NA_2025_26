@@ -113,10 +113,7 @@ def main() -> None:
     signal.signal(signal.SIGINT, _shutdown)
     signal.signal(signal.SIGTERM, _shutdown)
 
-    # 12. Start InferenceEngine
-    inference_engine.start()
-
-    # 13. Start MQTT (retry up to 3 times, proceed without if unavailable)
+    # 12. Start MQTT (retry up to 3 times, proceed without if unavailable)
     for attempt in range(1, 4):
         try:
             mqtt.start(trigger="Auto: application startup")
@@ -132,6 +129,9 @@ def main() -> None:
         log.warning(
             "Could not connect to MQTT after 3 attempts – WebUI will start anyway"
         )
+
+    # 13. Start InferenceEngine
+    inference_engine.start()
 
     # 14. Start FastAPI/Uvicorn (blocks on main thread)
     log.info("WebUI → http://%s:%s", cfg.web_host, cfg.web_port)
