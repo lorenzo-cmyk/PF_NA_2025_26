@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from pathlib import Path
 from typing import Literal
 
@@ -29,6 +30,7 @@ class VideoSource:
         self._source_type: Literal["usb", "video"] = "usb"
         self._paused = False
         self._last_frame: np.ndarray | None = None
+        self._black_frame: np.ndarray | None = None
 
         # Discover available sample videos
         videos_dir = self._samples_dir / "videos"
@@ -56,6 +58,14 @@ class VideoSource:
                 self._source_type = "video"
         else:
             self._open_usb()
+
+        self._stop_event = threading.Event()
+        self._capture_thread = threading.Thread(
+            target=self._capture_loop,
+            daemon=True,
+            name="VideoSourceCaptureThread",
+        )
+        self._capture_thread.start()
 
     # -- public API -------------------------------------------------------- #
 
@@ -92,27 +102,27 @@ class VideoSource:
         When paused, returns the last frame without advancing the position.
         """
         with self._lock:
-            if self._capture is None:
-                black = np.zeros((480, 640, 3), dtype=np.uint8)
-                return True, black
-
-            if self._paused and self._last_frame is not None:
+            # Under the new threading model, _last_frame is continuously updated
+            # by _capture_loop. We simply return what's available.
+            if self._last_frame is not None:
                 return True, self._last_frame.copy()
 
-            ok, frame = self._capture.read()
+            if self._capture is None:
+                if self._black_frame is None or self._black_frame.shape != (
+                    480,
+                    640,
+                    3,
+                ):
+                    self._black_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+                return True, self._black_frame.copy()
 
-            if not ok:
-                if self._source_type == "video":
-                    # EOF — return a black frame
-                    h = int(self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 480
-                    w = int(self._capture.get(cv2.CAP_PROP_FRAME_WIDTH)) or 640
-                    black = np.zeros((h, w, 3), dtype=np.uint8)
-                    self._last_frame = black
-                    return True, black
-                return False, None
-
-            self._last_frame = frame
-            return True, frame
+            # Fallback if the thread hasn't produced a frame yet
+            # It is not safe to call cap.get() without a lock, but we are inside the lock.
+            h = int(self._capture.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 480
+            w = int(self._capture.get(cv2.CAP_PROP_FRAME_WIDTH)) or 640
+            if self._black_frame is None or self._black_frame.shape != (h, w, 3):
+                self._black_frame = np.zeros((h, w, 3), dtype=np.uint8)
+            return True, self._black_frame.copy()
 
     def pause(self) -> None:
         """Pause video playback (no-op for USB)."""
@@ -168,8 +178,7 @@ class VideoSource:
         """Return the native FPS of the current source.
 
         For a video file this is the value encoded in the container.  For a USB
-        camera this is the FPS reported by the driver after we requested 15 FPS
-        on open (the driver may or may not honour the request).
+        camera this is the FPS reported by the driver.
         Returns ``None`` only if the capture is not open or the driver reports 0.
         """
         with self._lock:
@@ -184,8 +193,63 @@ class VideoSource:
 
     def release(self) -> None:
         """Release the OpenCV capture."""
+        self._stop_event.set()
+        if hasattr(self, "_capture_thread") and self._capture_thread.is_alive():
+            self._capture_thread.join(timeout=2.0)
         with self._lock:
             self._release_capture()
+
+    def _capture_loop(self) -> None:
+        """Continuously grab frames from the active capture device/file."""
+        current_cap = None
+        fps = 0.0
+
+        while not self._stop_event.is_set():
+            start_t = time.time()
+            sleep_t = 0.0
+
+            with self._lock:
+                cap = self._capture
+                source_type = self._source_type
+                paused = self._paused
+
+            if cap is None:
+                sleep_t = 0.1
+            elif paused and source_type == "video":
+                sleep_t = 0.1
+            else:
+                with self._lock:
+                    if cap is not self._capture:
+                        continue
+
+                    if cap is not current_cap:
+                        current_cap = cap
+                        if source_type == "video":
+                            fps = cap.get(cv2.CAP_PROP_FPS)
+                        else:
+                            fps = 0.0
+
+                    ok, frame = cap.read()
+
+                    if not ok:
+                        if source_type == "video":
+                            # EOF — loop back to the beginning
+                            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        else:
+                            sleep_t = 1.0
+                    else:
+                        self._last_frame = frame
+
+                if source_type == "video" and fps > 0:
+                    elapsed = time.time() - start_t
+                    req_sleep = (1.0 / fps) - elapsed
+                    if req_sleep > 0:
+                        sleep_t = req_sleep
+
+            if sleep_t > 0:
+                self._stop_event.wait(sleep_t)
+            else:
+                self._stop_event.wait(0.001)
 
     # -- lock-held helpers ------------------------------------------------- #
 
@@ -204,12 +268,11 @@ class VideoSource:
             self._capture = None
             self._source_type = "usb"
             return
-        cap.set(cv2.CAP_PROP_FPS, 15)
         actual_fps = cap.get(cv2.CAP_PROP_FPS)
         self._capture = cap
         self._source_type = "usb"
         log.info(
-            "VideoSource → USB camera (index=%d, requested_fps=15, actual_fps=%.2f)",
+            "VideoSource → USB camera (index=%d, actual_fps=%.2f)",
             self._usb_index,
             actual_fps,
         )
