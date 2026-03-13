@@ -51,29 +51,29 @@ Frozen dataclass loaded from environment variables. Mirrors the camera-emulator 
 
 **Fields:**
 
-| Field | Type | Default | Description |
-|:------|:-----|:--------|:------------|
-| `mqtt_host` | `str` | `localhost` | MQTT broker hostname |
-| `mqtt_port` | `int` | `1883` | MQTT broker port |
-| `mqtt_username` | `str` | `""` | MQTT credentials |
-| `mqtt_password` | `str` | `""` | MQTT credentials |
-| `mqtt_client_id` | `str` | `""` | MQTT client ID |
-| `edge_id` | `UUID` | *(required)* | Edge device UUID (provisioned at deployment time) |
-| `camera_id` | `UUID` | *(required)* | Camera UUID (provisioned at deployment time) |
-| `web_host` | `str` | `0.0.0.0` | WebUI bind address |
-| `web_port` | `int` | `8080` | WebUI bind port |
-| `model_path` | `str` | `model/best_yolov9t_aug.onnx` | Path to ONNX model |
-| `confidence_threshold` | `float` | `0.6` | Minimum detection confidence |
-| `iou_threshold` | `float` | `0.5` | NMS IoU threshold |
-| `usb_camera_index` | `int` | `0` | OpenCV VideoCapture device index |
-| `samples_dir` | `str` | `samples/` | Root directory for bundled sample assets |
-| `scenes_file` | `str` | `samples/scenes.json` | Path to sample event scenes JSON file |
-| `default_source` | `str` | `usb` | Initial video source (`usb` or `video`) |
-| `inference_fps` | `int` | `15` | Target inference framerate |
-| `event_throttle_s` | `float` | `5.0` | Minimum seconds between two published detection events |
-| `image_dir` | `str` | `data/images/` | Directory for saving captured frames (created on startup if missing) |
-| `telemetry_interval_s` | `float` | `30.0` | Seconds between telemetry heartbeat publishes |
-| `birth_*` fields | various | — | Camera registration defaults (edge_name, edge_location as plain string, camera_type, camera_coords, elevation, technical_params_json) |
+| Field                  | Type    | Default                       | Description                                                                                                                           |
+| :--------------------- | :------ | :---------------------------- | :------------------------------------------------------------------------------------------------------------------------------------ |
+| `mqtt_host`            | `str`   | `localhost`                   | MQTT broker hostname                                                                                                                  |
+| `mqtt_port`            | `int`   | `1883`                        | MQTT broker port                                                                                                                      |
+| `mqtt_username`        | `str`   | `""`                          | MQTT credentials                                                                                                                      |
+| `mqtt_password`        | `str`   | `""`                          | MQTT credentials                                                                                                                      |
+| `mqtt_client_id`       | `str`   | `""`                          | MQTT client ID                                                                                                                        |
+| `edge_id`              | `UUID`  | *(required)*                  | Edge device UUID (provisioned at deployment time)                                                                                     |
+| `camera_id`            | `UUID`  | *(required)*                  | Camera UUID (provisioned at deployment time)                                                                                          |
+| `web_host`             | `str`   | `0.0.0.0`                     | WebUI bind address                                                                                                                    |
+| `web_port`             | `int`   | `8080`                        | WebUI bind port                                                                                                                       |
+| `model_path`           | `str`   | `model/best_yolov9t_aug.onnx` | Path to ONNX model                                                                                                                    |
+| `confidence_threshold` | `float` | `0.6`                         | Minimum detection confidence                                                                                                          |
+| `iou_threshold`        | `float` | `0.5`                         | NMS IoU threshold                                                                                                                     |
+| `usb_camera_index`     | `int`   | `0`                           | OpenCV VideoCapture device index                                                                                                      |
+| `samples_dir`          | `str`   | `samples/`                    | Root directory for bundled sample assets                                                                                              |
+| `scenes_file`          | `str`   | `samples/scenes.json`         | Path to sample event scenes JSON file                                                                                                 |
+| `default_source`       | `str`   | `usb`                         | Initial video source (`usb` or `video`)                                                                                               |
+| `inference_fps`        | `int`   | `15`                          | Target inference framerate                                                                                                            |
+| `event_throttle_s`     | `float` | `5.0`                         | Minimum seconds between two published detection events                                                                                |
+| `image_dir`            | `str`   | `data/images/`                | Directory for saving captured frames (created on startup if missing)                                                                  |
+| `telemetry_interval_s` | `float` | `30.0`                        | Seconds between telemetry heartbeat publishes                                                                                         |
+| `birth_*` fields       | various | —                             | Camera registration defaults (edge_name, edge_location as plain string, camera_type, camera_coords, elevation, technical_params_json) |
 
 **Helper:**
 
@@ -91,28 +91,28 @@ Wraps an OpenCV `VideoCapture` and exposes a uniform frame-reading interface reg
 
 **State:**
 
-| Attribute | Type | Description |
-|:----------|:-----|:------------|
-| `_source_type` | `Literal["usb", "video"]` | Current active source |
-| `_capture` | `cv2.VideoCapture | None` | Active OpenCV capture |
-| `_lock` | `threading.Lock` | Thread-safe access to capture and state |
-| `_paused` | `bool` | Whether video playback is paused (only meaningful for `video` source) |
-| `_usb_index` | `int` | USB camera device index |
-| `_available_videos` | `list[dict]` | List of discovered sample videos (`{"name": ..., "path": ...}`) |
-| `_current_video` | `str` | Filename of the currently selected sample video |
+| Attribute           | Type                      | Description                                                           |
+| :------------------ | :------------------------ | :-------------------------------------------------------------------- |
+| `_source_type`      | `Literal["usb", "video"]` | Current active source                                                 |
+| `_capture`          | `cv2.VideoCapture         | None`                                                                 | Active OpenCV capture |
+| `_lock`             | `threading.Lock`          | Thread-safe access to capture and state                               |
+| `_paused`           | `bool`                    | Whether video playback is paused (only meaningful for `video` source) |
+| `_usb_index`        | `int`                     | USB camera device index                                               |
+| `_available_videos` | `list[dict]`              | List of discovered sample videos (`{"name": ..., "path": ...}`)       |
+| `_current_video`    | `str`                     | Filename of the currently selected sample video                       |
 
 **Methods:**
 
-| Method | Description |
-|:-------|:------------|
+| Method                                 | Description                                                                                                                                                                                                     |
+| :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `switch(source_type, video_name=None)` | Releases current capture, opens the new source. When switching to `video`, `video_name` selects which sample video to load. If omitted, uses the previously selected video or the first available. Thread-safe. |
-| `read() -> tuple[bool, np.ndarray | None]` | Returns the next frame. For `video` source when paused, returns the last captured frame without advancing. |
-| `pause()` | Pauses video playback (no-op for USB). |
-| `resume()` | Resumes video playback (no-op for USB). |
-| `seek(timestamp_ms: float)` | Seeks to a specific position in the video file via `CAP_PROP_POS_MSEC`. Only effective when paused. No-op for USB. |
-| `get_video_info() -> dict` | Returns metadata: `source_type`, `current_video`, `is_paused`, `position_ms`, `duration_ms`, `fps`. Duration and position are `None` for USB. |
-| `list_videos() -> list[dict]` | Returns the list of available sample videos (`[{"name": ..., "path": ...}, ...]`). |
-| `release()` | Releases the OpenCV capture. |
+| `read() -> tuple[bool, np.ndarray      | None]`                                                                                                                                                                                                          | Returns the next frame. For `video` source when paused, returns the last captured frame without advancing. |
+| `pause()`                              | Pauses video playback (no-op for USB).                                                                                                                                                                          |
+| `resume()`                             | Resumes video playback (no-op for USB).                                                                                                                                                                         |
+| `seek(timestamp_ms: float)`            | Seeks to a specific position in the video file via `CAP_PROP_POS_MSEC`. Only effective when paused. No-op for USB.                                                                                              |
+| `get_video_info() -> dict`             | Returns metadata: `source_type`, `current_video`, `is_paused`, `position_ms`, `duration_ms`, `fps`. Duration and position are `None` for USB.                                                                   |
+| `list_videos() -> list[dict]`          | Returns the list of available sample videos (`[{"name": ..., "path": ...}, ...]`).                                                                                                                              |
+| `release()`                            | Releases the OpenCV capture.                                                                                                                                                                                    |
 
 **Behavior notes:**
 
@@ -134,25 +134,25 @@ Pure ONNX inference: loads the model once, exposes a single stateless `detect()`
 
 **State:**
 
-| Attribute | Type | Description |
-|:----------|:-----|:------------|
-| `_session` | `ort.InferenceSession` | Loaded ONNX model session |
-| `_input_name` | `str` | Model input tensor name (cached on init) |
-| `_input_shape` | `tuple` | Expected input dimensions `(1, 3, H, W)` (cached on init) |
-| `_confidence_threshold` | `float` | Minimum detection confidence |
-| `_iou_threshold` | `float` | NMS IoU threshold |
+| Attribute               | Type                   | Description                                               |
+| :---------------------- | :--------------------- | :-------------------------------------------------------- |
+| `_session`              | `ort.InferenceSession` | Loaded ONNX model session                                 |
+| `_input_name`           | `str`                  | Model input tensor name (cached on init)                  |
+| `_input_shape`          | `tuple`                | Expected input dimensions `(1, 3, H, W)` (cached on init) |
+| `_confidence_threshold` | `float`                | Minimum detection confidence                              |
+| `_iou_threshold`        | `float`                | NMS IoU threshold                                         |
 
 **Methods:**
 
-| Method | Description |
-|:-------|:------------|
+| Method                                                       | Description                                                                                                                                                                                                     |
+| :----------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `detect(frame: np.ndarray) -> tuple[np.ndarray, list[dict]]` | Takes a raw BGR frame, runs the full pipeline (preprocess → infer → postprocess → annotate), and returns `(annotated_frame, detections)`. Pure function over the model weights — no side effects, no threading. |
 
 **Internal helpers (private):**
 
-| Method | Description |
-|:-------|:------------|
-| `_preprocess(frame) -> np.ndarray` | BGR→RGB, resize to model input shape, normalize to `[0, 1]`, transpose to CHW, add batch dimension. |
+| Method                                                             | Description                                                                                                                                                                 |
+| :----------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `_preprocess(frame) -> np.ndarray`                                 | BGR→RGB, resize to model input shape, normalize to `[0, 1]`, transpose to CHW, add batch dimension.                                                                         |
 | `_postprocess(frame, raw_output) -> tuple[np.ndarray, list[dict]]` | Decodes raw model output into boxes, applies confidence filtering and NMS, draws bounding boxes and labels on a copy of the frame, returns `(annotated_frame, detections)`. |
 
 **Detection output format** (per detection):
@@ -179,30 +179,30 @@ Threaded loop that reads frames from the VideoSource, delegates to the Detector,
 
 **State:**
 
-| Attribute | Type | Description |
-|:----------|:-----|:------------|
-| `_detector` | `Detector` | The detection model |
-| `_video_source` | `VideoSource` | Frame provider |
-| `_running` | `bool` | Engine loop control flag |
-| `_target_fps` | `int` | Target inference framerate |
-| `_latest_frame` | `np.ndarray | None` | Most recent annotated frame (with bounding boxes drawn) |
-| `_latest_detections` | `list[dict]` | Most recent detection results |
-| `_frame_lock` | `threading.Lock` | Guards `_latest_frame` and `_latest_detections` |
-| `_on_detection` | `Callable | None` | Callback invoked when detections are found |
+| Attribute            | Type             | Description                                     |
+| :------------------- | :--------------- | :---------------------------------------------- |
+| `_detector`          | `Detector`       | The detection model                             |
+| `_video_source`      | `VideoSource`    | Frame provider                                  |
+| `_running`           | `bool`           | Engine loop control flag                        |
+| `_target_fps`        | `int`            | Target inference framerate                      |
+| `_latest_frame`      | `np.ndarray      | None`                                           | Most recent annotated frame (with bounding boxes drawn) |
+| `_latest_detections` | `list[dict]`     | Most recent detection results                   |
+| `_frame_lock`        | `threading.Lock` | Guards `_latest_frame` and `_latest_detections` |
+| `_on_detection`      | `Callable        | None`                                           | Callback invoked when detections are found              |
 
 **Methods:**
 
-| Method | Description |
-|:-------|:------------|
-| `start()` | Starts the inference loop in a daemon thread. |
-| `stop()` | Signals the loop to stop and waits for the thread to join. |
-| `get_latest_frame() -> bytes | None` | Returns the latest annotated frame JPEG-encoded (thread-safe read). Used by the MJPEG stream. |
-| `get_latest_detections() -> list[dict]` | Returns the latest detection list (thread-safe read). |
-| `on_detection(callback)` | Registers a callback `fn(detections: list[dict], frame: np.ndarray)` invoked each time the engine produces detections with `count > 0`. |
+| Method                                  | Description                                                                                                                             |
+| :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| `start()`                               | Starts the inference loop in a daemon thread.                                                                                           |
+| `stop()`                                | Signals the loop to stop and waits for the thread to join.                                                                              |
+| `get_latest_frame() -> bytes            | None`                                                                                                                                   | Returns the latest annotated frame JPEG-encoded (thread-safe read). Used by the MJPEG stream. |
+| `get_latest_detections() -> list[dict]` | Returns the latest detection list (thread-safe read).                                                                                   |
+| `on_detection(callback)`                | Registers a callback `fn(detections: list[dict], frame: np.ndarray)` invoked each time the engine produces detections with `count > 0`. |
 
 **Inference loop (pseudocode):**
 
-```
+```python
 while _running:
     ok, frame = _video_source.read()
     if not ok:
@@ -232,19 +232,19 @@ Bridges the Inference Engine output to the MQTT client. Responsible for assembli
 
 **State:**
 
-| Attribute | Type | Description |
-|:----------|:-----|:------------|
-| `_mqtt` | `MQTTClient` | MQTT publishing interface |
-| `_cfg` | `Config` | Camera configuration |
-| `_last_event_time` | `float` | Timestamp of last published event (for throttling) |
-| `_image_dir` | `Path` | Directory where captured frames are saved as `{event_id}.jpg` for upload command fulfillment |
+| Attribute          | Type         | Description                                                                                  |
+| :----------------- | :----------- | :------------------------------------------------------------------------------------------- |
+| `_mqtt`            | `MQTTClient` | MQTT publishing interface                                                                    |
+| `_cfg`             | `Config`     | Camera configuration                                                                         |
+| `_last_event_time` | `float`      | Timestamp of last published event (for throttling)                                           |
+| `_image_dir`       | `Path`       | Directory where captured frames are saved as `{event_id}.jpg` for upload command fulfillment |
 
 **Methods:**
 
-| Method | Description |
-|:-------|:------------|
-| `handle_detections(detections, frame)` | Registered as the Inference Engine callback. Applies throttling, builds the event payload conforming to the MQTT spec, generates a UUID `event_id` (plain UUID, no prefix), saves the frame as `{event_id}.jpg` in `_image_dir`, and publishes to `{prefix}/event`. The `count` field is included for informational purposes only — the DB trigger `trg_refresh_count` always recomputes it from child rows. |
-| `handle_upload_cmd(event_id, upload_url)` | Called when a `cmd/upload` is received. Reads the image file `{event_id}.jpg` from `_image_dir`, uploads it via HTTP PUT to `upload_url`, and publishes `upload_status` with `remote_path` on success or `message` on error (matching the MQTT_Mapping.md §4 payload). Runs in a background thread to avoid blocking the MQTT callback. |
+| Method                                    | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
+| :---------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `handle_detections(detections, frame)`    | Registered as the Inference Engine callback. Applies throttling, builds the event payload conforming to the MQTT spec, generates a UUID `event_id` (plain UUID, no prefix), saves the frame as `{event_id}.jpg` in `_image_dir`, and publishes to `{prefix}/event`. The `count` field is included for informational purposes only — the DB trigger `trg_refresh_count` always recomputes it from child rows. |
+| `handle_upload_cmd(event_id, upload_url)` | Called when a `cmd/upload` is received. Reads the image file `{event_id}.jpg` from `_image_dir`, uploads it via HTTP PUT to `upload_url`, and publishes `upload_status` with `remote_path` on success or `message` on error (matching the MQTT_Mapping.md §4 payload). Runs in a background thread to avoid blocking the MQTT callback.                                                                      |
 
 **Event payload** (as per MQTT_Mapping.md):
 
@@ -278,17 +278,17 @@ Reuses the same pattern from the emulator — thin wrapper around `paho.mqtt.cli
 
 **Publishes to:**
 
-| Topic | QoS | Retained | Trigger |
-|:------|:----|:---------|:--------|
-| `{prefix}/lifecycle/birth` | 1 | Yes | On connect (auto) |
-| `{prefix}/telemetry` | 1 | Yes | Periodic (configurable interval) |
-| `{prefix}/event` | 1 | No | On detection (via EventPipeline) |
-| `{prefix}/event/upload_status` | 1 | No | After upload attempt |
+| Topic                          | QoS  | Retained | Trigger                          |
+| :----------------------------- | :--- | :------- | :------------------------------- |
+| `{prefix}/lifecycle/birth`     | 1    | Yes      | On connect (auto)                |
+| `{prefix}/telemetry`           | 1    | Yes      | Periodic (configurable interval) |
+| `{prefix}/event`               | 1    | No       | On detection (via EventPipeline) |
+| `{prefix}/event/upload_status` | 1    | No       | After upload attempt             |
 
 **Subscribes to:**
 
-| Topic | Handler |
-|:------|:--------|
+| Topic                 | Handler                                     |
+| :-------------------- | :------------------------------------------ |
 | `{prefix}/cmd/upload` | Routes to `EventPipeline.handle_upload_cmd` |
 
 **LWT:** `{"status": "Offline"}` on `{prefix}/telemetry`
@@ -326,17 +326,17 @@ All values are sourced from the `birth_*` fields in `Config`.
 
 **Methods (same interface as the emulator):**
 
-| Method | Description |
-|:-------|:------------|
-| `start()` | Connects to broker, starts background loop, auto-publishes birth. |
-| `stop()` | Publishes `{"status": "Offline"}` telemetry, disconnects gracefully. |
-| `publish_birth()` | Sends retained registration message. |
-| `publish_telemetry()` | Sends retained heartbeat. |
-| `publish_event(payload)` | Sends detection event. |
+| Method                                            | Description                                                                                                                                            |
+| :------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start()`                                         | Connects to broker, starts background loop, auto-publishes birth.                                                                                      |
+| `stop()`                                          | Publishes `{"status": "Offline"}` telemetry, disconnects gracefully.                                                                                   |
+| `publish_birth()`                                 | Sends retained registration message.                                                                                                                   |
+| `publish_telemetry()`                             | Sends retained heartbeat.                                                                                                                              |
+| `publish_event(payload)`                          | Sends detection event.                                                                                                                                 |
 | `publish_upload_status(event_id, status, detail)` | Sends upload result. On `SUCCESS`, `detail` is the `remote_path`. On `ERROR`, `detail` is the error `message`. Payload conforms to MQTT_Mapping.md §4. |
-| `is_connected() -> bool` | Thread-safe connection state check. |
-| `on_command(callback)` | Registers handler for incoming `cmd/upload` messages. |
-| `on_log_event(callback)` | Registers handler for structured MQTT event logs (for the WebUI log viewer). |
+| `is_connected() -> bool`                          | Thread-safe connection state check.                                                                                                                    |
+| `on_command(callback)`                            | Registers handler for incoming `cmd/upload` messages.                                                                                                  |
+| `on_log_event(callback)`                          | Registers handler for structured MQTT event logs (for the WebUI log viewer).                                                                           |
 
 ---
 
@@ -350,13 +350,13 @@ Serves the two HTML pages (**Homepage** and **Configuration**), the MJPEG live s
 
 #### Routes owned by WebUI
 
-| Method | Endpoint | Description |
-|:-------|:---------|:------------|
-| `GET` | `/` | Renders the Homepage template. |
-| `GET` | `/configuration` | Renders the Configuration page template. |
-| `GET` | `/stream` | MJPEG streaming response. Continuously yields the latest annotated frame from the Inference Engine as a `multipart/x-mixed-replace` stream. This is what the Homepage embeds as a live view via `<img src="/stream">`. |
-| `GET` | `/api/status` | Returns camera status JSON: `mqtt_connected`, `edge_id`, `camera_id`, `source_type`, `current_video`, `is_paused`, `inference_running`. |
-| `GET` | `/api/log` | Returns the recent MQTT event log (same deque-based pattern as the emulator, capped at 200 entries). |
+| Method | Endpoint         | Description                                                                                                                                                                                                            |
+| :----- | :--------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/`              | Renders the Homepage template.                                                                                                                                                                                         |
+| `GET`  | `/configuration` | Renders the Configuration page template.                                                                                                                                                                               |
+| `GET`  | `/stream`        | MJPEG streaming response. Continuously yields the latest annotated frame from the Inference Engine as a `multipart/x-mixed-replace` stream. This is what the Homepage embeds as a live view via `<img src="/stream">`. |
+| `GET`  | `/api/status`    | Returns camera status JSON: `mqtt_connected`, `edge_id`, `camera_id`, `source_type`, `current_video`, `is_paused`, `inference_running`.                                                                                |
+| `GET`  | `/api/log`       | Returns the recent MQTT event log (same deque-based pattern as the emulator, capped at 200 entries).                                                                                                                   |
 
 #### MJPEG Stream Implementation
 
@@ -381,22 +381,22 @@ All control and configuration REST endpoints, mounted as a sub-router on the Fas
 
 #### Routes owned by WebAPI
 
-| Method | Endpoint | Description |
-|:-------|:---------|:------------|
-| `GET` | `/health` | Health check — returns `mqtt_connected`, `inference_running`, `source_type`. |
-| `POST` | `/api/restart` | Stops the Inference Engine and MQTT client, then restarts them. Returns success/failure. |
-| `POST` | `/api/mqtt/disconnect` | Gracefully disconnects the MQTT client. |
-| `POST` | `/api/mqtt/reconnect` | Reconnects the MQTT client to the broker. |
-| `POST` | `/api/source/switch` | Switches video source. Body: `{"source": "usb" | "video", "video_name": "sample_01.mp4"}`. The`video_name` field is optional and only used when switching to `video`. Delegates to`VideoSource.switch()`. |
-| `POST` | `/api/source/pause` | Pauses video playback. |
-| `POST` | `/api/source/resume` | Resumes video playback. |
-| `POST` | `/api/source/seek` | Seeks in paused video. Body: `{"timestamp_ms": 12345}`. |
-| `GET` | `/api/source/info` | Returns `VideoSource.get_video_info()` (source type, current video name, paused state, position, duration). |
-| `GET` | `/api/source/videos` | Returns the list of available sample videos from `VideoSource.list_videos()`. |
-| `GET` | `/api/scenes` | Returns the list of sample event scenes loaded from `scenes.json`. |
-| `POST` | `/api/event/inject` | Injects an MQTT event. Body: `{"scene_index": 0}` to use a predefined scene, or a full custom event payload. Publishes via `MQTTClient.publish_event()`. |
-| `POST` | `/api/birth` | Publishes a custom birth message (same as emulator). |
-| `POST` | `/api/telemetry` | Publishes a custom telemetry message (same as emulator). |
+| Method | Endpoint               | Description                                                                                                                                              |
+| :----- | :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/health`              | Health check — returns `mqtt_connected`, `inference_running`, `source_type`.                                                                             |
+| `POST` | `/api/restart`         | Stops the Inference Engine and MQTT client, then restarts them. Returns success/failure.                                                                 |
+| `POST` | `/api/mqtt/disconnect` | Gracefully disconnects the MQTT client.                                                                                                                  |
+| `POST` | `/api/mqtt/reconnect`  | Reconnects the MQTT client to the broker.                                                                                                                |
+| `POST` | `/api/source/switch`   | Switches video source. Body: `{"source": "usb"                                                                                                           | "video", "video_name": "sample_01.mp4"}`. The`video_name` field is optional and only used when switching to `video`. Delegates to`VideoSource.switch()`. |
+| `POST` | `/api/source/pause`    | Pauses video playback.                                                                                                                                   |
+| `POST` | `/api/source/resume`   | Resumes video playback.                                                                                                                                  |
+| `POST` | `/api/source/seek`     | Seeks in paused video. Body: `{"timestamp_ms": 12345}`.                                                                                                  |
+| `GET`  | `/api/source/info`     | Returns `VideoSource.get_video_info()` (source type, current video name, paused state, position, duration).                                              |
+| `GET`  | `/api/source/videos`   | Returns the list of available sample videos from `VideoSource.list_videos()`.                                                                            |
+| `GET`  | `/api/scenes`          | Returns the list of sample event scenes loaded from `scenes.json`.                                                                                       |
+| `POST` | `/api/event/inject`    | Injects an MQTT event. Body: `{"scene_index": 0}` to use a predefined scene, or a full custom event payload. Publishes via `MQTTClient.publish_event()`. |
+| `POST` | `/api/birth`           | Publishes a custom birth message (same as emulator).                                                                                                     |
+| `POST` | `/api/telemetry`       | Publishes a custom telemetry message (same as emulator).                                                                                                 |
 
 ---
 
@@ -408,22 +408,22 @@ Two templates, both using Tailwind CSS (CDN) and a dark theme consistent with th
 
 Three sections stacked vertically:
 
-| Section | Content |
-|:--------|:--------|
-| **Status Bar** | Connection badge (MQTT connected/disconnected), Edge ID, Camera ID, current video source indicator. Polled via `GET /api/status` on a short interval. |
-| **Live View** | An `<img>` tag with `src="/stream"`. Displays the real-time annotated inference output. No JavaScript needed — the browser handles the MJPEG stream natively. |
-| **System Logs** | Scrollable log panel showing MQTT events (direction, topic, payload, timestamp). Polled via `GET /api/log`. Same presentation as the camera-emulator. |
+| Section         | Content                                                                                                                                                       |
+| :-------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Status Bar**  | Connection badge (MQTT connected/disconnected), Edge ID, Camera ID, current video source indicator. Polled via `GET /api/status` on a short interval.         |
+| **Live View**   | An `<img>` tag with `src="/stream"`. Displays the real-time annotated inference output. No JavaScript needed — the browser handles the MJPEG stream natively. |
+| **System Logs** | Scrollable log panel showing MQTT events (direction, topic, payload, timestamp). Polled via `GET /api/log`. Same presentation as the camera-emulator.         |
 
 #### `configuration.html`
 
 Four card sections:
 
-| Section | Controls |
-|:--------|:---------|
-| **Software Restart** | A single "Restart Camera Software" button. Calls `POST /api/restart`. Shows a brief "Restarting..." indicator. |
-| **MQTT Connection** | "Disconnect" and "Reconnect" buttons. Reflects current state. Calls `POST /api/mqtt/disconnect` and `POST /api/mqtt/reconnect`. |
-| **Video Source** | Radio toggle: `USB Camera` / `Pre-recorded Video`. On switch, calls `POST /api/source/switch`. When `video` is selected, shows: (1) a **dropdown to select which sample video** to play (populated from `GET /api/source/videos`), (2) a Play/Pause toggle button, and (3) a range slider (timestamp scrubber) displaying current position and total duration. The scrubber is only interactive when paused. Position and duration are polled from `GET /api/source/info`. Seeking calls `POST /api/source/seek`. Changing the video dropdown calls `POST /api/source/switch` with the new `video_name`. |
-| **Inject Event** | A **dropdown of sample event scenes** (populated from `GET /api/scenes`, loaded from the bundled `scenes.json`). Each scene has a name, description, and predefined detection payload — same structure as the camera-emulator's scenes. Selecting a scene and clicking "Send" calls `POST /api/event/inject {"scene_index": N}`. Below the dropdown, there is also an expandable **custom event form** allowing manual entry of `count` and detections (`animal_type`, `distance`, `size_estimate`, `confidence`). Also includes manual Birth and Telemetry publishing forms. |
+| Section              | Controls                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Software Restart** | A single "Restart Camera Software" button. Calls `POST /api/restart`. Shows a brief "Restarting..." indicator.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **MQTT Connection**  | "Disconnect" and "Reconnect" buttons. Reflects current state. Calls `POST /api/mqtt/disconnect` and `POST /api/mqtt/reconnect`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Video Source**     | Radio toggle: `USB Camera` / `Pre-recorded Video`. On switch, calls `POST /api/source/switch`. When `video` is selected, shows: (1) a **dropdown to select which sample video** to play (populated from `GET /api/source/videos`), (2) a Play/Pause toggle button, and (3) a range slider (timestamp scrubber) displaying current position and total duration. The scrubber is only interactive when paused. Position and duration are polled from `GET /api/source/info`. Seeking calls `POST /api/source/seek`. Changing the video dropdown calls `POST /api/source/switch` with the new `video_name`. |
+| **Inject Event**     | A **dropdown of sample event scenes** (populated from `GET /api/scenes`, loaded from the bundled `scenes.json`). Each scene has a name, description, and predefined detection payload — same structure as the camera-emulator's scenes. Selecting a scene and clicking "Send" calls `POST /api/event/inject {"scene_index": N}`. Below the dropdown, there is also an expandable **custom event form** allowing manual entry of `count` and detections (`animal_type`, `distance`, `size_estimate`, `confidence`). Also includes manual Birth and Telemetry publishing forms.                            |
 
 ---
 
@@ -433,7 +433,7 @@ Orchestrates startup and wiring of all components.
 
 **Startup sequence:**
 
-```
+```text
 1.  Load Config from environment variables
 2.  Load sample scenes from scenes_file JSON
 3.  Discover available sample videos from samples_dir/videos/
@@ -459,7 +459,7 @@ Orchestrates startup and wiring of all components.
 
 ## 3. File Structure
 
-```
+```text
 src/services/camera/
 ├── Dockerfile
 ├── main.py                          # Entry point (same pattern as emulator)
@@ -493,22 +493,22 @@ src/services/camera/
 
 ## 4. Dependencies
 
-| Package | Purpose |
-|:--------|:--------|
-| `fastapi` | WebUI HTTP framework |
-| `uvicorn[standard]` | ASGI server |
-| `paho-mqtt` | MQTT v5 client (v2 API) |
-| `jinja2` | HTML templating |
-| `requests` | HTTP uploads to Object Storage |
-| `opencv-python` | Video capture (USB + file) and frame manipulation |
-| `numpy` | Image array operations |
-| `onnxruntime` | YOLOv9t model inference |
+| Package             | Purpose                                           |
+| :------------------ | :------------------------------------------------ |
+| `fastapi`           | WebUI HTTP framework                              |
+| `uvicorn[standard]` | ASGI server                                       |
+| `paho-mqtt`         | MQTT v5 client (v2 API)                           |
+| `jinja2`            | HTML templating                                   |
+| `requests`          | HTTP uploads to Object Storage                    |
+| `opencv-python`     | Video capture (USB + file) and frame manipulation |
+| `numpy`             | Image array operations                            |
+| `onnxruntime`       | YOLOv9t model inference                           |
 
 ---
 
 ## 5. Threading Model
 
-```
+```text
 Main Thread          ─── Uvicorn / FastAPI (blocking)
                           ├── HTTP request handlers
                           └── /stream MJPEG generator (one per connected client)
@@ -535,7 +535,7 @@ All shared state (`_latest_frame`, `_latest_detections`, MQTT connection flag, V
 
 ### 6.1 Detection → MQTT Event
 
-```
+```text
 VideoSource ──frame──> InferenceEngine ──detections──> EventPipeline ──publish──> MQTTClient
                              │                              │                        │
                              │                              │                        v
@@ -547,7 +547,7 @@ VideoSource ──frame──> InferenceEngine ──detections──> EventPipe
 
 ### 6.2 Upload Command Flow
 
-```
+```text
 MQTTClient <──cmd/upload── MQTT Broker
      │
      v
@@ -561,7 +561,7 @@ EventPipeline.handle_upload_cmd(event_id, upload_url)
 
 ### 6.3 Live View (MJPEG)
 
-```
+```text
 Browser <img src="/stream">
      │
      v
@@ -577,14 +577,14 @@ FastAPI GET /stream (StreamingResponse)
 
 ## 7. Video Source Switching — Behavior Spec
 
-| Action | USB Source | Video Source |
-|:-------|:----------|:------------|
-| **Switch to USB** | No-op | Releases video capture, opens USB device. Resets pause state. |
+| Action              | USB Source                                                        | Video Source                                                                                                                 |
+| :------------------ | :---------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
+| **Switch to USB**   | No-op                                                             | Releases video capture, opens USB device. Resets pause state.                                                                |
 | **Switch to Video** | Releases USB capture, opens selected sample video from beginning. | If a different `video_name` is specified, releases current video and opens the new one from beginning. Same name is a no-op. |
-| **Select Video** | Ignored | Switches to the chosen sample video (calls `switch("video", video_name)`). Resets to beginning of the new file. |
-| **Pause** | Ignored | Freezes playback. `read()` returns the current frame repeatedly. |
-| **Resume** | Ignored | Resumes playback from current position. |
-| **Seek** | Ignored | Only works when paused. Sets `CAP_PROP_POS_MSEC`. Next `read()` returns the frame at the new position. |
+| **Select Video**    | Ignored                                                           | Switches to the chosen sample video (calls `switch("video", video_name)`). Resets to beginning of the new file.              |
+| **Pause**           | Ignored                                                           | Freezes playback. `read()` returns the current frame repeatedly.                                                             |
+| **Resume**          | Ignored                                                           | Resumes playback from current position.                                                                                      |
+| **Seek**            | Ignored                                                           | Only works when paused. Sets `CAP_PROP_POS_MSEC`. Next `read()` returns the frame at the new position.                       |
 
 The Inference Engine does not need to know which source is active — it always calls `VideoSource.read()` and processes whatever frame is returned. The MJPEG stream and detections reflect the active source seamlessly.
 
@@ -592,11 +592,11 @@ The Inference Engine does not need to know which source is active — it always 
 
 ## 8. WebUI Polling Intervals
 
-| Endpoint | Polling Interval | Consumer |
-|:---------|:-----------------|:---------|
-| `GET /api/status` | 2 s | Homepage status bar |
-| `GET /api/log` | 3 s | Homepage log panel |
-| `GET /api/source/info` | 1 s | Configuration video scrubber position |
+| Endpoint               | Polling Interval | Consumer                              |
+| :--------------------- | :--------------- | :------------------------------------ |
+| `GET /api/status`      | 2 s              | Homepage status bar                   |
+| `GET /api/log`         | 3 s              | Homepage log panel                    |
+| `GET /api/source/info` | 1 s              | Configuration video scrubber position |
 
 The MJPEG stream (`/stream`) is continuous and does not use polling.
 
@@ -606,11 +606,11 @@ The MJPEG stream (`/stream`) is continuous and does not use polling.
 
 The Docker image ships with all assets needed to operate without external dependencies beyond the MQTT broker and Object Storage:
 
-| Asset | Container Path | Description |
-|:------|:---------------|:------------|
-| **ONNX Model** | `model/best_yolov9t_aug.onnx` | YOLOv9t model trained for wildlife detection (Wild Boar, Wolf, Deer). Small enough to bundle directly (~15 MB). |
-| **Sample Videos** | `samples/videos/*.mp4` | One or more pre-recorded video files of wildlife scenes. Used as an alternative to the USB camera input for demo, testing, and diagnostics. The user selects which video to play from the Configuration page dropdown. |
-| **Sample Event Scenes** | `samples/scenes.json` | A JSON array of predefined detection events for diagnostics injection, following the same structure as the camera-emulator's `demo_scenes/scenes.json`. Each scene contains a `name`, `description`, `count`, and a `detections` array. The user selects a scene from the Configuration page dropdown and publishes it as an MQTT event. |
+| Asset                   | Container Path                | Description                                                                                                                                                                                                                                                                                                                              |
+| :---------------------- | :---------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ONNX Model**          | `model/best_yolov9t_aug.onnx` | YOLOv9t model trained for wildlife detection (Wild Boar, Wolf, Deer). Small enough to bundle directly (~15 MB).                                                                                                                                                                                                                          |
+| **Sample Videos**       | `samples/videos/*.mp4`        | One or more pre-recorded video files of wildlife scenes. Used as an alternative to the USB camera input for demo, testing, and diagnostics. The user selects which video to play from the Configuration page dropdown.                                                                                                                   |
+| **Sample Event Scenes** | `samples/scenes.json`         | A JSON array of predefined detection events for diagnostics injection, following the same structure as the camera-emulator's `demo_scenes/scenes.json`. Each scene contains a `name`, `description`, `count`, and a `detections` array. The user selects a scene from the Configuration page dropdown and publishes it as an MQTT event. |
 
 ### `scenes.json` Format
 
@@ -638,13 +638,13 @@ Scenes do **not** include a `photo` field (unlike the emulator) — the camera s
 
 ## 10. Error Handling & Degradation
 
-| Failure | Behavior |
-|:--------|:---------|
-| **MQTT broker unreachable on startup** | The WebUI and Inference Engine start normally. The status bar shows "Disconnected". The failed connection attempt is logged in the system log panel. |
-| **MQTT broker disconnects at runtime** | LWT fires automatically. The status bar reflects "Disconnected". The log shows the disconnection event. Inference continues (detections are produced but not published). |
-| **MQTT reconnect** | User clicks "Reconnect" on the Configuration page, or the application can attempt auto-reconnect (paho-mqtt built-in). On success, birth is re-published and telemetry resumes. |
-| **USB camera unavailable** | `VideoSource.read()` returns `ok=False`. The Inference Engine produces no frames — the MJPEG stream shows the last frame or nothing. The log records the error. Switching to a sample video still works. |
-| **Video file EOF** | `read()` returns a solid black frame. The stream goes black, no detections fire. The user can seek, switch video, or switch to USB. |
+| Failure                                | Behavior                                                                                                                                                                                                 |
+| :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MQTT broker unreachable on startup** | The WebUI and Inference Engine start normally. The status bar shows "Disconnected". The failed connection attempt is logged in the system log panel.                                                     |
+| **MQTT broker disconnects at runtime** | LWT fires automatically. The status bar reflects "Disconnected". The log shows the disconnection event. Inference continues (detections are produced but not published).                                 |
+| **MQTT reconnect**                     | User clicks "Reconnect" on the Configuration page, or the application can attempt auto-reconnect (paho-mqtt built-in). On success, birth is re-published and telemetry resumes.                          |
+| **USB camera unavailable**             | `VideoSource.read()` returns `ok=False`. The Inference Engine produces no frames — the MJPEG stream shows the last frame or nothing. The log records the error. Switching to a sample video still works. |
+| **Video file EOF**                     | `read()` returns a solid black frame. The stream goes black, no detections fire. The user can seek, switch video, or switch to USB.                                                                      |
 
 ---
 
@@ -818,9 +818,9 @@ classDiagram
 
 ### Reading the Diagram
 
-| Relationship | UML Notation | Meaning |
-|:-------------|:-------------|:--------|
-| `o--` (open diamond) | Aggregation | The source class holds a reference to the target, received via constructor injection. Neither class owns the other's lifecycle — `main.py` creates all instances and passes them in. |
+| Relationship         | UML Notation          | Meaning                                                                                                                                                                                             |
+| :------------------- | :-------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `o--` (open diamond) | Aggregation           | The source class holds a reference to the target, received via constructor injection. Neither class owns the other's lifecycle — `main.py` creates all instances and passes them in.                |
 | `..>` (dashed arrow) | Dependency / callback | A runtime dependency established through callback registration or router mounting. The arrow points from the **caller** to the **callee**. These are wired in `main.py` during startup (see §2.10). |
 
 ### Notes

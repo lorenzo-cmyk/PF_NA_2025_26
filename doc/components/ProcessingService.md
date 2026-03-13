@@ -53,37 +53,37 @@ Frozen dataclass loaded from environment variables. Exposes derived helpers for 
 
 **Enum: `ServiceMode`**
 
-| Value | Description |
-|:------|:------------|
-| `EDGE` | Runs as the Edge Processing Service |
+| Value   | Description                          |
+| :------ | :----------------------------------- |
+| `EDGE`  | Runs as the Edge Processing Service  |
 | `CLOUD` | Runs as the Cloud Processing Service |
 
 **Class: `Config` (frozen dataclass)**
 
 **Fields:**
 
-| Field | Type | Default | Description |
-|:------|:-----|:--------|:------------|
-| `service_mode` | `ServiceMode` | `EDGE` | Operational mode (`EDGE` or `CLOUD`) |
-| `mqtt_broker_url` | `str` | `mqtt://localhost:1883` | MQTT broker address (scheme://host:port) |
-| `database_url` | `str` | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string |
-| `object_storage_url` | `str` | `http://localhost:9000` | S3-compatible endpoint (internal) |
-| `s3_access_key` | `str` | `gBOAR` | S3 access key |
-| `s3_secret_key` | `str` | `gBOARpass` | S3 secret key |
-| `s3_bucket` | `str` | `gboar-images` | S3 bucket name |
-| `s3_public_url` | `str` | `""` (falls back to `object_storage_url`) | Public base URL for stored images (no credentials) |
-| `web_host` | `str` | `0.0.0.0` | HTTP server bind address |
-| `web_port` | `int` | `8000` | HTTP server bind port |
-| `mqtt_client_id` | `str` | `processing-service` | MQTT client identifier |
+| Field                | Type          | Default                                                        | Description                                        |
+| :------------------- | :------------ | :------------------------------------------------------------- | :------------------------------------------------- |
+| `service_mode`       | `ServiceMode` | `EDGE`                                                         | Operational mode (`EDGE` or `CLOUD`)               |
+| `mqtt_broker_url`    | `str`         | `mqtt://localhost:1883`                                        | MQTT broker address (scheme://host:port)           |
+| `database_url`       | `str`         | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string                       |
+| `object_storage_url` | `str`         | `http://localhost:9000`                                        | S3-compatible endpoint (internal)                  |
+| `s3_access_key`      | `str`         | `gBOAR`                                                        | S3 access key                                      |
+| `s3_secret_key`      | `str`         | `gBOARpass`                                                    | S3 secret key                                      |
+| `s3_bucket`          | `str`         | `gboar-images`                                                 | S3 bucket name                                     |
+| `s3_public_url`      | `str`         | `""` (falls back to `object_storage_url`)                      | Public base URL for stored images (no credentials) |
+| `web_host`           | `str`         | `0.0.0.0`                                                      | HTTP server bind address                           |
+| `web_port`           | `int`         | `8000`                                                         | HTTP server bind port                              |
+| `mqtt_client_id`     | `str`         | `processing-service`                                           | MQTT client identifier                             |
 
 **Derived helpers (properties):**
 
-| Property | Return Type | Description |
-|:---------|:------------|:------------|
-| `is_edge` | `bool` | `True` when `service_mode == EDGE` |
-| `is_cloud` | `bool` | `True` when `service_mode == CLOUD` |
-| `mqtt_host` | `str` | Host extracted from `mqtt_broker_url` |
-| `mqtt_port` | `int` | Port extracted from `mqtt_broker_url` (default: `1883`) |
+| Property    | Return Type | Description                                             |
+| :---------- | :---------- | :------------------------------------------------------ |
+| `is_edge`   | `bool`      | `True` when `service_mode == EDGE`                      |
+| `is_cloud`  | `bool`      | `True` when `service_mode == CLOUD`                     |
+| `mqtt_host` | `str`       | Host extracted from `mqtt_broker_url`                   |
+| `mqtt_port` | `int`       | Port extracted from `mqtt_broker_url` (default: `1883`) |
 
 ---
 
@@ -95,35 +95,35 @@ Thin wrapper around `paho.mqtt.client` v2. Handles the full MQTT lifecycle: conn
 
 **State:**
 
-| Attribute | Type | Description |
-|:----------|:-----|:------------|
-| `_cfg` | `Config` | Application configuration |
-| `_client` | `mqtt.Client` | Underlying paho-mqtt client (CallbackAPIVersion.VERSION2) |
-| `_connected` | `bool` | Thread-safe connection state flag |
-| `_lock` | `threading.Lock` | Guards `_connected` |
-| `_message_callbacks` | `list[MessageCallback]` | Registered message handlers |
-| `_subscriptions` | `list[str]` | Topic patterns to subscribe on connect |
+| Attribute            | Type                    | Description                                               |
+| :------------------- | :---------------------- | :-------------------------------------------------------- |
+| `_cfg`               | `Config`                | Application configuration                                 |
+| `_client`            | `mqtt.Client`           | Underlying paho-mqtt client (CallbackAPIVersion.VERSION2) |
+| `_connected`         | `bool`                  | Thread-safe connection state flag                         |
+| `_lock`              | `threading.Lock`        | Guards `_connected`                                       |
+| `_message_callbacks` | `list[MessageCallback]` | Registered message handlers                               |
+| `_subscriptions`     | `list[str]`             | Topic patterns to subscribe on connect                    |
 
 **Type alias:** `MessageCallback = Callable[[str, dict[str, Any]], None]` — receives `(topic, payload_dict)`.
 
 **Methods:**
 
-| Method | Description |
-|:-------|:------------|
-| `connected -> bool` | Property. Thread-safe connection state check. |
-| `add_subscription(topic)` | Registers a topic pattern to subscribe to on connect. |
-| `on_message(cb)` | Registers a callback invoked for every incoming message. |
-| `start()` | Connects to the broker and starts the paho network loop in a background thread via `loop_start()`. |
-| `stop()` | Disconnects and stops the network loop. |
-| `publish(topic, payload, qos=1, retain=False)` | Publishes a JSON-serialized payload to the given topic. |
+| Method                                         | Description                                                                                        |
+| :--------------------------------------------- | :------------------------------------------------------------------------------------------------- |
+| `connected -> bool`                            | Property. Thread-safe connection state check.                                                      |
+| `add_subscription(topic)`                      | Registers a topic pattern to subscribe to on connect.                                              |
+| `on_message(cb)`                               | Registers a callback invoked for every incoming message.                                           |
+| `start()`                                      | Connects to the broker and starts the paho network loop in a background thread via `loop_start()`. |
+| `stop()`                                       | Disconnects and stops the network loop.                                                            |
+| `publish(topic, payload, qos=1, retain=False)` | Publishes a JSON-serialized payload to the given topic.                                            |
 
 **Paho callbacks (internal):**
 
-| Callback | Behavior |
-|:---------|:---------|
-| `_on_connect` | Sets `_connected = True`, subscribes to all registered topic patterns (QoS 1). |
-| `_on_disconnect` | Sets `_connected = False`. |
-| `_on_message` | Deserializes JSON payload, invokes all registered `MessageCallback`s. Silently skips non-JSON payloads. |
+| Callback         | Behavior                                                                                                |
+| :--------------- | :------------------------------------------------------------------------------------------------------ |
+| `_on_connect`    | Sets `_connected = True`, subscribes to all registered topic patterns (QoS 1).                          |
+| `_on_disconnect` | Sets `_connected = False`.                                                                              |
+| `_on_message`    | Deserializes JSON payload, invokes all registered `MessageCallback`s. Silently skips non-JSON payloads. |
 
 **Note:** This client does **not** configure an LWT. The Processing Service is not an Extreme-Edge device — it does not publish lifecycle/telemetry messages about itself.
 
@@ -139,20 +139,20 @@ Contains all business logic: topic parsing, routing by mode, database CRUD, MQTT
 
 **State:**
 
-| Attribute | Type | Description |
-|:----------|:-----|:------------|
-| `_cfg` | `Config` | Application configuration |
-| `_mqtt` | `MQTTClient` | MQTT publishing interface |
-| `_engine` | `Engine` | SQLAlchemy engine for database sessions |
-| `_s3` | `S3Client \| None` | Object storage client (may be `None` if init failed) |
+| Attribute | Type               | Description                                          |
+| :-------- | :----------------- | :--------------------------------------------------- |
+| `_cfg`    | `Config`           | Application configuration                            |
+| `_mqtt`   | `MQTTClient`       | MQTT publishing interface                            |
+| `_engine` | `Engine`           | SQLAlchemy engine for database sessions              |
+| `_s3`     | `S3Client \| None` | Object storage client (may be `None` if init failed) |
 
 **Module-level helpers:**
 
-| Helper | Description |
-|:-------|:------------|
-| `_TOPIC_RE` | Regex `^(edge\|cloud)/(?P<edge_id>...)/(?P<camera_id>...)/(?P<rest>...)$` — extracts prefix, edge_id, camera_id, and remainder from any incoming topic. |
-| `_POINT_RE` | Regex to parse `POINT(lon, lat)` strings into `(float, float)`. |
-| `_parse_point(value) -> (lon, lat) \| None` | Extracts longitude and latitude from a `POINT(...)` string. |
+| Helper                                      | Description                                                                                                                                             |
+| :------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `_TOPIC_RE`                                 | Regex `^(edge\|cloud)/(?P<edge_id>...)/(?P<camera_id>...)/(?P<rest>...)$` — extracts prefix, edge_id, camera_id, and remainder from any incoming topic. |
+| `_POINT_RE`                                 | Regex to parse `POINT(lon, lat)` strings into `(float, float)`.                                                                                         |
+| `_parse_point(value) -> (lon, lat) \| None` | Extracts longitude and latitude from a `POINT(...)` string.                                                                                             |
 
 #### 2.3.1 Entry Point
 
@@ -164,14 +164,14 @@ Contains all business logic: topic parsing, routing by mode, database CRUD, MQTT
 
 Routes incoming messages from two subscriptions: `edge/#` and `cloud/+/+/cmd/upload`.
 
-| Incoming Topic Pattern | Handler Called | Relay to Cloud? |
-|:-----------------------|:--------------|:----------------|
-| `edge/{eid}/{cid}/lifecycle/birth` | `_handle_birth` | **Yes** → `cloud/{eid}/{cid}/lifecycle/birth` (retained) |
-| `edge/{eid}/{cid}/telemetry` | `_handle_telemetry` | **Yes** → `cloud/{eid}/{cid}/telemetry` (retained) |
-| `edge/{eid}/{cid}/event` | `_handle_event` | **Yes** → `cloud/{eid}/{cid}/event` |
-| `edge/{eid}/{cid}/event/upload_status` | `handle_upload_status` | **No** — upload_status is a local Edge concern |
-| `edge/{eid}/{cid}/cmd/upload` | *(ignored)* | **No** — these are outgoing commands the service itself publishes |
-| `cloud/{eid}/{cid}/cmd/upload` | `_edge_route_cloud_cmd` | **No** — handled locally |
+| Incoming Topic Pattern                 | Handler Called          | Relay to Cloud?                                                   |
+| :------------------------------------- | :---------------------- | :---------------------------------------------------------------- |
+| `edge/{eid}/{cid}/lifecycle/birth`     | `_handle_birth`         | **Yes** → `cloud/{eid}/{cid}/lifecycle/birth` (retained)          |
+| `edge/{eid}/{cid}/telemetry`           | `_handle_telemetry`     | **Yes** → `cloud/{eid}/{cid}/telemetry` (retained)                |
+| `edge/{eid}/{cid}/event`               | `_handle_event`         | **Yes** → `cloud/{eid}/{cid}/event`                               |
+| `edge/{eid}/{cid}/event/upload_status` | `handle_upload_status`  | **No** — upload_status is a local Edge concern                    |
+| `edge/{eid}/{cid}/cmd/upload`          | *(ignored)*             | **No** — these are outgoing commands the service itself publishes |
+| `cloud/{eid}/{cid}/cmd/upload`         | `_edge_route_cloud_cmd` | **No** — handled locally                                          |
 
 **Relay logic:** After processing an `edge/` message (except `upload_status` and `cmd/upload`), the handler publishes the same payload to the corresponding `cloud/{edge_id}/{camera_id}/{rest}` topic. `lifecycle/birth` and `telemetry` are published as retained; `event` is not.
 
@@ -181,13 +181,13 @@ Routes incoming messages from two subscriptions: `edge/#` and `cloud/+/+/cmd/upl
 
 Routes incoming messages from subscription `cloud/#`.
 
-| Incoming Topic Pattern | Handler Called |
-|:-----------------------|:--------------|
-| `cloud/{eid}/{cid}/lifecycle/birth` | `_handle_birth` |
-| `cloud/{eid}/{cid}/telemetry` | `_handle_telemetry` |
-| `cloud/{eid}/{cid}/event` | `_handle_event` |
-| `cloud/{eid}/{cid}/event/upload_status` | `handle_upload_status` |
-| `cloud/{eid}/{cid}/cmd/upload` | *(ignored)* — outgoing commands the service itself publishes |
+| Incoming Topic Pattern                  | Handler Called                                               |
+| :-------------------------------------- | :----------------------------------------------------------- |
+| `cloud/{eid}/{cid}/lifecycle/birth`     | `_handle_birth`                                              |
+| `cloud/{eid}/{cid}/telemetry`           | `_handle_telemetry`                                          |
+| `cloud/{eid}/{cid}/event`               | `_handle_event`                                              |
+| `cloud/{eid}/{cid}/event/upload_status` | `handle_upload_status`                                       |
+| `cloud/{eid}/{cid}/cmd/upload`          | *(ignored)* — outgoing commands the service itself publishes |
 
 Cloud mode does **not** relay messages — it is the final destination.
 
@@ -255,21 +255,21 @@ When the Cloud requests an image via `cloud/{eid}/{cid}/cmd/upload`, the Edge Pr
 
 SQLModel-based ORM models matching the WatchEdge DB schema. The four tables are:
 
-| Model | Table | PK | Parent FK |
-|:------|:------|:---|:----------|
-| `EdgeDevice` | `edge_device` | `edge_id` (UUID) | — |
-| `Camera` | `camera` | `camera_id` (UUID) | `edge_device.edge_id` |
-| `DatasetStore` | `datasetstore` | `event_id` (UUID) | `camera.camera_id` |
+| Model            | Table            | PK                    | Parent FK               |
+| :--------------- | :--------------- | :-------------------- | :---------------------- |
+| `EdgeDevice`     | `edge_device`    | `edge_id` (UUID)      | —                       |
+| `Camera`         | `camera`         | `camera_id` (UUID)    | `edge_device.edge_id`   |
+| `DatasetStore`   | `datasetstore`   | `event_id` (UUID)     | `camera.camera_id`      |
 | `AnimalDetected` | `animaldetected` | `detection_id` (UUID) | `datasetstore.event_id` |
 
 **Note:** `Camera.location_coordinates` (PostGIS `GEOGRAPHY(Point, 4326)`) is **not** mapped in the SQLModel class — it is handled via raw SQL in `_handle_birth`.
 
 **Factory functions:**
 
-| Function | Description |
-|:---------|:------------|
-| `get_engine(database_url) -> Engine` | Creates a SQLAlchemy engine. |
-| `get_session(engine) -> Session` | Creates a new SQLModel `Session`. |
+| Function                             | Description                       |
+| :----------------------------------- | :-------------------------------- |
+| `get_engine(database_url) -> Engine` | Creates a SQLAlchemy engine.      |
+| `get_session(engine) -> Session`     | Creates a new SQLModel `Session`. |
 
 ---
 
@@ -283,12 +283,12 @@ Wrapper around `boto3` for S3-compatible object storage (RustFS). Used for both 
 
 **State:**
 
-| Attribute | Type | Description |
-|:----------|:-----|:------------|
-| `_cfg` | `Config` | Application configuration |
-| `_client` | `boto3.client` | Configured S3 client (path-style addressing, s3v4 signatures) |
-| `_bucket` | `str` | Bucket name |
-| `_public_base` | `str` | Public URL base (from `s3_public_url` or `object_storage_url`) |
+| Attribute      | Type           | Description                                                    |
+| :------------- | :------------- | :------------------------------------------------------------- |
+| `_cfg`         | `Config`       | Application configuration                                      |
+| `_client`      | `boto3.client` | Configured S3 client (path-style addressing, s3v4 signatures)  |
+| `_bucket`      | `str`          | Bucket name                                                    |
+| `_public_base` | `str`          | Public URL base (from `s3_public_url` or `object_storage_url`) |
 
 **Initialization behavior:**
 
@@ -298,13 +298,13 @@ Wrapper around `boto3` for S3-compatible object storage (RustFS). Used for both 
 
 **Methods:**
 
-| Method | Description |
-|:-------|:------------|
-| `generate_presigned_upload_url(object_key, expires_in=3600) -> str` | Generates a presigned PUT URL for uploading an object. |
-| `generate_presigned_download_url(object_key, expires_in=3600) -> str` | Generates a presigned GET URL for downloading an object. |
-| `object_exists(object_key) -> bool` | Checks whether an object exists in the bucket. |
-| `get_object(object_key) -> bytes \| None` | Downloads an object and returns its bytes, or `None` if not found. |
-| `get_object_url(object_key) -> str` | Returns the clean public URL of an object: `{_public_base}/{bucket}/{key}`. |
+| Method                                                                | Description                                                                 |
+| :-------------------------------------------------------------------- | :-------------------------------------------------------------------------- |
+| `generate_presigned_upload_url(object_key, expires_in=3600) -> str`   | Generates a presigned PUT URL for uploading an object.                      |
+| `generate_presigned_download_url(object_key, expires_in=3600) -> str` | Generates a presigned GET URL for downloading an object.                    |
+| `object_exists(object_key) -> bool`                                   | Checks whether an object exists in the bucket.                              |
+| `get_object(object_key) -> bytes \| None`                             | Downloads an object and returns its bytes, or `None` if not found.          |
+| `get_object_url(object_key) -> str`                                   | Returns the clean public URL of an object: `{_public_base}/{bucket}/{key}`. |
 
 ---
 
@@ -314,14 +314,14 @@ FastAPI application providing a health check (both modes) and an image retrieval
 
 **Module-level state (set by `init()`):**
 
-| Variable | Type | Description |
-|:---------|:-----|:------------|
-| `_cfg` | `Config` | Application configuration |
-| `_mqtt` | `MQTTClient` | MQTT client reference |
-| `_engine` | `Engine` | SQLAlchemy DB engine |
-| `_s3` | `S3Client \| None` | S3 client reference |
+| Variable         | Type                         | Description                                    |
+| :--------------- | :--------------------------- | :--------------------------------------------- |
+| `_cfg`           | `Config`                     | Application configuration                      |
+| `_mqtt`          | `MQTTClient`                 | MQTT client reference                          |
+| `_engine`        | `Engine`                     | SQLAlchemy DB engine                           |
+| `_s3`            | `S3Client \| None`           | S3 client reference                            |
 | `_upload_events` | `dict[str, threading.Event]` | Pending upload completion waiters (Cloud mode) |
-| `_upload_lock` | `threading.Lock` | Guards `_upload_events` |
+| `_upload_lock`   | `threading.Lock`             | Guards `_upload_events`                        |
 
 **Function: `init(cfg, mqtt_client, engine, s3)`** — Wires up the shared state before the FastAPI app starts.
 
@@ -329,16 +329,16 @@ FastAPI application providing a health check (both modes) and an image retrieval
 
 #### Endpoints
 
-| Method | Path | Mode | Description |
-|:-------|:-----|:-----|:------------|
-| `GET` | `/health` | Both | Returns `{"status": "ok", "mode": ..., "mqtt_connected": ...}`. |
-| `GET` | `/api/v1/images/{event_id}` | Cloud only | Retrieves an event image. See below for the full flow. |
+| Method | Path                        | Mode       | Description                                                     |
+| :----- | :-------------------------- | :--------- | :-------------------------------------------------------------- |
+| `GET`  | `/health`                   | Both       | Returns `{"status": "ok", "mode": ..., "mqtt_connected": ...}`. |
+| `GET`  | `/api/v1/images/{event_id}` | Cloud only | Retrieves an event image. See below for the full flow.          |
 
 #### Image Retrieval Flow (`GET /api/v1/images/{event_id}`)
 
 This endpoint is the mechanism by which the Dashboard (or any Cloud consumer) obtains detection images. It implements a **synchronous on-demand pull** pattern:
 
-```
+```text
 1. Validate event_id is a UUID.
 2. Look up DatasetStore row in DB.
    └── 404 if not found.
@@ -372,7 +372,7 @@ Orchestrates startup and wiring of all components.
 
 **Startup sequence:**
 
-```
+```text
 1.  Load Config from environment variables
 2.  Create SQLAlchemy engine from database_url
 3.  Create S3Client (graceful degradation: if init fails, image features are disabled)
@@ -394,7 +394,7 @@ Orchestrates startup and wiring of all components.
 
 ## 3. File Structure
 
-```
+```text
 src/services/processing-service/
 ├── Dockerfile
 ├── main.py                          # CLI entry point (delegates to processing_service.main)
@@ -415,21 +415,21 @@ src/services/processing-service/
 
 ## 4. Dependencies
 
-| Package | Purpose |
-|:--------|:--------|
-| `fastapi` | HTTP API framework |
-| `uvicorn[standard]` | ASGI server |
-| `paho-mqtt` | MQTT v5 client (v2 API) |
-| `sqlmodel` | ORM models and database sessions (wraps SQLAlchemy) |
-| `psycopg2-binary` | PostgreSQL driver |
-| `requests` | HTTP PUT/GET for image upload/download |
-| `boto3` | S3-compatible object storage client |
+| Package             | Purpose                                             |
+| :------------------ | :-------------------------------------------------- |
+| `fastapi`           | HTTP API framework                                  |
+| `uvicorn[standard]` | ASGI server                                         |
+| `paho-mqtt`         | MQTT v5 client (v2 API)                             |
+| `sqlmodel`          | ORM models and database sessions (wraps SQLAlchemy) |
+| `psycopg2-binary`   | PostgreSQL driver                                   |
+| `requests`          | HTTP PUT/GET for image upload/download              |
+| `boto3`             | S3-compatible object storage client                 |
 
 ---
 
 ## 5. Threading Model
 
-```
+```text
 Main Thread          ─── Uvicorn / FastAPI (blocking)
                           ├── GET /health
                           └── GET /api/v1/images/{event_id}
@@ -456,7 +456,7 @@ Shared state:
 
 ### 6.1 Edge Mode: Event Ingestion & Relay
 
-```
+```text
 Extreme-Edge Camera
      │
      │  MQTT: edge/{eid}/{cid}/event
@@ -482,7 +482,7 @@ MessageHandler._handle_edge()
 
 ### 6.2 Edge Mode: Image Upload Flow (Extreme-Edge → Edge S3)
 
-```
+```text
 Processing Service publishes:  edge/{eid}/{cid}/cmd/upload
      │                          {"event_id": ..., "upload_url": <presigned Edge S3 PUT>}
      v
@@ -500,7 +500,7 @@ Extreme-Edge Camera
 
 ### 6.3 Edge Mode: Cloud Upload Command Fulfillment
 
-```
+```text
 Cloud Processing Service publishes:  cloud/{eid}/{cid}/cmd/upload
      │                                {"event_id": ..., "upload_url": <presigned Cloud S3 PUT>}
      │
@@ -526,7 +526,7 @@ MessageHandler._edge_route_cloud_cmd()
 
 ### 6.4 Cloud Mode: On-Demand Image Retrieval
 
-```
+```text
 Dashboard (or any consumer)
      │
      │  GET /api/v1/images/{event_id}
@@ -555,34 +555,34 @@ FastAPI endpoint
 
 **Subscribes to:**
 
-| Topic Pattern | Purpose |
-|:--------------|:--------|
-| `edge/#` | All Extreme-Edge messages (birth, telemetry, event, upload_status) |
-| `cloud/+/+/cmd/upload` | Cloud upload commands forwarded down by Mosquitto bridge |
+| Topic Pattern          | Purpose                                                            |
+| :--------------------- | :----------------------------------------------------------------- |
+| `edge/#`               | All Extreme-Edge messages (birth, telemetry, event, upload_status) |
+| `cloud/+/+/cmd/upload` | Cloud upload commands forwarded down by Mosquitto bridge           |
 
 **Publishes to:**
 
-| Topic | QoS | Retained | Trigger |
-|:------|:----|:---------|:--------|
-| `cloud/{eid}/{cid}/lifecycle/birth` | 1 | Yes | On receiving `edge/.../lifecycle/birth` |
-| `cloud/{eid}/{cid}/telemetry` | 1 | Yes | On receiving `edge/.../telemetry` |
-| `cloud/{eid}/{cid}/event` | 1 | No | On receiving `edge/.../event` |
-| `edge/{eid}/{cid}/cmd/upload` | 1 | No | After storing an event (instructs camera to upload image) |
-| `cloud/{eid}/{cid}/event/upload_status` | 1 | No | After fulfilling a cloud `cmd/upload` |
+| Topic                                   | QoS  | Retained | Trigger                                                   |
+| :-------------------------------------- | :--- | :------- | :-------------------------------------------------------- |
+| `cloud/{eid}/{cid}/lifecycle/birth`     | 1    | Yes      | On receiving `edge/.../lifecycle/birth`                   |
+| `cloud/{eid}/{cid}/telemetry`           | 1    | Yes      | On receiving `edge/.../telemetry`                         |
+| `cloud/{eid}/{cid}/event`               | 1    | No       | On receiving `edge/.../event`                             |
+| `edge/{eid}/{cid}/cmd/upload`           | 1    | No       | After storing an event (instructs camera to upload image) |
+| `cloud/{eid}/{cid}/event/upload_status` | 1    | No       | After fulfilling a cloud `cmd/upload`                     |
 
 ### Cloud Mode
 
 **Subscribes to:**
 
-| Topic Pattern | Purpose |
-|:--------------|:--------|
-| `cloud/#` | All relayed messages (birth, telemetry, event, upload_status) |
+| Topic Pattern | Purpose                                                       |
+| :------------ | :------------------------------------------------------------ |
+| `cloud/#`     | All relayed messages (birth, telemetry, event, upload_status) |
 
 **Publishes to:**
 
-| Topic | QoS | Retained | Trigger |
-|:------|:----|:---------|:--------|
-| `cloud/{eid}/{cid}/cmd/upload` | 1 | No | On-demand image retrieval via `GET /api/v1/images/{event_id}` |
+| Topic                          | QoS  | Retained | Trigger                                                       |
+| :----------------------------- | :--- | :------- | :------------------------------------------------------------ |
+| `cloud/{eid}/{cid}/cmd/upload` | 1    | No       | On-demand image retrieval via `GET /api/v1/images/{event_id}` |
 
 ---
 
@@ -590,12 +590,12 @@ FastAPI endpoint
 
 All entity identifiers are **UUIDs end-to-end**. The same UUID appears in the MQTT topic, the message payloads, and the database primary key — there is no mapping layer.
 
-| Entity | MQTT topic segment | DB column | Generated by |
-|:-------|:-------------------|:----------|:-------------|
-| Edge device | `{edge_id}` (UUID) | `edge_device.edge_id` (PK) | Provisioned at deployment time (env var) |
-| Camera | `{camera_id}` (UUID) | `camera.camera_id` (PK) | Provisioned at deployment time (env var) |
-| Event | — (in payload) | `datasetstore.event_id` (PK) | Generated by the camera on each detection (`uuid.uuid4()`) |
-| Detection | — | `animaldetected.detection_id` (PK) | Generated by the Processing Service on insert (`uuid.uuid4()`) |
+| Entity      | MQTT topic segment   | DB column                          | Generated by                                                   |
+| :---------- | :------------------- | :--------------------------------- | :------------------------------------------------------------- |
+| Edge device | `{edge_id}` (UUID)   | `edge_device.edge_id` (PK)         | Provisioned at deployment time (env var)                       |
+| Camera      | `{camera_id}` (UUID) | `camera.camera_id` (PK)            | Provisioned at deployment time (env var)                       |
+| Event       | — (in payload)       | `datasetstore.event_id` (PK)       | Generated by the camera on each detection (`uuid.uuid4()`)     |
+| Detection   | —                    | `animaldetected.detection_id` (PK) | Generated by the Processing Service on insert (`uuid.uuid4()`) |
 
 **Topic example:** `edge/a3f1b2c4-...-d5e6/7c8d9e0f-...-a1b2/event`
 
@@ -607,8 +607,8 @@ On `_handle_birth`, the handler parses the topic's `edge_id` / `camera_id` segme
 
 ## 9. Graceful Degradation
 
-| Component | Failure Mode | Behavior |
-|:----------|:-------------|:---------|
-| **S3 Client** | Initialization fails | `s3` is set to `None`. Image features (upload commands, image retrieval) are disabled. All other functionality (DB persistence, MQTT relay) continues. |
-| **MQTT Broker** | Unreachable at startup | HTTP server starts anyway. MQTT features are unavailable until reconnection (paho-mqtt handles auto-reconnect). |
-| **Database** | Query fails | Individual handler catches the exception and logs it. The message is effectively dropped but the service continues processing subsequent messages. |
+| Component       | Failure Mode           | Behavior                                                                                                                                               |
+| :-------------- | :--------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S3 Client**   | Initialization fails   | `s3` is set to `None`. Image features (upload commands, image retrieval) are disabled. All other functionality (DB persistence, MQTT relay) continues. |
+| **MQTT Broker** | Unreachable at startup | HTTP server starts anyway. MQTT features are unavailable until reconnection (paho-mqtt handles auto-reconnect).                                        |
+| **Database**    | Query fails            | Individual handler catches the exception and logs it. The message is effectively dropped but the service continues processing subsequent messages.     |

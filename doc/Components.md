@@ -7,11 +7,11 @@
 |                            EXTREME-EDGE                               |
 |                                                                       |
 |  +-----------------------------------------------------------------+  |
-|  |        Camera Management System & AI Detection Software         |  |
-|  +-------------------------------+---------------------------------+  |
-|                                  |                                    |
-|  +-------------------------------+---------------------------------+  |
-|  |               gBOAR Library (Python MQTT Client)                |  |
+|  |           Camera Application (Inference + Management)           |  |
+|  |           - OpenCV Video Capture / Pre-recorded video           |  |
+|  |           - ONNX YOLOv9t AI Detection                           |  |
+|  |           - Built-in WebUI (FastAPI + Jinja2)                   |  |
+|  |           - Paho-MQTT Client (gBOAR namespace)                  |  |
 |  +-------------------------------+---------------------------------+  |
 +----------+------------------------------------------+-----------------+
            ^                                          |
@@ -66,8 +66,7 @@
 
 ### Extreme-Edge
 
-- **Camera Management System & AI Detection Software**: Handles image capture and local AI inference.
-- **gBOAR Library**: Python library enabling the CMS to communicate with the network via MQTT. Publishes lifecycle (`birth`), `telemetry` (with LWT configured), `event`, and `upload_status` data to the `edge/{edge_id}/{camera_id}/...` namespace. Accepts commands on `edge/{edge_id}/{camera_id}/cmd/upload` to upload files using HTTP PUT to the Edge Object Storage.
+- **Camera Application**: A monolithic Python application combining image capture, local AI inference, and network communication. Handles reading from the video source, running the YOLO ONNX model, and exposing a local management WebUI. It natively implements MQTT communication, publishing lifecycle (`birth`), `telemetry` (with LWT configured), `event`, and `upload_status` data to the `edge/{edge_id}/{camera_id}/...` namespace. Accepts commands on `edge/{edge_id}/{camera_id}/cmd/upload` to upload files using HTTP PUT to the Edge Object Storage.
 
 ### Edge
 

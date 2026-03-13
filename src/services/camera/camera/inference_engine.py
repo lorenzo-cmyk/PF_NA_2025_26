@@ -33,6 +33,7 @@ class InferenceEngine:
         self._thread: threading.Thread | None = None
 
         self._latest_frame: np.ndarray | None = None
+        self._latest_jpeg: bytes | None = None
         self._latest_detections: list[dict] = []
         self._frame_lock = threading.Lock()
 
@@ -73,13 +74,13 @@ class InferenceEngine:
         log.info("InferenceEngine stopped.")
 
     def get_latest_frame(self) -> bytes | None:
-        """Return the latest annotated frame as JPEG bytes (thread-safe)."""
+        """Return the latest annotated frame as JPEG bytes (thread-safe).
+
+        The JPEG encoding is done once in the inference loop; this method
+        simply returns the cached bytes.
+        """
         with self._frame_lock:
-            frame = self._latest_frame
-        if frame is None:
-            return None
-        ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
-        return bytes(buf) if ok else None
+            return self._latest_jpeg
 
     def get_latest_detections(self) -> list[dict]:
         """Return the latest detection list (thread-safe)."""
@@ -97,6 +98,7 @@ class InferenceEngine:
     # -- inference loop ---------------------------------------------------- #
 
     def _loop(self) -> None:
+        source_fps = self._video_source.get_source_fps()
         while self._running:
             t0 = time.monotonic()
 
@@ -112,8 +114,12 @@ class InferenceEngine:
                 time.sleep(0.1)
                 continue
 
+            ok_enc, buf = cv2.imencode(
+                ".jpg", annotated, [cv2.IMWRITE_JPEG_QUALITY, 80]
+            )
             with self._frame_lock:
                 self._latest_frame = annotated
+                self._latest_jpeg = bytes(buf) if ok_enc else None
                 self._latest_detections = detections
 
             if detections and self._on_detection is not None:
@@ -123,10 +129,8 @@ class InferenceEngine:
                     log.exception("Error in on_detection callback.")
 
             # Cap inference to the source FPS so we never process faster than
-            # the source delivers.  For USB cameras get_source_fps() returns the
-            # driver-reported FPS (after requesting 15 FPS on open).  Falls back
-            # to target_fps only if the driver cannot report a valid FPS.
-            source_fps = self._video_source.get_source_fps()
+            # the source delivers.  source_fps is read once before the loop
+            # (it only changes on source switch, which restarts the engine).
             effective_fps = (
                 min(self._target_fps, source_fps)
                 if source_fps and source_fps > 0
