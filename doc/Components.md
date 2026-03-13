@@ -11,7 +11,7 @@
 |  |           - OpenCV Video Capture / Pre-recorded video           |  |
 |  |           - ONNX YOLOv9t AI Detection                           |  |
 |  |           - Built-in WebUI (FastAPI + Jinja2)                   |  |
-|  |           - Paho-MQTT Client (gBOAR namespace)                  |  |
+|  |           - Paho-MQTT Client (WatchEdge namespace)              |  |
 |  +-------------------------------+---------------------------------+  |
 +----------+------------------------------------------+-----------------+
            ^                                          |
