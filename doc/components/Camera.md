@@ -21,7 +21,7 @@ The camera software is a single Python application composed of two main subsyste
 │  └──────┬───────┘    └────────┬─────────┘    └────────┬─────────┘  │
 │         │                     │                       │            │
 │         │ frames              │ annotated frames      │ detections │
-│         │                     │ + detections           │            │
+│         │                     │ + detections          │            │
 │         │                     v                       v            │
 │         │            ┌──────────────────┐    ┌──────────────────┐  │
 │         │            │   Frame Buffer   │    │   MQTT Client    │  │
@@ -32,11 +32,11 @@ The camera software is a single Python application composed of two main subsyste
 │  ┌─────────────────────────────────────────────────────────────┐   │
 │  │                    WebUI (FastAPI + Jinja2)                 │   │
 │  │                                                             │   │
-│  │  ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐  │   │
-│  │  │  Homepage   │  │Configuration │  │  MJPEG Stream     │  │   │
-│  │  │  (status,   │  │ (restart,    │  │  Endpoint         │  │   │
-│  │  │   logs)     │  │  MQTT, src)  │  │  /stream          │  │   │
-│  │  └─────────────┘  └──────────────┘  └───────────────────┘  │   │
+│  │  ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐   │   │
+│  │  │  Homepage   │  │Configuration │  │  MJPEG Stream     │   │   │
+│  │  │  (status,   │  │ (restart,    │  │  Endpoint         │   │   │
+│  │  │   logs)     │  │  MQTT, src)  │  │  /stream          │   │   │
+│  │  └─────────────┘  └──────────────┘  └───────────────────┘   │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────┘
 ```

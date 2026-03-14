@@ -1,0 +1,20 @@
+# Grafana Dashboard Provisioning Configuration
+# See: https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards
+apiVersion: 1
+
+providers:
+  # Name of the provider
+  - name: "Default"
+    # The Grafana organization ID that the dashboards belong to
+    orgId: 1
+    # The folder where the dashboards will be placed in Grafana (empty string means the default 'General' folder)
+    folder: ""
+    # The type of provisioning source
+    type: file
+    # Allow users to delete provisioned dashboards from the UI
+    disableDeletion: false
+    # How often Grafana will scan for changed dashboards
+    updateIntervalSeconds: 10
+    options:
+      # The absolute path to the directory containing the dashboard JSON files
+      path: /var/lib/grafana/dashboards

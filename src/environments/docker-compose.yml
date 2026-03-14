@@ -1,6 +1,6 @@
 services:
   # =============================================================
-  # EXTREME-EDGE — Cameras (2x)
+  # EXTREME-EDGE — Cameras (1x)
   # =============================================================
 
   camera-1:
@@ -19,7 +19,14 @@ services:
     networks:
       - edge-net
     depends_on:
-      - edge-mosquitto
+      edge-mosquitto:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8080\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   # =============================================================
@@ -38,7 +45,14 @@ services:
       - edge-net
       - cloud-net
     depends_on:
-      - cloud-mosquitto
+      cloud-mosquitto:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   edge-postgresql:
@@ -52,15 +66,15 @@ services:
       - "5432:5432"
     volumes:
       - edge-pgdata:/var/lib/postgresql
-      - ../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../services/database-postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - edge-net
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U watchedge -d watchedge-db"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
       start_period: 10s
 
   edge-object-storage-init:
@@ -101,10 +115,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   edge-processing-service:
     build:
@@ -128,11 +142,17 @@ services:
       - cloud-net
     depends_on:
       edge-mosquitto:
-        condition: service_started
+        condition: service_healthy
       edge-postgresql:
         condition: service_healthy
       edge-object-storage:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/docs\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   edge-grafana:
@@ -142,17 +162,28 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: gBOAR
       GF_SECURITY_ADMIN_USER: gBOAR
       GF_INSTALL_PLUGINS: grafana-postgresql-datasource
+      GF_CONFIG_DB_URL: edge-postgresql:5432
+      GF_CONFIG_DB_USER: watchedge
+      GF_CONFIG_DB_PASSWORD: watchedge
+      GF_CONFIG_DB_NAME: watchedge-db
     ports:
       - "3000:3000"
     volumes:
       - edge-grafana-storage:/var/lib/grafana
-      - ./edge/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./edge/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./edge/grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
+      - ../services/dashboard-grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../services/dashboard-grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../services/dashboard-grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
     networks:
       - edge-net
     depends_on:
-      - edge-postgresql
+      edge-postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   # =============================================================
@@ -169,6 +200,12 @@ services:
       - ./cloud/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
       - cloud-net
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   cloud-postgresql:
@@ -182,15 +219,15 @@ services:
       - "5433:5432"
     volumes:
       - cloud-pgdata:/var/lib/postgresql
-      - ../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../services/database-postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - cloud-net
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U watchedge -d watchedge-db"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
       start_period: 10s
 
   cloud-object-storage-init:
@@ -231,10 +268,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   cloud-processing-service:
     image: gboar-processing-service
@@ -255,11 +292,17 @@ services:
       - cloud-net
     depends_on:
       cloud-mosquitto:
-        condition: service_started
+        condition: service_healthy
       cloud-postgresql:
         condition: service_healthy
       cloud-object-storage:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/docs\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   cloud-grafana:
@@ -269,17 +312,28 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: gBOAR
       GF_SECURITY_ADMIN_USER: gBOAR
       GF_INSTALL_PLUGINS: grafana-postgresql-datasource
+      GF_CONFIG_DB_URL: cloud-postgresql:5432
+      GF_CONFIG_DB_USER: watchedge
+      GF_CONFIG_DB_PASSWORD: watchedge
+      GF_CONFIG_DB_NAME: watchedge-db
     ports:
       - "3001:3000"
     volumes:
       - cloud-grafana-storage:/var/lib/grafana
-      - ./cloud/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./cloud/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./cloud/grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
+      - ../services/dashboard-grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../services/dashboard-grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../services/dashboard-grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
     networks:
       - cloud-net
     depends_on:
-      - cloud-postgresql
+      cloud-postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
 networks:

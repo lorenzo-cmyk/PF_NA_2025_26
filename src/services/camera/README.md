@@ -111,14 +111,14 @@ MQTT_HOST=mqtt.example.com
 
 ```bash
 # Install dependencies (Python 3.12+)
-pip install -e .
+uv sync
 
 # Create .env with at least EDGE_ID and CAMERA_ID
 cp .env.example .env   # or write it manually
 
-camera          # via the project script
+uv run camera          # via the project script
 # or
-python main.py
+uv run python main.py
 ```
 
 ### Docker

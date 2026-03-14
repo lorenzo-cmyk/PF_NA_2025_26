@@ -1,0 +1,30 @@
+# Grafana Datasource Provisioning Configuration
+# See: https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources
+apiVersion: 1
+
+datasources:
+  # Name of the datasource
+  - name: PostgreSQL
+    # The type of the datasource
+    type: grafana-postgresql-datasource
+    # A unique identifier for the datasource
+    uid: bfejnp2moiyo0d
+    # The connection URL to the database
+    url: $GF_CONFIG_DB_URL
+    # The database user
+    user: $GF_CONFIG_DB_USER
+    # Secure JSON data for sensitive information like passwords
+    secureJsonData:
+      password: $GF_CONFIG_DB_PASSWORD
+    # JSON data for additional connection parameters
+    jsonData:
+      # The name of the database to connect to
+      database: $GF_CONFIG_DB_NAME
+      # SSL mode for the connection
+      sslmode: "disable"
+      # The version of PostgreSQL being used
+      postgresVersion: 15
+    # The access type (proxy means Grafana backend will proxy the requests)
+    access: proxy
+    # Set this datasource as the default one
+    isDefault: true

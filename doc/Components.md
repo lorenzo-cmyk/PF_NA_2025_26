@@ -11,7 +11,7 @@
 |  |           - OpenCV Video Capture / Pre-recorded video           |  |
 |  |           - ONNX YOLOv9t AI Detection                           |  |
 |  |           - Built-in WebUI (FastAPI + Jinja2)                   |  |
-|  |           - Paho-MQTT Client (gBOAR namespace)                  |  |
+|  |           - Paho-MQTT Client (WatchEdge namespace)              |  |
 |  +-------------------------------+---------------------------------+  |
 +----------+------------------------------------------+-----------------+
            ^                                          |
@@ -86,6 +86,7 @@
 ## BIM
 
 - Mosquitto: [DockerHub](https://hub.docker.com/_/eclipse-mosquitto)
-- PostgreSQL: [DockerHub](https://hub.docker.com/_/postgres)
+- PostgreSQL: [DockerHub](https://hub.docker.com/r/postgis/postgis)
+  - Docker image including PostGIS extension for geospatial queries.
 - RustFS: [DockerHub](https://hub.docker.com/r/rustfs/rustfs)
   - RustFS is used due to MinIO deprecation.
