@@ -1,6 +1,6 @@
 services:
   # =============================================================
-  # EXTREME-EDGE — Cameras (2x)
+  # EXTREME-EDGE — Cameras (1x)
   # =============================================================
 
   camera-1:
@@ -19,7 +19,14 @@ services:
     networks:
       - edge-net
     depends_on:
-      - edge-mosquitto
+      edge-mosquitto:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8080\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   # =============================================================
@@ -38,7 +45,14 @@ services:
       - edge-net
       - cloud-net
     depends_on:
-      - cloud-mosquitto
+      cloud-mosquitto:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   edge-postgresql:
@@ -58,9 +72,9 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U watchedge -d watchedge-db"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
       start_period: 10s
 
   edge-object-storage-init:
@@ -101,10 +115,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   edge-processing-service:
     build:
@@ -128,11 +142,17 @@ services:
       - cloud-net
     depends_on:
       edge-mosquitto:
-        condition: service_started
+        condition: service_healthy
       edge-postgresql:
         condition: service_healthy
       edge-object-storage:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/docs\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   edge-grafana:
@@ -156,7 +176,14 @@ services:
     networks:
       - edge-net
     depends_on:
-      - edge-postgresql
+      edge-postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   # =============================================================
@@ -173,6 +200,12 @@ services:
       - ./cloud/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
       - cloud-net
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   cloud-postgresql:
@@ -192,9 +225,9 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U watchedge -d watchedge-db"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
       start_period: 10s
 
   cloud-object-storage-init:
@@ -235,10 +268,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   cloud-processing-service:
     image: gboar-processing-service
@@ -259,11 +292,17 @@ services:
       - cloud-net
     depends_on:
       cloud-mosquitto:
-        condition: service_started
+        condition: service_healthy
       cloud-postgresql:
         condition: service_healthy
       cloud-object-storage:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/docs\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
   cloud-grafana:
@@ -287,7 +326,14 @@ services:
     networks:
       - cloud-net
     depends_on:
-      - cloud-postgresql
+      cloud-postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
 
 networks:
