@@ -142,13 +142,17 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: gBOAR
       GF_SECURITY_ADMIN_USER: gBOAR
       GF_INSTALL_PLUGINS: grafana-postgresql-datasource
+      GF_CONFIG_DB_URL: edge-postgresql:5432
+      GF_CONFIG_DB_USER: watchedge
+      GF_CONFIG_DB_PASSWORD: watchedge
+      GF_CONFIG_DB_NAME: watchedge-db
     ports:
       - "3000:3000"
     volumes:
       - edge-grafana-storage:/var/lib/grafana
-      - ./edge/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./edge/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./edge/grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
+      - ../services/dashboard-grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../services/dashboard-grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../services/dashboard-grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
     networks:
       - edge-net
     depends_on:
@@ -269,13 +273,17 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: gBOAR
       GF_SECURITY_ADMIN_USER: gBOAR
       GF_INSTALL_PLUGINS: grafana-postgresql-datasource
+      GF_CONFIG_DB_URL: cloud-postgresql:5432
+      GF_CONFIG_DB_USER: watchedge
+      GF_CONFIG_DB_PASSWORD: watchedge
+      GF_CONFIG_DB_NAME: watchedge-db
     ports:
       - "3001:3000"
     volumes:
       - cloud-grafana-storage:/var/lib/grafana
-      - ./cloud/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./cloud/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./cloud/grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
+      - ../services/dashboard-grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../services/dashboard-grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../services/dashboard-grafana/dashboard_model.json:/var/lib/grafana/dashboards/dashboard_model.json:ro
     networks:
       - cloud-net
     depends_on:
