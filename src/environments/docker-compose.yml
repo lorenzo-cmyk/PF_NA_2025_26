@@ -1,19 +1,17 @@
 services:
   # =============================================================
-  # EXTREME-EDGE — Cameras (1x)
+  # EXTREME-EDGE
   # =============================================================
-
-  camera-1:
+  extreme-edge-camera:
     build:
       context: ../services/camera
-    image: gboar-camera
-    container_name: extreme-edge-camera-01
+    image: watchedge-camera
+    container_name: extreme-edge-camera
     environment:
       MQTT_HOST: edge-mosquitto
       MQTT_PORT: 1883
       EDGE_ID: a3f1b2c4-0000-0000-0000-000000000001
       CAMERA_ID: 7c8d9e0f-0000-0000-0000-000000000001
-      MQTT_CLIENT_ID: camera-01
     ports:
       - "8080:8080"
     networks:
@@ -22,7 +20,11 @@ services:
       edge-mosquitto:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8080\")'"]
+      test:
+        [
+          "CMD-SHELL",
+          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8080/health")''',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,9 +32,8 @@ services:
     restart: unless-stopped
 
   # =============================================================
-  # EDGE SITE
+  # EDGE
   # =============================================================
-
   edge-mosquitto:
     image: eclipse-mosquitto
     container_name: edge-mosquitto
@@ -48,7 +49,11 @@ services:
       cloud-mosquitto:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null"]
+      test:
+        [
+          "CMD-SHELL",
+          "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -62,8 +67,6 @@ services:
       POSTGRES_DB: watchedge-db
       POSTGRES_USER: watchedge
       POSTGRES_PASSWORD: watchedge
-    ports:
-      - "5432:5432"
     volumes:
       - edge-pgdata:/var/lib/postgresql
       - ../services/database-postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -77,9 +80,9 @@ services:
       retries: 5
       start_period: 10s
 
-  edge-object-storage-init:
+  edge-rustfs-init:
     image: alpine
-    container_name: edge-object-storage-init
+    container_name: edge-rustfs-init
     volumes:
       - edge-objectdata:/data
     command: >
@@ -90,9 +93,9 @@ services:
       "
     restart: "no"
 
-  edge-object-storage:
+  edge-rustfs:
     image: rustfs/rustfs:latest
-    container_name: edge-object-storage
+    container_name: edge-rustfs
     security_opt:
       - "no-new-privileges:true"
     environment:
@@ -100,8 +103,8 @@ services:
       RUSTFS_ADDRESS: 0.0.0.0:9000
       RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
       RUSTFS_CONSOLE_ENABLE: "true"
-      RUSTFS_ACCESS_KEY: gBOAR
-      RUSTFS_SECRET_KEY: gBOARpass
+      RUSTFS_ACCESS_KEY: watchedge
+      RUSTFS_SECRET_KEY: watchedge-pass
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -110,7 +113,7 @@ services:
     networks:
       - edge-net
     depends_on:
-      edge-object-storage-init:
+      edge-rustfs-init:
         condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
@@ -123,17 +126,17 @@ services:
   edge-processing-service:
     build:
       context: ../services/processing-service
-    image: gboar-processing-service
+    image: watchedge-processing-service
     container_name: edge-processing-service
     environment:
       SERVICE_MODE: EDGE
       MQTT_HOST: edge-mosquitto
       MQTT_PORT: 1883
       DATABASE_URL: postgresql://watchedge:watchedge@edge-postgresql:5432/watchedge-db
-      OBJECT_STORAGE_URL: http://edge-object-storage:9000
-      S3_ACCESS_KEY: gBOAR
-      S3_SECRET_KEY: gBOARpass
-      S3_BUCKET: gboar-images
+      OBJECT_STORAGE_URL: http://edge-rustfs:9000
+      S3_ACCESS_KEY: watchedge
+      S3_SECRET_KEY: watchedge-pass
+      S3_BUCKET: watchedge-images
       MQTT_CLIENT_ID: edge-processing-service
     ports:
       - "8000:8000"
@@ -145,10 +148,14 @@ services:
         condition: service_healthy
       edge-postgresql:
         condition: service_healthy
-      edge-object-storage:
+      edge-rustfs:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/docs\")'"]
+      test:
+        [
+          "CMD-SHELL",
+          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/health")''',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -159,8 +166,8 @@ services:
     image: grafana/grafana
     container_name: edge-grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: gBOAR
-      GF_SECURITY_ADMIN_USER: gBOAR
+      GF_SECURITY_ADMIN_PASSWORD: watchedge-pass
+      GF_SECURITY_ADMIN_USER: watchedge
       GF_INSTALL_PLUGINS: grafana-postgresql-datasource
       GF_CONFIG_DB_URL: edge-postgresql:5432
       GF_CONFIG_DB_USER: watchedge
@@ -187,9 +194,8 @@ services:
     restart: unless-stopped
 
   # =============================================================
-  # CLOUD SITE
+  # CLOUD
   # =============================================================
-
   cloud-mosquitto:
     image: eclipse-mosquitto
     container_name: cloud-mosquitto
@@ -201,7 +207,11 @@ services:
     networks:
       - cloud-net
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null"]
+      test:
+        [
+          "CMD-SHELL",
+          "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -215,8 +225,6 @@ services:
       POSTGRES_DB: watchedge-db
       POSTGRES_USER: watchedge
       POSTGRES_PASSWORD: watchedge
-    ports:
-      - "5433:5432"
     volumes:
       - cloud-pgdata:/var/lib/postgresql
       - ../services/database-postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -230,9 +238,9 @@ services:
       retries: 5
       start_period: 10s
 
-  cloud-object-storage-init:
+  cloud-rustfs-init:
     image: alpine
-    container_name: cloud-object-storage-init
+    container_name: cloud-rustfs-init
     volumes:
       - cloud-objectdata:/data
     command: >
@@ -243,9 +251,9 @@ services:
       "
     restart: "no"
 
-  cloud-object-storage:
+  cloud-rustfs:
     image: rustfs/rustfs:latest
-    container_name: cloud-object-storage
+    container_name: cloud-rustfs
     security_opt:
       - "no-new-privileges:true"
     environment:
@@ -253,8 +261,8 @@ services:
       RUSTFS_ADDRESS: 0.0.0.0:9000
       RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
       RUSTFS_CONSOLE_ENABLE: "true"
-      RUSTFS_ACCESS_KEY: gBOAR
-      RUSTFS_SECRET_KEY: gBOARpass
+      RUSTFS_ACCESS_KEY: watchedge
+      RUSTFS_SECRET_KEY: watchedge-pass
     ports:
       - "9002:9000"
       - "9003:9001"
@@ -263,7 +271,7 @@ services:
     networks:
       - cloud-net
     depends_on:
-      cloud-object-storage-init:
+      cloud-rustfs-init:
         condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
@@ -274,17 +282,17 @@ services:
       start_period: 10s
 
   cloud-processing-service:
-    image: gboar-processing-service
+    image: watchedge-processing-service
     container_name: cloud-processing-service
     environment:
       SERVICE_MODE: CLOUD
       MQTT_HOST: cloud-mosquitto
       MQTT_PORT: 1883
       DATABASE_URL: postgresql://watchedge:watchedge@cloud-postgresql:5432/watchedge-db
-      OBJECT_STORAGE_URL: http://cloud-object-storage:9000
-      S3_ACCESS_KEY: gBOAR
-      S3_SECRET_KEY: gBOARpass
-      S3_BUCKET: gboar-images
+      OBJECT_STORAGE_URL: http://cloud-rustfs:9000
+      S3_ACCESS_KEY: watchedge
+      S3_SECRET_KEY: watchedge-pass
+      S3_BUCKET: watchedge-images
       MQTT_CLIENT_ID: cloud-processing-service
     ports:
       - "8001:8000"
@@ -295,10 +303,14 @@ services:
         condition: service_healthy
       cloud-postgresql:
         condition: service_healthy
-      cloud-object-storage:
+      cloud-rustfs:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/docs\")'"]
+      test:
+        [
+          "CMD-SHELL",
+          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/health")''',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -309,8 +321,8 @@ services:
     image: grafana/grafana
     container_name: cloud-grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: gBOAR
-      GF_SECURITY_ADMIN_USER: gBOAR
+      GF_SECURITY_ADMIN_PASSWORD: watchedge-pass
+      GF_SECURITY_ADMIN_USER: watchedge
       GF_INSTALL_PLUGINS: grafana-postgresql-datasource
       GF_CONFIG_DB_URL: cloud-postgresql:5432
       GF_CONFIG_DB_USER: watchedge
@@ -338,9 +350,9 @@ services:
 
 networks:
   edge-net:
-    name: gboar-edge
+    name: watchedge-edge
   cloud-net:
-    name: gboar-cloud
+    name: watchedge-cloud
 
 volumes:
   edge-pgdata:

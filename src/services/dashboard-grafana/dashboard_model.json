@@ -15,6 +15,7 @@
       }
     ]
   },
+  "description": "cinghiali",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -30,6 +31,13 @@
           "color": {
             "mode": "thresholds"
           },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -48,47 +56,95 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 5,
+        "h": 8,
+        "w": 14,
         "x": 0,
         "y": 0
       },
-      "id": 1,
+      "id": 7,
       "options": {
-        "minVizHeight": 75,
-        "minVizWidth": 75,
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["count"],
-          "fields": "",
-          "values": false
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": false,
+          "showScale": false,
+          "showZoom": true
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "sizing": "auto"
+        "layers": [
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.4,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 2
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "location": {
+              "mode": "auto"
+            },
+            "name": "Layer 1",
+            "tooltip": true,
+            "type": "markers"
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "coords",
+          "lat": 43.740721,
+          "lon": 10.372097,
+          "noRepeat": false,
+          "zoom": 11.15
+        }
       },
-      "pluginVersion": "12.4.0",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
-          "dataset": "watchedge-db",
+          "dataset": "watchedge",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "bfejnp2moiyo0d"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT COUNT(edge_id) FROM edge_device LIMIT 50 ",
+          "rawQuery": true,
+          "rawSql": "SELECT \r\n  camera_id, \r\n  status,\r\n  ST_X(location_coordinates::geometry) AS latitude, \r\n  ST_Y(location_coordinates::geometry) AS longitude \r\nFROM camera;",
           "refId": "A",
           "sql": {
             "columns": [
               {
-                "name": "COUNT",
-                "parameters": [
-                  {
-                    "name": "edge_id",
-                    "type": "functionParameter"
-                  }
-                ],
+                "parameters": [],
                 "type": "function"
               }
             ],
@@ -101,12 +157,11 @@
               }
             ],
             "limit": 50
-          },
-          "table": "edge_device"
+          }
         }
       ],
-      "title": "Edge Device",
-      "type": "gauge"
+      "title": "CAMERAS MAP",
+      "type": "geomap"
     },
     {
       "datasource": {
@@ -136,101 +191,97 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 8,
         "w": 5,
-        "x": 5,
-        "y": 0
-      },
-      "id": 3,
-      "options": {
-        "minVizHeight": 75,
-        "minVizWidth": 75,
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "sizing": "auto"
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "dataset": "watchedge-db",
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "bfejnp2moiyo0d"
-          },
-          "editorMode": "builder",
-          "format": "table",
-          "rawSql": "SELECT COUNT(camera_id) FROM camera LIMIT 50 ",
-          "refId": "A",
-          "sql": {
-            "columns": [
-              {
-                "name": "COUNT",
-                "parameters": [
-                  {
-                    "name": "camera_id",
-                    "type": "functionParameter"
-                  }
-                ],
-                "type": "function"
-              }
-            ],
-            "groupBy": [
-              {
-                "property": {
-                  "type": "string"
-                },
-                "type": "groupBy"
-              }
-            ],
-            "limit": 50
-          },
-          "table": "camera"
-        }
-      ],
-      "title": "Camera",
-      "type": "gauge"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "bfejnp2moiyo0d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 14,
-        "x": 10,
+        "x": 14,
         "y": 0
       },
       "id": 5,
       "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "watchedge",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \r\n  status, \r\n  COUNT(camera_id) AS \"camera_count\" \r\nFROM camera \r\nGROUP BY status;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "ONLINE VS OFFLINE CAMERAS",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "bfejnp2moiyo0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 5,
+        "x": 19,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
         "minVizHeight": 75,
         "minVizWidth": 75,
         "orientation": "auto",
@@ -243,28 +294,23 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "12.4.0",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
-          "dataset": "watchedge-db",
+          "dataset": "watchedge",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "bfejnp2moiyo0d"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT COUNT(event_id) FROM datasetstore LIMIT 50 ",
+          "rawQuery": true,
+          "rawSql": "SELECT \r\n  camera_id, \r\n  status, \r\n  battery_level \r\nFROM camera \r\nWHERE battery_level < 20 \r\nORDER BY battery_level ASC;",
           "refId": "A",
           "sql": {
             "columns": [
               {
-                "name": "COUNT",
-                "parameters": [
-                  {
-                    "name": "event_id",
-                    "type": "functionParameter"
-                  }
-                ],
+                "parameters": [],
                 "type": "function"
               }
             ],
@@ -277,11 +323,10 @@
               }
             ],
             "limit": 50
-          },
-          "table": "datasetstore"
+          }
         }
       ],
-      "title": "Events",
+      "title": "BATTERY LEVEL UNDER 20%",
       "type": "gauge"
     },
     {
@@ -292,17 +337,41 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
             },
-            "footer": {
-              "reducers": []
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
             },
-            "inspect": false
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "thresholds": {
@@ -322,37 +391,42 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 5,
+        "h": 8,
+        "w": 12,
         "x": 0,
-        "y": 5
+        "y": 8
       },
-      "id": 2,
+      "id": 9,
       "options": {
-        "cellHeight": "sm",
-        "showHeader": true
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
       },
-      "pluginVersion": "12.4.0",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
-          "dataset": "watchedge-db",
+          "dataset": "watchedge",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "bfejnp2moiyo0d"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT * FROM edge_device LIMIT 50 ",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  $__timeGroup(datasetstore.\"time\", '1h') AS \"time\",\r\n  animaldetected.animal_type AS \"metric\",\r\n  COUNT(animaldetected.detection_id) AS \"detections\"\r\nFROM animaldetected\r\nJOIN datasetstore ON animaldetected.event_id = datasetstore.event_id\r\n-- Notice that the WHERE clause is gone!\r\nGROUP BY 1, 2\r\nORDER BY 1;",
           "refId": "A",
           "sql": {
             "columns": [
               {
-                "parameters": [
-                  {
-                    "name": "*",
-                    "type": "functionParameter"
-                  }
-                ],
+                "parameters": [],
                 "type": "function"
               }
             ],
@@ -365,12 +439,123 @@
               }
             ],
             "limit": 50
-          },
-          "table": "edge_device"
+          }
         }
       ],
-      "title": "Edge Device",
-      "type": "table"
+      "title": "DETECTIONS BY TIME OF DAY",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "bfejnp2moiyo0d"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "dataset": "watchedge",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfejnp2moiyo0d"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT \r\n  animal_type, \r\n  COUNT(detection_id) AS \"total_detections\" \r\nFROM animaldetected \r\nGROUP BY animal_type \r\nORDER BY \"total_detections\" DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "SPECIES DISTRIBUTION",
+      "type": "barchart"
     },
     {
       "datasource": {
@@ -410,37 +595,33 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 5,
-        "x": 5,
-        "y": 5
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
       },
       "id": 4,
       "options": {
         "cellHeight": "sm",
         "showHeader": true
       },
-      "pluginVersion": "12.4.0",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
-          "dataset": "watchedge-db",
+          "dataset": "watchedge",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "bfejnp2moiyo0d"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT * FROM camera LIMIT 50 ",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM edge_device;",
           "refId": "A",
           "sql": {
             "columns": [
               {
-                "parameters": [
-                  {
-                    "name": "*",
-                    "type": "functionParameter"
-                  }
-                ],
+                "parameters": [],
                 "type": "function"
               }
             ],
@@ -453,11 +634,10 @@
               }
             ],
             "limit": 50
-          },
-          "table": "camera"
+          }
         }
       ],
-      "title": "Camera",
+      "title": "EDGE _DEVICE",
       "type": "table"
     },
     {
@@ -477,6 +657,9 @@
             },
             "footer": {
               "reducers": []
+            },
+            "hideFrom": {
+              "viz": false
             },
             "inspect": false
           },
@@ -498,37 +681,33 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 14,
-        "x": 10,
-        "y": 5
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
       },
-      "id": 6,
+      "id": 2,
       "options": {
         "cellHeight": "sm",
         "showHeader": true
       },
-      "pluginVersion": "12.4.0",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
-          "dataset": "watchedge-db",
+          "dataset": "watchedge",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "bfejnp2moiyo0d"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT * FROM datasetstore LIMIT 50 ",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM camera",
           "refId": "A",
           "sql": {
             "columns": [
               {
-                "parameters": [
-                  {
-                    "name": "*",
-                    "type": "functionParameter"
-                  }
-                ],
+                "parameters": [],
                 "type": "function"
               }
             ],
@@ -541,11 +720,10 @@
               }
             ],
             "limit": 50
-          },
-          "table": "datasetstore"
+          }
         }
       ],
-      "title": "Events",
+      "title": "CAMERA",
       "type": "table"
     },
     {
@@ -557,6 +735,19 @@
         "defaults": {
           "color": {
             "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "hideFrom": {
+              "viz": false
+            },
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -576,47 +767,33 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 10,
+        "h": 8,
+        "w": 12,
         "x": 0,
-        "y": 12
+        "y": 24
       },
-      "id": 7,
+      "id": 1,
       "options": {
-        "minVizHeight": 75,
-        "minVizWidth": 75,
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "sizing": "auto"
+        "cellHeight": "sm",
+        "showHeader": true
       },
-      "pluginVersion": "12.4.0",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
-          "dataset": "watchedge-db",
+          "dataset": "watchedge",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "bfejnp2moiyo0d"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT COUNT(detection_id) FROM animaldetected LIMIT 50 ",
+          "rawQuery": true,
+          "rawSql": "SELECT * FROM animaldetected;",
           "refId": "A",
           "sql": {
             "columns": [
               {
-                "name": "COUNT",
-                "parameters": [
-                  {
-                    "name": "detection_id",
-                    "type": "functionParameter"
-                  }
-                ],
+                "parameters": [],
                 "type": "function"
               }
             ],
@@ -629,12 +806,11 @@
               }
             ],
             "limit": 50
-          },
-          "table": "animaldetected"
+          }
         }
       ],
-      "title": "Animals",
-      "type": "gauge"
+      "title": "ANIMALDETECTED",
+      "type": "table"
     },
     {
       "datasource": {
@@ -674,37 +850,33 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 20,
-        "w": 14,
-        "x": 10,
-        "y": 12
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
       },
-      "id": 8,
+      "id": 3,
       "options": {
         "cellHeight": "sm",
         "showHeader": true
       },
-      "pluginVersion": "12.4.0",
+      "pluginVersion": "12.4.1",
       "targets": [
         {
-          "dataset": "watchedge-db",
+          "dataset": "watchedge",
           "datasource": {
             "type": "grafana-postgresql-datasource",
             "uid": "bfejnp2moiyo0d"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "format": "table",
-          "rawSql": "SELECT * FROM animaldetected LIMIT 50 ",
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  *\r\nFROM\r\n  datasetstore",
           "refId": "A",
           "sql": {
             "columns": [
               {
-                "parameters": [
-                  {
-                    "name": "*",
-                    "type": "functionParameter"
-                  }
-                ],
+                "parameters": [],
                 "type": "function"
               }
             ],
@@ -717,11 +889,10 @@
               }
             ],
             "limit": 50
-          },
-          "table": "animaldetected"
+          }
         }
       ],
-      "title": "Animals",
+      "title": "DATASETSTORE",
       "type": "table"
     }
   ],
@@ -732,13 +903,13 @@
     "list": []
   },
   "time": {
-    "from": "2026-02-21T11:15:27.316Z",
-    "to": "2026-02-22T11:15:27.316Z"
+    "from": "now-1h",
+    "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "ItalTel Tech 3.0",
-  "uid": "cinghiale",
-  "version": 9,
+  "title": "WATCHEDGE",
+  "uid": "adsc4sq",
+  "version": 1,
   "weekStart": ""
 }
