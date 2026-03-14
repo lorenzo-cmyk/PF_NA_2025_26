@@ -52,7 +52,7 @@ services:
       - "5432:5432"
     volumes:
       - edge-pgdata:/var/lib/postgresql
-      - ../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../services/database-postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - edge-net
     restart: unless-stopped
@@ -186,7 +186,7 @@ services:
       - "5433:5432"
     volumes:
       - cloud-pgdata:/var/lib/postgresql
-      - ../services/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../services/database-postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - cloud-net
     restart: unless-stopped
