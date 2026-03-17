@@ -80,6 +80,7 @@ Settings are read from a `.env` file in the project root (or from environment va
 | `S3_BUCKET`          | `watchedge-images`                                             | S3 bucket name                                                                    |
 | `WEB_HOST`           | `0.0.0.0`                                                      | HTTP server bind address                                                          |
 | `WEB_PORT`           | `8000`                                                         | HTTP server port                                                                  |
+| `WEB_BASE_URL`       | `http://localhost:8000`                                        | External base URL for the service UI (not used for filtering/validation)          |
 
 Minimal `.env` example:
 

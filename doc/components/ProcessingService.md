@@ -78,6 +78,7 @@ Frozen dataclass loaded from environment variables. Exposes derived helpers for 
 | `s3_public_url`      | `str`         | `""` (falls back to `object_storage_url`)                      | Public base URL for stored images (no credentials)                                |
 | `web_host`           | `str`         | `0.0.0.0`                                                      | HTTP server bind address                                                          |
 | `web_port`           | `int`         | `8000`                                                         | HTTP server bind port                                                             |
+| `web_base_url`       | `str`         | `http://localhost:8000`                                        | External base URL for generating user-facing links (DO NOT filter requests by it) |
 
 **Derived helpers (properties):**
 
