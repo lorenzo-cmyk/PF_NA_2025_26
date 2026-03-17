@@ -99,7 +99,7 @@ async def get_image(event_id: str) -> Response:
     if ds is None:
         raise HTTPException(status_code=404, detail=f"Event {event_id} not found")
 
-    # Try to fetch from cloud object storage if imagepath exists
+    # Try to fetch from Object Storage if imagepath exists
     if ds.imagepath:
         object_key = f"{event_id}.jpg"
         if _s3 and _s3.object_exists(object_key):

@@ -75,7 +75,7 @@ Frozen dataclass loaded from environment variables. Exposes derived helpers for 
 | `s3_access_key`      | `str`         | `watchedge`                                                    | S3 access key                                                                                                                |
 | `s3_secret_key`      | `str`         | `watchedge`                                                    | S3 secret key                                                                                                                |
 | `s3_bucket`          | `str`         | `watchedge-images`                                             | S3 bucket name                                                                                                               |
-| `s3_public_url`      | `str`         | `""` (falls back to `object_storage_url`)                      | Public base URL for stored images (no credentials)                                                                           |
+| `s3_public_url`      | `str`         | `""` (falls back to `object_storage_url`)                      | Public base URL for stored images (no credentials). MUST be reachable by the operator client.                                |
 | `web_host`           | `str`         | `0.0.0.0`                                                      | HTTP server bind address                                                                                                     |
 | `web_port`           | `int`         | `8000`                                                         | HTTP server bind port                                                                                                        |
 | `web_base_url`       | `str`         | `http://localhost:8000`                                        | External base URL for generating user-facing links. MUST be reachable by the operator client. (DO NOT filter requests by it) |
@@ -224,7 +224,7 @@ Inserts a `datasetstore` row and its child `animaldetected` rows:
 1. Extracts `event_id` from payload (must be a valid UUID).
 2. Parses `camera_id` as UUID; looks up the camera by PK. Skips if not found (event before birth).
 3. Checks for duplicate `event_id` — skips if already exists.
-4. Inserts `datasetstore` with `imagepath = ""` (image not yet uploaded), `time` from `capture_time`, `count` from payload (informational — the DB trigger `trg_refresh_count` recomputes it).
+4. Inserts `datasetstore` with a proxy URL as `imagepath` (pointing to the `/api/v1/images/{event_id}` endpoint), `time` from `capture_time`, `count` from payload (informational — the DB trigger `trg_refresh_count` recomputes it).
 5. Flushes (parent must exist for FK).
 6. For each detection in `payload["detections"]`, inserts an `animaldetected` child row with `animal_type`, `distance`, `size_estimate`, `confidence`.
 7. Commits.
