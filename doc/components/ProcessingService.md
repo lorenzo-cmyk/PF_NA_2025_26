@@ -62,22 +62,22 @@ Frozen dataclass loaded from environment variables. Exposes derived helpers for 
 
 **Fields:**
 
-| Field                | Type          | Default                                                        | Description                                        |
-| :------------------- | :------------ | :------------------------------------------------------------- | :------------------------------------------------- |
-| `service_mode`       | `ServiceMode` | `EDGE`                                                         | Operational mode (`EDGE` or `CLOUD`)               |
-| `mqtt_host`          | `str`         | `localhost`                                                    | MQTT broker host                                   |
-| `mqtt_port`          | `int`         | `1883`                                                         | MQTT broker port                                   |
-| `mqtt_username`      | `str`         | `""`                                                           | MQTT username (optional)                           |
-| `mqtt_password`      | `str`         | `""`                                                           | MQTT password (optional)                           |
-| `mqtt_client_id`     | `str`         | `""` (auto-generated)                                          | MQTT client identifier                             |
-| `database_url`       | `str`         | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string                       |
-| `object_storage_url` | `str`         | `http://localhost:9000`                                        | S3-compatible endpoint (internal)                  |
-| `s3_access_key`      | `str`         | `watchedge`                                                    | S3 access key                                      |
-| `s3_secret_key`      | `str`         | `watchedge`                                                    | S3 secret key                                      |
-| `s3_bucket`          | `str`         | `watchedge-images`                                             | S3 bucket name                                     |
-| `s3_public_url`      | `str`         | `""` (falls back to `object_storage_url`)                      | Public base URL for stored images (no credentials) |
-| `web_host`           | `str`         | `0.0.0.0`                                                      | HTTP server bind address                           |
-| `web_port`           | `int`         | `8000`                                                         | HTTP server bind port                              |
+| Field                | Type          | Default                                                        | Description                                                                       |
+| :------------------- | :------------ | :------------------------------------------------------------- | :-------------------------------------------------------------------------------- |
+| `service_mode`       | `ServiceMode` | `EDGE`                                                         | Operational mode (`EDGE` or `CLOUD`)                                              |
+| `mqtt_host`          | `str`         | `localhost`                                                    | MQTT broker host                                                                  |
+| `mqtt_port`          | `int`         | `1883`                                                         | MQTT broker port                                                                  |
+| `mqtt_username`      | `str`         | `""`                                                           | MQTT username (optional)                                                          |
+| `mqtt_password`      | `str`         | `""`                                                           | MQTT password (optional)                                                          |
+| `mqtt_client_id`     | `str`         | `""` (auto-generated)                                          | MQTT client identifier                                                            |
+| `database_url`       | `str`         | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string                                                      |
+| `object_storage_url` | `str`         | `http://localhost:9000`                                        | S3-compatible endpoint (MUST be accessible by BOTH Camera and processing-service) |
+| `s3_access_key`      | `str`         | `watchedge`                                                    | S3 access key                                                                     |
+| `s3_secret_key`      | `str`         | `watchedge`                                                    | S3 secret key                                                                     |
+| `s3_bucket`          | `str`         | `watchedge-images`                                             | S3 bucket name                                                                    |
+| `s3_public_url`      | `str`         | `""` (falls back to `object_storage_url`)                      | Public base URL for stored images (no credentials)                                |
+| `web_host`           | `str`         | `0.0.0.0`                                                      | HTTP server bind address                                                          |
+| `web_port`           | `int`         | `8000`                                                         | HTTP server bind port                                                             |
 
 **Derived helpers (properties):**
 

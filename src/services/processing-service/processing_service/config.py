@@ -45,7 +45,7 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
     # Database
     database_url: str = "postgresql://watchedge:watchedge@localhost:5432/watchedge-db"
 
-    # Object Storage (S3-compatible)
+    # Object Storage (S3-compatible) - MUST be accessible by BOTH Camera and processing-service
     object_storage_url: str = "http://localhost:9000"
     s3_access_key: str = "watchedge"
     s3_secret_key: str = "watchedge"
