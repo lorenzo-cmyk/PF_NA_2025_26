@@ -73,7 +73,7 @@ def health() -> dict[str, str]:
 
 
 # --------------------------------------------------------------------------- #
-#  Cloud-only: image retrieval endpoint
+#  Image retrieval endpoint
 # --------------------------------------------------------------------------- #
 
 
@@ -82,15 +82,10 @@ async def get_image(event_id: str) -> Response:
     """Retrieve an image for the given event.
 
     1. Look up the event in the database to get image_path.
-    2. Try fetching the image from Cloud Object Storage.
+    2. Try fetching the image from Object Storage.
     3. If not available, publish an upload command and wait for the image.
     4. Return the image bytes to the caller.
     """
-    if not _cfg.is_cloud:
-        raise HTTPException(
-            status_code=404,
-            detail="Image retrieval is only available in CLOUD mode",
-        )
 
     # Look up the event in the DB
     try:
@@ -145,7 +140,11 @@ async def get_image(event_id: str) -> Response:
             "event_id": event_id,
             "upload_url": upload_url,
         }
-        cmd_topic = f"cloud/{edge_id}/{camera_id}/cmd/upload"
+        cmd_topic = (
+            f"cloud/{edge_id}/{camera_id}/cmd/upload"
+            if _cfg.is_cloud
+            else f"edge/{edge_id}/{camera_id}/cmd/upload"
+        )
         _mqtt.publish(cmd_topic, cmd_payload, qos=1)
         log.info("Requested image upload: %s", cmd_topic)
 
