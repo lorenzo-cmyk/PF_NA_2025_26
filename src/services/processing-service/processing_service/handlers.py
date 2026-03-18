@@ -380,7 +380,7 @@ class MessageHandler:
                     camera_id=camera_uuid,
                     time=capture_time,
                     count=payload.get("count", 0),
-                    imagepath="",
+                    imagepath=f"{self._cfg.web_base_url.rstrip('/')}/api/v1/images/{event_uuid}",
                 )
                 session.add(ds)
                 # Flush to ensure datasetstore row exists before FK-dependent inserts

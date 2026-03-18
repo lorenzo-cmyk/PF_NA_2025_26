@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14.3-slim
 
 # System deps for OpenCV (headless) and ONNX Runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \

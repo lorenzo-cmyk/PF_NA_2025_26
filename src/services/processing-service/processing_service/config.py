@@ -45,7 +45,7 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
     # Database
     database_url: str = "postgresql://watchedge:watchedge@localhost:5432/watchedge-db"
 
-    # Object Storage (S3-compatible)
+    # Object Storage (S3-compatible) - MUST be accessible by BOTH Camera and processing-service
     object_storage_url: str = "http://localhost:9000"
     s3_access_key: str = "watchedge"
     s3_secret_key: str = "watchedge"
@@ -55,6 +55,7 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
     # HTTP server
     web_host: str = "0.0.0.0"
     web_port: int = Field(default=8000, ge=1, le=65535)
+    web_base_url: str = "http://localhost:8000"
 
     # --- derived helpers -------------------------------------------------- #
 
@@ -96,4 +97,5 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
         _log.info("  [HTTP Server]")
         _log.info("    WEB_HOST              = %s", self.web_host)
         _log.info("    WEB_PORT              = %d", self.web_port)
+        _log.info("    WEB_BASE_URL          = %s", self.web_base_url)
         _log.info("=======================================")

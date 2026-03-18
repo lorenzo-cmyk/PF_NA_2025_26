@@ -131,7 +131,7 @@ class MQTTClient:
     ) -> None:
         try:
             payload: dict[str, Any] = json.loads(msg.payload)
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except json.JSONDecodeError, UnicodeDecodeError:
             log.warning("Non-JSON payload on %s – skipping", msg.topic)
             return
 

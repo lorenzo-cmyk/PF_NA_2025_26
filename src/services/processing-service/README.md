@@ -64,22 +64,23 @@ Handles the `cloud/` counterparts of birth, telemetry, event, and upload_status 
 
 Settings are read from a `.env` file in the project root (or from environment variables).
 
-| Variable             | Default                                                        | Description                                                   |
-| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
-| `SERVICE_MODE`       | `EDGE`                                                         | Operational mode: `EDGE` or `CLOUD`                           |
-| `MQTT_HOST`          | `localhost`                                                    | MQTT broker hostname                                          |
-| `MQTT_PORT`          | `1883`                                                         | MQTT broker port                                              |
-| `MQTT_USERNAME`      | _(none)_                                                       | Broker username; leave empty for anonymous connections        |
-| `MQTT_PASSWORD`      | _(none)_                                                       | Broker password                                               |
-| `MQTT_CLIENT_ID`     | _(auto)_                                                       | MQTT client ID — must differ between Edge and Cloud instances |
-| `DATABASE_URL`       | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string                                  |
-| `OBJECT_STORAGE_URL` | `http://localhost:9000`                                        | S3-compatible endpoint (internal, used for presigned URLs)    |
-| `S3_PUBLIC_URL`      | _(falls back to `OBJECT_STORAGE_URL`)_                         | Public base URL for stored images (no credentials)            |
-| `S3_ACCESS_KEY`      | `watchedge`                                                    | S3 access key                                                 |
-| `S3_SECRET_KEY`      | `watchedge`                                                    | S3 secret key                                                 |
-| `S3_BUCKET`          | `watchedge-images`                                             | S3 bucket name                                                |
-| `WEB_HOST`           | `0.0.0.0`                                                      | HTTP server bind address                                      |
-| `WEB_PORT`           | `8000`                                                         | HTTP server port                                              |
+| Variable             | Default                                                        | Description                                                                                                        |
+| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `SERVICE_MODE`       | `EDGE`                                                         | Operational mode: `EDGE` or `CLOUD`                                                                                |
+| `MQTT_HOST`          | `localhost`                                                    | MQTT broker hostname                                                                                               |
+| `MQTT_PORT`          | `1883`                                                         | MQTT broker port                                                                                                   |
+| `MQTT_USERNAME`      | _(none)_                                                       | Broker username; leave empty for anonymous connections                                                             |
+| `MQTT_PASSWORD`      | _(none)_                                                       | Broker password                                                                                                    |
+| `MQTT_CLIENT_ID`     | _(auto)_                                                       | MQTT client ID — must differ between Edge and Cloud instances                                                      |
+| `DATABASE_URL`       | `postgresql://watchedge:watchedge@localhost:5432/watchedge-db` | PostgreSQL connection string                                                                                       |
+| `OBJECT_STORAGE_URL` | `http://localhost:9000`                                        | S3-compatible endpoint (MUST be accessible by BOTH Camera and processing-service)                                  |
+| `S3_PUBLIC_URL`      | _(falls back to `OBJECT_STORAGE_URL`)_                         | Public base URL for stored images (no credentials). MUST be reachable by the operator client.                      |
+| `S3_ACCESS_KEY`      | `watchedge`                                                    | S3 access key                                                                                                      |
+| `S3_SECRET_KEY`      | `watchedge`                                                    | S3 secret key                                                                                                      |
+| `S3_BUCKET`          | `watchedge-images`                                             | S3 bucket name                                                                                                     |
+| `WEB_HOST`           | `0.0.0.0`                                                      | HTTP server bind address                                                                                           |
+| `WEB_PORT`           | `8000`                                                         | HTTP server port                                                                                                   |
+| `WEB_BASE_URL`       | `http://localhost:8000`                                        | External base URL for the service UI. MUST be reachable by the operator client (not used for filtering/validation) |
 
 Minimal `.env` example:
 
