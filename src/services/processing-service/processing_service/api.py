@@ -10,7 +10,7 @@ from typing import Any
 
 import requests as http_requests
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import RedirectResponse, Response
 
 from processing_service.config import Config
 from processing_service.database import Camera, DatasetStore, get_session
@@ -191,6 +191,12 @@ async def get_image(event_id: str) -> Response:
 # --------------------------------------------------------------------------- #
 #  Helpers
 # --------------------------------------------------------------------------- #
+
+
+@app.get("/")
+def root() -> RedirectResponse:
+    """Redirect root to health check endpoint."""
+    return RedirectResponse(url="/health", status_code=307)
 
 
 def _try_fetch_image(url: str) -> bytes | None:
