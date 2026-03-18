@@ -12,9 +12,25 @@ dependencies = [
     "requests>=2.32.5",
     "opencv-python>=4.13.0.92",
     "numpy>=2.4.3",
-    "onnxruntime>=1.24.4",
     "python-dotenv>=1.2.2",
     "pydantic-settings>=2.13.1",
+]
+
+[project.optional-dependencies]
+cpu = ["onnxruntime>=1.24.4"]
+nvidia-gpu = ["onnxruntime-gpu[cuda,cudnn]>=1.24.4"]
+nvidia-gpu-pascal = [
+    "onnxruntime-gpu[cuda,cudnn]>=1.24.4",
+    "nvidia-cudnn-cu12==9.10.2.21",
+]
+
+[tool.uv]
+conflicts = [
+    [
+        { extra = "cpu" },
+        { extra = "nvidia-gpu" },
+        { extra = "nvidia-gpu-pascal" },
+    ],
 ]
 
 [project.scripts]
