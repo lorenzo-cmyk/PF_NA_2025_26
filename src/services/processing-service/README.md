@@ -96,7 +96,7 @@ OBJECT_STORAGE_URL=http://minio:9000
 ### Local (development)
 
 ```bash
-# Install dependencies (Python 3.12+)
+# Install dependencies (Python 3.14.3+)
 uv sync
 
 # Create .env (requires PostgreSQL, Mosquitto, and an S3-compatible storage instance)
