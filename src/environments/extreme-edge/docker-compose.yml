@@ -1,0 +1,30 @@
+services:
+  extreme-edge-camera:
+    build:
+      context: ../../services/camera
+      args:
+        RUNTIME_ENV: nvidia-gpu-pascal
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    image: watchedge-camera
+    container_name: extreme-edge-camera
+    environment:
+      ### CHANGE-ME: Update the information below to match the production environment.
+      MQTT_HOST: 192.168.178.20
+      MQTT_PORT: 1883
+      EDGE_ID: a3f1b2c4-0000-0000-0000-000000000001
+      CAMERA_ID: 7c8d9e0f-0000-0000-0000-000000000001
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD-SHELL", 'python -c ''import urllib.request; urllib.request.urlopen("http://127.0.0.1:8080/health")''' ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
