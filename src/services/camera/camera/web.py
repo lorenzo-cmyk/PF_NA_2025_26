@@ -107,6 +107,7 @@ class WebUI:
                 "mqtt_connected": self._mqtt.connected,
                 "edge_id": self._cfg.edge_id,
                 "camera_id": self._cfg.camera_id,
+                "execution_provider": self._engine.execution_provider,
                 "source_type": info.get("source_type"),
                 "current_video": info.get("current_video"),
                 "is_paused": info.get("is_paused"),

@@ -10,16 +10,18 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
+ARG RUNTIME_ENV=cpu
+
 # Install dependencies (cache-friendly layer)
 COPY pyproject.toml README.md ./
-RUN uv sync --no-install-project
+RUN uv sync --extra ${RUNTIME_ENV} --no-install-project
 
 # Copy application source and install the project
 COPY main.py .
 COPY camera/ camera/
 COPY model/ model/
 COPY samples/ samples/
-RUN uv sync
+RUN uv sync --extra ${RUNTIME_ENV}
 
 # Runtime directories (images are written here at runtime)
 RUN mkdir -p data/images

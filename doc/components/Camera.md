@@ -58,8 +58,8 @@ Frozen dataclass loaded from environment variables. Mirrors the camera-emulator 
 | `mqtt_username`        | `str`   | `""`                          | MQTT credentials                                                                                                                      |
 | `mqtt_password`        | `str`   | `""`                          | MQTT credentials                                                                                                                      |
 | `mqtt_client_id`       | `str`   | `""`                          | MQTT client ID                                                                                                                        |
-| `edge_id`              | `UUID`  | *(required)*                  | Edge device UUID (provisioned at deployment time)                                                                                     |
-| `camera_id`            | `UUID`  | *(required)*                  | Camera UUID (provisioned at deployment time)                                                                                          |
+| `edge_id`              | `UUID`  | _(required)_                  | Edge device UUID (provisioned at deployment time)                                                                                     |
+| `camera_id`            | `UUID`  | _(required)_                  | Camera UUID (provisioned at deployment time)                                                                                          |
 | `web_host`             | `str`   | `0.0.0.0`                     | WebUI bind address                                                                                                                    |
 | `web_port`             | `int`   | `8080`                        | WebUI bind port                                                                                                                       |
 | `model_path`           | `str`   | `model/best_yolov9t_aug.onnx` | Path to ONNX model                                                                                                                    |
@@ -92,7 +92,7 @@ Wraps an OpenCV `VideoCapture` and exposes a uniform frame-reading interface reg
 **State:**
 
 | Attribute           | Type                      | Description                                                           |
-| :------------------ | :------------------------ | :-------------------------------------------------------------------- |
+| :------------------ | :------------------------ | :-------------------------------------------------------------------- | --------------------- |
 | `_source_type`      | `Literal["usb", "video"]` | Current active source                                                 |
 | `_capture`          | `cv2.VideoCapture         | None`                                                                 | Active OpenCV capture |
 | `_lock`             | `threading.Lock`          | Thread-safe access to capture and state                               |
@@ -104,7 +104,7 @@ Wraps an OpenCV `VideoCapture` and exposes a uniform frame-reading interface reg
 **Methods:**
 
 | Method                                 | Description                                                                                                                                                                                                     |
-| :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `switch(source_type, video_name=None)` | Releases current capture, opens the new source. When switching to `video`, `video_name` selects which sample video to load. If omitted, uses the previously selected video or the first available. Thread-safe. |
 | `read() -> tuple[bool, np.ndarray      | None]`                                                                                                                                                                                                          | Returns the next frame. For `video` source when paused, returns the last captured frame without advancing. |
 | `pause()`                              | Pauses video playback (no-op for USB).                                                                                                                                                                          |
@@ -130,13 +130,14 @@ Pure ONNX inference: loads the model once, exposes a single stateless `detect()`
 
 **Class: `Detector`**
 
-**Dependencies:** `onnxruntime`, `cv2`, `numpy`
+**Dependencies:** `onnxruntime` (or `onnxruntime-gpu`), `cv2`, `numpy`. Note that dependencies are managed explicitly via `uv` using mutually exclusive extras (`cpu`, `nvidia-gpu`, `nvidia-gpu-pascal`) for granular GPU or CPU support, avoiding heavy unneeded artifacts.
 
 **State:**
 
 | Attribute               | Type                   | Description                                               |
 | :---------------------- | :--------------------- | :-------------------------------------------------------- |
 | `_session`              | `ort.InferenceSession` | Loaded ONNX model session                                 |
+| `_execution_provider`   | `str`                  | Chosen execution provider (`CUDAExecutionProvider` etc)   |
 | `_input_name`           | `str`                  | Model input tensor name (cached on init)                  |
 | `_input_shape`          | `tuple`                | Expected input dimensions `(1, 3, H, W)` (cached on init) |
 | `_confidence_threshold` | `float`                | Minimum detection confidence                              |
@@ -180,7 +181,7 @@ Threaded loop that reads frames from the VideoSource, delegates to the Detector,
 **State:**
 
 | Attribute            | Type             | Description                                     |
-| :------------------- | :--------------- | :---------------------------------------------- |
+| :------------------- | :--------------- | :---------------------------------------------- | ------------------------------------------------------- |
 | `_detector`          | `Detector`       | The detection model                             |
 | `_video_source`      | `VideoSource`    | Frame provider                                  |
 | `_running`           | `bool`           | Engine loop control flag                        |
@@ -193,7 +194,7 @@ Threaded loop that reads frames from the VideoSource, delegates to the Detector,
 **Methods:**
 
 | Method                                  | Description                                                                                                                             |
-| :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `start()`                               | Starts the inference loop in a daemon thread.                                                                                           |
 | `stop()`                                | Signals the loop to stop and waits for the thread to join.                                                                              |
 | `get_latest_frame() -> bytes            | None`                                                                                                                                   | Returns the latest annotated frame JPEG-encoded (thread-safe read). Used by the MJPEG stream. |
@@ -250,17 +251,17 @@ Bridges the Inference Engine output to the MQTT client. Responsible for assembli
 
 ```json
 {
-    "event_id": "{UUID}",
-    "capture_time": "2026-03-01T12:00:00Z",
-    "count": 1,
-    "detections": [
-        {
-            "animal_type": "boar",
-            "distance": 15.5,
-            "size_estimate": 1.20,
-            "confidence": 0.92
-        }
-    ]
+  "event_id": "{UUID}",
+  "capture_time": "2026-03-01T12:00:00Z",
+  "count": 1,
+  "detections": [
+    {
+      "animal_type": "boar",
+      "distance": 15.5,
+      "size_estimate": 1.2,
+      "confidence": 0.92
+    }
+  ]
 }
 ```
 
@@ -297,15 +298,15 @@ Reuses the same pattern from the emulator — thin wrapper around `paho.mqtt.cli
 
 ```json
 {
-    "edge_name": "SAN_ROSSORE_PACK_01",
-    "edge_location": "San Rossore Forest",
-    "camera_type": "BOAR_CAMERA_V3",
-    "camera_coords": "POINT(10.324982, 43.76797)",
-    "elevation": 30,
-    "technical_params_json": {
-        "iso": 800,
-        "res": "2160x3840"
-    }
+  "edge_name": "SAN_ROSSORE_PACK_01",
+  "edge_location": "San Rossore Forest",
+  "camera_type": "BOAR_CAMERA_V3",
+  "camera_coords": "POINT(10.324982, 43.76797)",
+  "elevation": 30,
+  "technical_params_json": {
+    "iso": 800,
+    "res": "2160x3840"
+  }
 }
 ```
 
@@ -315,10 +316,10 @@ All values are sourced from the `birth_*` fields in `Config`.
 
 ```json
 {
-    "timestamp": "2026-03-01T10:00:00Z",
-    "status": "Online",
-    "temperature": 17.5,
-    "battery_level": 74
+  "timestamp": "2026-03-01T10:00:00Z",
+  "status": "Online",
+  "temperature": 17.5,
+  "battery_level": 74
 }
 ```
 
@@ -382,12 +383,12 @@ All control and configuration REST endpoints, mounted as a sub-router on the Fas
 #### Routes owned by WebAPI
 
 | Method | Endpoint               | Description                                                                                                                                              |
-| :----- | :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| :----- | :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `GET`  | `/health`              | Health check — returns `mqtt_connected`, `inference_running`, `source_type`.                                                                             |
 | `POST` | `/api/restart`         | Stops the Inference Engine and MQTT client, then restarts them. Returns success/failure.                                                                 |
 | `POST` | `/api/mqtt/disconnect` | Gracefully disconnects the MQTT client.                                                                                                                  |
 | `POST` | `/api/mqtt/reconnect`  | Reconnects the MQTT client to the broker.                                                                                                                |
-| `POST` | `/api/source/switch`   | Switches video source. Body: `{"source": "usb"                                                                                                           | "video", "video_name": "sample_01.mp4"}`. The`video_name` field is optional and only used when switching to `video`. Delegates to`VideoSource.switch()`. |
+| `POST` | `/api/source/switch`   | Switches video source. Body: `{"source": "usb"                                                                                                           | "video", "video_name": "sample_01.mp4"}`. The`video_name`field is optional and only used when switching to`video`. Delegates to`VideoSource.switch()`. |
 | `POST` | `/api/source/pause`    | Pauses video playback.                                                                                                                                   |
 | `POST` | `/api/source/resume`   | Resumes video playback.                                                                                                                                  |
 | `POST` | `/api/source/seek`     | Seeks in paused video. Body: `{"timestamp_ms": 12345}`.                                                                                                  |
@@ -616,19 +617,19 @@ The Docker image ships with all assets needed to operate without external depend
 
 ```json
 [
-    {
-        "name": "Demo scene 1",
-        "description": "One large boar",
-        "count": 1,
-        "detections": [
-            {
-                "animal_type": "boar",
-                "distance": 39.7,
-                "size_estimate": 1.20,
-                "confidence": 0.96
-            }
-        ]
-    }
+  {
+    "name": "Demo scene 1",
+    "description": "One large boar",
+    "count": 1,
+    "detections": [
+      {
+        "animal_type": "boar",
+        "distance": 39.7,
+        "size_estimate": 1.2,
+        "confidence": 0.96
+      }
+    ]
+  }
 ]
 ```
 

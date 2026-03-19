@@ -54,9 +54,29 @@ class Detector:
         confidence_threshold: float = 0.6,
         iou_threshold: float = 0.5,
     ) -> None:
+        log.info("Initializing ONNX Runtime …")
+        # Load NVIDIA shared libraries from venv site-packages to ensure CUDA support works on all platforms.
+        ort.preload_dlls(directory="")
+        # Get all available inference providers
+        providers = ort.get_available_providers()
+        log.info("Available ONNX Runtime providers: %s", providers)
+        # Pick the best available provider (prefer GPU)
+        if "CUDAExecutionProvider" in providers:
+            log.info("Using 'CUDAExecutionProvider' for ONNX Runtime inference.")
+            self._execution_provider = "CUDAExecutionProvider"
+        elif "CPUExecutionProvider" in providers:
+            log.warning(
+                "'CUDAExecutionProvider' not available; falling back to CPUExecutionProvider. Inference will be slower."
+            )
+            self._execution_provider = "CPUExecutionProvider"
+        else:
+            raise RuntimeError(
+                "No suitable ONNX Runtime execution provider found. Aborting."
+            )
+
         log.info("Loading ONNX model from %s …", model_path)
         self._session = ort.InferenceSession(
-            model_path, providers=["CPUExecutionProvider"]
+            model_path, providers=[self._execution_provider]
         )
         model_input = self._session.get_inputs()[0]
         self._input_name: str = model_input.name
@@ -72,6 +92,11 @@ class Detector:
             confidence_threshold,
             iou_threshold,
         )
+
+    @property
+    def execution_provider(self) -> str:
+        """Return the current ONNX execution provider in use ('GPU' or 'CPU')."""
+        return "GPU" if self._execution_provider == "CUDAExecutionProvider" else "CPU"
 
     def detect(self, frame: np.ndarray) -> tuple[np.ndarray, list[dict]]:
         """Run the full pipeline on *frame* and return (annotated_frame, detections)."""

@@ -5,6 +5,8 @@ services:
   extreme-edge-camera:
     build:
       context: ../services/camera
+      args:
+        RUNTIME_ENV: cpu
     image: watchedge-camera
     container_name: extreme-edge-camera
     environment:
@@ -20,11 +22,7 @@ services:
       edge-mosquitto:
         condition: service_healthy
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8080/health")''',
-        ]
+      test: [ "CMD-SHELL", 'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8080/health")''' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,11 +47,7 @@ services:
       cloud-mosquitto:
         condition: service_healthy
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null",
-        ]
+      test: [ "CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -74,7 +68,7 @@ services:
       - edge-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U watchedge -d watchedge-db"]
+      test: [ "CMD-SHELL", "pg_isready -U watchedge -d watchedge-db" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -117,7 +111,7 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health"]
+      test: [ "CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -152,11 +146,7 @@ services:
       edge-rustfs:
         condition: service_healthy
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/health")''',
-        ]
+      test: [ "CMD-SHELL", 'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/health")''' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -187,7 +177,7 @@ services:
       edge-postgresql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -208,11 +198,7 @@ services:
     networks:
       - cloud-net
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null",
-        ]
+      test: [ "CMD-SHELL", "mosquitto_sub -t '$$SYS/broker/version' -C 1 > /dev/null" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -233,7 +219,7 @@ services:
       - cloud-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U watchedge -d watchedge-db"]
+      test: [ "CMD-SHELL", "pg_isready -U watchedge -d watchedge-db" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -276,7 +262,7 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health"]
+      test: [ "CMD", "sh", "-c", "curl -f http://127.0.0.1:9000/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -308,11 +294,7 @@ services:
       cloud-rustfs:
         condition: service_healthy
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/health")''',
-        ]
+      test: [ "CMD-SHELL", 'python -c ''import urllib.request; urllib.request.urlopen("http://localhost:8000/health")''' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -343,7 +325,7 @@ services:
       cloud-postgresql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
