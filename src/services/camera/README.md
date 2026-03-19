@@ -110,8 +110,10 @@ MQTT_HOST=mqtt.example.com
 ### Local (development)
 
 ```bash
-# Install dependencies (Python 3.12+)
-uv sync
+# Install dependencies (Python 3.14.3+)
+# Use optional extras depending on your hardware: '--all-extras' for the standard cpu
+# OR '--extra nvidia-gpu' (modern CuDNN 9) OR '--extra nvidia-gpu-pascal' (older CuDNN 8/earlier 9 pins)
+uv sync --extra cpu
 
 # Create .env with at least EDGE_ID and CAMERA_ID
 cp .env.example .env   # or write it manually
@@ -123,8 +125,10 @@ uv run python main.py
 
 ### Docker
 
+You can build the Docker image with different dependencies using the `RUNTIME_ENV` build argument (options: `cpu`, `nvidia-gpu`, `nvidia-gpu-pascal`). This ensures the container only contains the packages relevant to your execution environment.
+
 ```bash
-docker build -t watchedge-camera .
+docker build --build-arg RUNTIME_ENV=cpu -t watchedge-camera .
 
 docker run --rm \
   -e EDGE_ID=11111111-1111-1111-1111-111111111111 \

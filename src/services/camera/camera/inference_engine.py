@@ -92,6 +92,11 @@ class InferenceEngine:
         self._on_detection = callback
 
     @property
+    def execution_provider(self) -> str:
+        """Return the underlying detector's execution provider."""
+        return self._detector.execution_provider
+
+    @property
     def running(self) -> bool:
         return self._running
 

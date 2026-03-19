@@ -56,6 +56,7 @@ class WebAPI:
             return {
                 "mqtt_connected": self._mqtt.connected,
                 "inference_running": self._engine.running,
+                "execution_provider": self._engine.execution_provider,
                 "source_type": info.get("source_type"),
             }
 

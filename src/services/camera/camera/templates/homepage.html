@@ -20,7 +20,7 @@
           <span
             id="conn-badge"
             class="text-xs px-2.5 py-0.5 rounded-full font-semibold {{ 'bg-green-500/15 text-green-500' if connected else 'bg-red-500/15 text-red-500' }}"
-            >{{ "CONNECTED" if connected else "DISCONNECTED" }}</span
+            >{{ "MQTT CONNECTED" if connected else "MQTT DISCONNECTED" }}</span
           >
           <a
             href="/configuration"
@@ -33,22 +33,34 @@
       <!-- Status bar -->
       <div
         id="status-bar"
-        class="flex gap-4 flex-wrap text-sm text-gray-500 mb-5"
+        class="flex flex-col gap-2 text-sm text-gray-500 mb-5"
       >
-        <div>
-          Edge: <strong class="text-gray-200">{{ cfg.edge_id }}</strong>
+        <div class="flex gap-4 flex-wrap pb-2 border-b border-gray-800">
+          <div>
+            Edge ID: <strong class="text-gray-200">{{ cfg.edge_id }}</strong>
+          </div>
+          <div>
+            Camera ID:
+            <strong class="text-gray-200">{{ cfg.camera_id }}</strong>
+          </div>
         </div>
-        <div>
-          Camera: <strong class="text-gray-200">{{ cfg.camera_id }}</strong>
+        <div class="flex gap-4 flex-wrap pb-2 border-b border-gray-800">
+          <div>
+            MQTT Broker Endpoint:
+            <strong class="text-gray-200"
+              >{{ cfg.mqtt_host }}:{{ cfg.mqtt_port }}</strong
+            >
+          </div>
         </div>
-        <div>
-          Broker:
-          <strong class="text-gray-200"
-            >{{ cfg.mqtt_host }}:{{ cfg.mqtt_port }}</strong
-          >
-        </div>
-        <div id="source-indicator">
-          Source: <strong class="text-gray-200" id="source-val">—</strong>
+        <div class="flex gap-4 flex-wrap pb-2 border-b border-gray-800">
+          <div>
+            AI Inference Provider:
+            <strong class="text-gray-200" id="provider-val">—</strong>
+          </div>
+          <div id="source-indicator">
+            Stream Source:
+            <strong class="text-gray-200" id="source-val">—</strong>
+          </div>
         </div>
       </div>
 
@@ -117,17 +129,21 @@
           if (d.mqtt_connected) {
             badge.className =
               "text-xs px-2.5 py-0.5 rounded-full font-semibold bg-green-500/15 text-green-500";
-            badge.textContent = "CONNECTED";
+            badge.textContent = "MQTT CONNECTED";
           } else {
             badge.className =
               "text-xs px-2.5 py-0.5 rounded-full font-semibold bg-red-500/15 text-red-500";
-            badge.textContent = "DISCONNECTED";
+            badge.textContent = "MQTT DISCONNECTED";
           }
           const src =
             d.source_type === "video"
               ? `video (${d.current_video || "—"})${d.is_paused ? " ⏸" : " ▶"}`
               : "USB";
           document.getElementById("source-val").textContent = src;
+          if (d.execution_provider) {
+            document.getElementById("provider-val").textContent =
+              d.execution_provider;
+          }
         } catch (_) {}
       }
 

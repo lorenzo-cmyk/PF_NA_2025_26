@@ -93,6 +93,11 @@ class Detector:
             iou_threshold,
         )
 
+    @property
+    def execution_provider(self) -> str:
+        """Return the current ONNX execution provider in use ('GPU' or 'CPU')."""
+        return "GPU" if self._execution_provider == "CUDAExecutionProvider" else "CPU"
+
     def detect(self, frame: np.ndarray) -> tuple[np.ndarray, list[dict]]:
         """Run the full pipeline on *frame* and return (annotated_frame, detections)."""
         img_h, img_w = frame.shape[:2]
