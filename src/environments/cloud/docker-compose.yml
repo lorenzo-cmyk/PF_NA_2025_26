@@ -17,15 +17,17 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  cloud-postgis:
-    image: postgis/postgis
-    container_name: cloud-postgis
+  cloud-postgresql:
+    build:
+      context: ../../services/database-postgresql/docker-postgis/17-3.5
+    image: watchedge-postgis
+    container_name: cloud-postgresql
     environment:
       POSTGRES_DB: watchedge-db
       POSTGRES_USER: watchedge
       POSTGRES_PASSWORD: watchedge
     volumes:
-      - cloud-postgis-storage:/var/lib/postgresql
+      - cloud-postgresql-storage:/var/lib/postgresql
       - ../../services/database-postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - cloud-network
@@ -89,7 +91,7 @@ services:
       SERVICE_MODE: CLOUD
       MQTT_HOST: cloud-mosquitto
       MQTT_PORT: 1883
-      DATABASE_URL: postgresql://watchedge:watchedge@cloud-postgis:5432/watchedge-db
+      DATABASE_URL: postgresql://watchedge:watchedge@cloud-postgresql:5432/watchedge-db
       ### CHANGE-ME: Change to reachable FQDN/IP (needs to be reachable by both Edge and Cloud) when running in production.
       OBJECT_STORAGE_URL: http://192.168.178.20:9002
       S3_ACCESS_KEY: watchedge
@@ -105,7 +107,7 @@ services:
     depends_on:
       cloud-mosquitto:
         condition: service_healthy
-      cloud-postgis:
+      cloud-postgresql:
         condition: service_healthy
       cloud-rustfs:
         condition: service_healthy
@@ -124,7 +126,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: watchedge
       GF_SECURITY_ADMIN_USER: watchedge
       GF_INSTALL_PLUGINS: grafana-postgresql-datasource
-      GF_CONFIG_DB_URL: cloud-postgis:5432
+      GF_CONFIG_DB_URL: cloud-postgresql:5432
       GF_CONFIG_DB_USER: watchedge
       GF_CONFIG_DB_PASSWORD: watchedge
       GF_CONFIG_DB_NAME: watchedge-db
@@ -138,7 +140,7 @@ services:
     networks:
       - cloud-network
     depends_on:
-      cloud-postgis:
+      cloud-postgresql:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://127.0.0.1:3000/api/health || exit 1" ]
@@ -149,7 +151,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  cloud-postgis-storage:
+  cloud-postgresql-storage:
   cloud-mosquitto-storage:
   cloud-rustfs-storage:
   cloud-grafana-storage:

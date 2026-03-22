@@ -17,15 +17,17 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  edge-postgis:
-    image: postgis/postgis
-    container_name: edge-postgis
+  edge-postgresql:
+    build:
+      context: ../../services/database-postgresql/docker-postgis/17-3.5
+    image: watchedge-postgis
+    container_name: edge-postgresql
     environment:
       POSTGRES_DB: watchedge-db
       POSTGRES_USER: watchedge
       POSTGRES_PASSWORD: watchedge
     volumes:
-      - edge-postgis-storage:/var/lib/postgresql
+      - edge-postgresql-storage:/var/lib/postgresql
       - ../../services/database-postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - edge-network
@@ -89,7 +91,7 @@ services:
       SERVICE_MODE: EDGE
       MQTT_HOST: edge-mosquitto
       MQTT_PORT: 1883
-      DATABASE_URL: postgresql://watchedge:watchedge@edge-postgis:5432/watchedge-db
+      DATABASE_URL: postgresql://watchedge:watchedge@edge-postgresql:5432/watchedge-db
       ### CHANGE-ME: Change to reachable FQDN/IP (needs to be reachable by both Camera and Edge) when running in production.
       OBJECT_STORAGE_URL: http://192.168.178.20:9000
       S3_ACCESS_KEY: watchedge
@@ -105,7 +107,7 @@ services:
     depends_on:
       edge-mosquitto:
         condition: service_healthy
-      edge-postgis:
+      edge-postgresql:
         condition: service_healthy
       edge-rustfs:
         condition: service_healthy
@@ -124,7 +126,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: watchedge
       GF_SECURITY_ADMIN_USER: watchedge
       GF_INSTALL_PLUGINS: grafana-postgresql-datasource
-      GF_CONFIG_DB_URL: edge-postgis:5432
+      GF_CONFIG_DB_URL: edge-postgresql:5432
       GF_CONFIG_DB_USER: watchedge
       GF_CONFIG_DB_PASSWORD: watchedge
       GF_CONFIG_DB_NAME: watchedge-db
@@ -138,7 +140,7 @@ services:
     networks:
       - edge-network
     depends_on:
-      edge-postgis:
+      edge-postgresql:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://127.0.0.1:3000/api/health || exit 1" ]
@@ -149,7 +151,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  edge-postgis-storage:
+  edge-postgresql-storage:
   edge-mosquitto-storage:
   edge-rustfs-storage:
   edge-grafana-storage:

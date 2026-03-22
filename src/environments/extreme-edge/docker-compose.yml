@@ -1,5 +1,6 @@
 services:
   extreme-edge-camera:
+    ### CHANGE-ME: Change configuration if GPU acceleration is not available in the production environment.
     build:
       context: ../../services/camera
       args:
