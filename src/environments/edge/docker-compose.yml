@@ -18,7 +18,9 @@ services:
     restart: unless-stopped
 
   edge-postgresql:
-    image: postgis/postgis
+    build:
+      context: ../../services/database-postgresql/docker-postgis/17-3.5
+    image: watchedge-postgis
     container_name: edge-postgresql
     environment:
       POSTGRES_DB: watchedge-db
