@@ -78,9 +78,9 @@ class WebUI:
         @app.get("/", response_class=HTMLResponse)
         async def homepage(request: Request):
             return templates.TemplateResponse(
-                "homepage.html",
-                {
-                    "request": request,
+                request=request,
+                name="homepage.html",
+                context={
                     "cfg": self._cfg,
                     "connected": self._mqtt.connected,
                 },
@@ -89,8 +89,9 @@ class WebUI:
         @app.get("/configuration", response_class=HTMLResponse)
         async def configuration(request: Request):
             return templates.TemplateResponse(
-                "configuration.html",
-                {"request": request, "cfg": self._cfg},
+                request=request,
+                name="configuration.html",
+                context={"cfg": self._cfg},
             )
 
         @app.get("/stream")
