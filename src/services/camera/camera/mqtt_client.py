@@ -358,7 +358,7 @@ class MQTTClient:  # pylint: disable=too-many-instance-attributes
     ) -> None:
         try:
             payload = json.loads(msg.payload)
-        except json.JSONDecodeError, UnicodeDecodeError:
+        except (json.JSONDecodeError, UnicodeDecodeError):
             payload = {"raw": msg.payload.decode(errors="replace")}
 
         parts = []
