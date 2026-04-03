@@ -56,7 +56,12 @@ class Detector:
     ) -> None:
         log.info("Initializing ONNX Runtime …")
         # Load NVIDIA shared libraries from venv site-packages to ensure CUDA support works on all platforms.
-        ort.preload_dlls(directory="")
+        if callable(getattr(ort, "preload_dlls", None)):
+            ort.preload_dlls(directory="")
+        else:
+            log.warning(
+                "ort.preload_dlls() not available on this system; skipping DLL preload."
+            )
         # Get all available inference providers
         providers = ort.get_available_providers()
         log.info("Available ONNX Runtime providers: %s", providers)
