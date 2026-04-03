@@ -107,6 +107,9 @@ MQTT_HOST=mqtt.example.com
 
 ## Running
 
+Tailwind CSS is downloaded automatically on the first boot of the camera service and cached locally under `templates/static/`.
+If needed, it can also be downloaded ahead of time by running `camera/tailwind.py` manually before startup.
+
 ### Local (development)
 
 ```bash
