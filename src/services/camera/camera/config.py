@@ -146,7 +146,7 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
         """Return the birth registration payload derived from config."""
         try:
             technical_params = json.loads(self.birth_technical_params_json)
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, ValueError):  # fmt: skip
             technical_params = {}
         return {
             "edge_name": self.birth_edge_name,
