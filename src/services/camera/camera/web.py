@@ -11,6 +11,7 @@ from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from camera.config import Config
@@ -42,6 +43,14 @@ class WebUI:
         self._event_log: deque[dict[str, Any]] = deque(maxlen=200)
 
         self.app = FastAPI(title="WatchEdge Camera")
+
+        # Mount static files for locally served Tailwind CSS
+        static_dir = TEMPLATES_DIR / "static"
+        if static_dir.exists():
+            self.app.mount(
+                "/static", StaticFiles(directory=str(static_dir)), name="static"
+            )
+
         self._register_routes()
 
     # -- log callback ------------------------------------------------------ #

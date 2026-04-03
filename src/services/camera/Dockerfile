@@ -23,6 +23,9 @@ COPY model/ model/
 COPY samples/ samples/
 RUN uv sync --extra ${RUNTIME_ENV}
 
+# Download Tailwind CSS
+RUN uv run python -m camera.tailwind || (echo "Failed to download Tailwind CSS" && exit 1)
+
 # Runtime directories (images are written here at runtime)
 RUN mkdir -p data/images
 

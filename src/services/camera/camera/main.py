@@ -18,6 +18,7 @@ from camera.mqtt_client import MQTTClient
 from camera.event_pipeline import EventPipeline
 from camera.web import WebUI
 from camera.api import WebAPI
+from camera.tailwind import ensure_tailwind
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,6 +44,11 @@ def _load_scenes(path: str) -> list[dict]:
 
 def main() -> None:
     """Boot the camera service."""
+    # 0. Ensure Tailwind CSS is available
+    if not ensure_tailwind():
+        log.error("Failed to ensure that Tailwind CSS is available. Aborting startup.")
+        sys.exit(1)
+
     # 1. Load configuration
     cfg = Config()
     cfg.log()
