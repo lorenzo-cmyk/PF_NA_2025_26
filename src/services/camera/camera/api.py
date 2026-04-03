@@ -172,7 +172,7 @@ class WebAPI:
             body = await request.json()
             try:
                 tech = _json.loads(body.get("technical_params_json", "{}"))
-            except (ValueError, TypeError):
+            except (ValueError, TypeError):  # fmt: skip
                 tech = {}
             payload = {
                 "edge_name": body.get("edge_name", self._cfg.birth_edge_name),
