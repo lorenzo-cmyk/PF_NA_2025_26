@@ -63,7 +63,7 @@ class Config(BaseSettings):  # pylint: disable=too-many-instance-attributes
     birth_edge_name: str = "SAN_ROSSORE_PARK"
     birth_edge_location: str = "San Rossore Park (PI, Italy)"
     birth_camera_type: str = "EXTREME_EDGE_CAMERA_V8"
-    birth_camera_coords: str = "POINT(43.7233401, 10.3365951)"
+    birth_camera_coords: str = "POINT(10.3365951, 43.7233401)"
     birth_elevation: int = 20
     birth_technical_params_json: str = '{"res": "2568x1724"}'
 

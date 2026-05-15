@@ -2,6 +2,7 @@
   {
     "name": "Demo scene n.1",
     "description": "A single large adult boar detected at close range (~40m), moving alone through the field. High-confidence detection with a full-sized body profile.",
+    "photo": "samples/1.jpg",
     "count": 1,
     "detections": [
       {
@@ -15,6 +16,7 @@
   {
     "name": "Demo scene n.2",
     "description": "Two boars at close range (~17–20m): one large adult and one smaller juvenile. Both detected with high confidence in the same area.",
+    "photo": "samples/2.jpg",
     "count": 2,
     "detections": [
       {
@@ -34,6 +36,7 @@
   {
     "name": "Demo scene n.3",
     "description": "A group of three boars spread across the scene (~20–41m): one large adult leading, followed by two smaller juveniles at greater distance. Very high confidence on the lead animal.",
+    "photo": "samples/3.jpg",
     "count": 3,
     "detections": [
       {
@@ -59,6 +62,7 @@
   {
     "name": "Demo scene n.4",
     "description": "Single wolf detected at mid-range (~25m) with a medium-sized body profile. Unusual sighting — no boar activity present in the scene.",
+    "photo": "samples/4.jpg",
     "count": 1,
     "detections": [
       {
