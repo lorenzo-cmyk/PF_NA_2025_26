@@ -155,18 +155,18 @@ docker run --rm \
 
 All endpoints are served by the same FastAPI app as the Web UI.
 
-| Method | Path                   | Description                                                       |
-| ------ | ---------------------- | ----------------------------------------------------------------- |
-| `GET`  | `/health`              | Returns MQTT, inference, and source status                        |
-| `POST` | `/api/restart`         | Restarts the inference engine and MQTT client                     |
-| `POST` | `/api/mqtt/disconnect` | Disconnects from the broker                                       |
-| `POST` | `/api/mqtt/reconnect`  | Reconnects to the broker                                          |
-| `POST` | `/api/source/switch`   | Switch source (`{"source": "usb"\|"video", "video_name": "..."}`) |
-| `POST` | `/api/source/pause`    | Pause video playback                                              |
-| `POST` | `/api/source/resume`   | Resume video playback                                             |
-| `POST` | `/api/source/seek`     | Seek to timestamp (`{"timestamp_ms": 0}`)                         |
-| `POST` | `/api/event/inject`    | Publish a detection event (scene name or raw payload)             |
-| `POST` | `/api/birth`           | Manually publish the birth/registration message                   |
-| `POST` | `/api/telemetry`       | Manually publish a telemetry message                              |
+| Method | Path                   | Description                                           |
+| ------ | ---------------------- | ----------------------------------------------------- |
+| `GET`  | `/health`              | Returns MQTT, inference, and source status            |
+| `POST` | `/api/restart`         | Restarts the inference engine and MQTT client         |
+| `POST` | `/api/mqtt/disconnect` | Disconnects from the broker                           |
+| `POST` | `/api/mqtt/reconnect`  | Reconnects to the broker                              |
+| `POST` | `/api/source/switch`   | Switch source (`{"source": "usb"                      | "video", "video_name": "..."}`) |
+| `POST` | `/api/source/pause`    | Pause video playback                                  |
+| `POST` | `/api/source/resume`   | Resume video playback                                 |
+| `POST` | `/api/source/seek`     | Seek to timestamp (`{"timestamp_ms": 0}`)             |
+| `POST` | `/api/event/inject`    | Publish a detection event (scene name or raw payload) |
+| `POST` | `/api/birth`           | Manually publish the birth/registration message       |
+| `POST` | `/api/telemetry`       | Manually publish a telemetry message                  |
 
 Interactive API docs are available at `http://<host>:8080/docs`.

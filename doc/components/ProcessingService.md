@@ -13,7 +13,7 @@ The Processing Service is a Python application composed of three subsystems that
 3. **HTTP API** — A FastAPI server providing a health check endpoint and (in Cloud mode) a REST endpoint for on-demand image retrieval.
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────────────────┐
 │                         Processing Service                              │
 │                                                                         │
 │  ┌──────────────────┐    ┌──────────────────┐    ┌───────────────────┐  │
@@ -40,7 +40,7 @@ The Processing Service is a Python application composed of three subsystems that
 │  │   • Issue cmd/upload to Extreme-Edge                             │   │
 │  │   • Fulfil cloud cmd/upload                                      │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -82,9 +82,9 @@ Frozen dataclass loaded from environment variables. Exposes derived helpers for 
 
 **Derived helpers (properties):**
 
-| Property   | Return Type | Description                        |
-| :--------- | :---------- | :--------------------------------- |
-| `is_edge`  | `bool`      | `True` when `service_mode == EDGE` |
+| Property   | Return Type | Description                         |
+| :--------- | :---------- | :---------------------------------- |
+| `is_edge`  | `bool`      | `True` when `service_mode == EDGE`  |
 | `is_cloud` | `bool`      | `True` when `service_mode == CLOUD` |
 
 ---
@@ -150,11 +150,11 @@ Contains all business logic: topic parsing, routing by mode, database CRUD, MQTT
 
 **Module-level helpers:**
 
-| Helper                                      | Description                                                                                                                                             |
-| :------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `_TOPIC_RE`                                 | Regex `^(edge\|cloud)/(?P<edge_id>...)/(?P<camera_id>...)/(?P<rest>...)$` — extracts prefix, edge_id, camera_id, and remainder from any incoming topic. |
-| `_POINT_RE`                                 | Regex to parse `POINT(lon, lat)` strings into `(float, float)`.                                                                                         |
-| `_parse_point(value) -> (lon, lat) \| None` | Extracts longitude and latitude from a `POINT(...)` string.                                                                                             |
+| Helper                                      | Description                                                     |
+| :------------------------------------------ | :-------------------------------------------------------------- |
+| `_TOPIC_RE`                                 | Regex `^(edge                                                   | cloud)/(?P<edge_id>...)/(?P<camera_id>...)/(?P<rest>...)$` — extracts prefix, edge_id, camera_id, and remainder from any incoming topic. |
+| `_POINT_RE`                                 | Regex to parse `POINT(lon, lat)` strings into `(float, float)`. |
+| `_parse_point(value) -> (lon, lat) \| None` | Extracts longitude and latitude from a `POINT(...)` string.     |
 
 #### 2.3.1 Entry Point
 
