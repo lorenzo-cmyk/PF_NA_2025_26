@@ -209,9 +209,3 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-
-# Camera inference test results
-src/services/camera/data/images/
-
-# Locally cached Tailwind CSS (downloaded at build time)
-src/services/camera/camera/templates/static/
