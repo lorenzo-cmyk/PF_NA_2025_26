@@ -6,7 +6,7 @@ Wildlife detection system built as a project for the Network Automation course (
 
 ```text
 ┌──────────────┐    MQTT      ┌──────────────┐     MQTT      ┌──────────────┐
-│ EXTREME-EDGE │◀──────────▶│     EDGE     │◀───────────▶│    CLOUD     │
+│ EXTREME-EDGE │◀──────────▶ │     EDGE     │◀───────────▶ │    CLOUD     │
 │              │   edge/#     │              │   cloud/#     │              │
 │ Camera App   │              │ Mosquitto    │   (bridged)   │ Mosquitto    │
 │ YOLOv9t ONNX │              │ Processing   │               │ Processing   │
