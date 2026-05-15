@@ -36,6 +36,7 @@ Wildlife detection system built as a project for the Network Automation course (
 ## Repository structure
 
 ```text
+deliverables/                # Final project report and demonstration video
 src/
 ├── environments/
 │   ├── extreme-edge/        # Camera Docker Compose
