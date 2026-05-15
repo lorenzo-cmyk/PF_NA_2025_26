@@ -1,18 +1,20 @@
 # WatchEdge — ground-Based Observation and Relay (gBOAR🐗)
 
-Wildlife detection system built as a project for the **Network Automation** course (Politecnico di Milano, AY 2025-2026). It uses on-device AI inference to detect animals (wild boar, wolves, deer) from camera feeds, and relays detection events across a 3-tier Edge-Cloud architecture over MQTT.
+Wildlife detection system built as a project for the Network Automation course (Politecnico di Milano, AY 2025-2026). It uses on-device AI inference to detect animals (wild boar, wolves, deer) from camera feeds, and relays detection events across a 3-tier Edge-Cloud architecture over MQTT.
 
 ## Architecture
 
 ```text
-EXTREME-EDGE ──MQTT──▶ EDGE ──MQTT──▶ CLOUD
- (camera)     (edge/#)  (Mosquitto)   (cloud/#)  (Mosquitto bridge)
-                         │                          │
-                    Processing Service          Processing Service
-                    + PostgreSQL + PostGIS      + PostgreSQL + PostGIS
-                    + RustFS (S3)               + RustFS (S3)
-                    + Grafana                   + Grafana
-                                                 + ItalTel Dashboard
+┌──────────────┐    MQTT      ┌──────────────┐     MQTT      ┌──────────────┐
+│ EXTREME-EDGE │◀──────────▶│     EDGE     │◀───────────▶│    CLOUD     │
+│              │   edge/#     │              │   cloud/#     │              │
+│ Camera App   │              │ Mosquitto    │   (bridged)   │ Mosquitto    │
+│ YOLOv9t ONNX │              │ Processing   │               │ Processing   │
+│ WebUI        │              │ PostgreSQL   │               │ PostgreSQL   │
+│              │              │ RustFS       │               │ RustFS       │
+│              │              │ Grafana      │               │ Grafana      │
+│              │              │              │               │ ItalTel Dash │
+└──────────────┘              └──────────────┘               └──────────────┘
 ```
 
 | Tier             | What it does                                                                                                               | Stack                                            |
@@ -48,7 +50,7 @@ src/
 
 ## Prerequisites
 
-- Docker and Docker Compose v2
+- Docker and Docker Compose
 - NVIDIA GPU with CUDA support (optional — falls back to CPU inference)
 
 ## Running
