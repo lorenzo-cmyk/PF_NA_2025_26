@@ -82,12 +82,10 @@ Frozen dataclass loaded from environment variables. Exposes derived helpers for 
 
 **Derived helpers (properties):**
 
-| Property    | Return Type | Description                                             |
-| :---------- | :---------- | :------------------------------------------------------ |
-| `is_edge`   | `bool`      | `True` when `service_mode == EDGE`                      |
-| `is_cloud`  | `bool`      | `True` when `service_mode == CLOUD`                     |
-| `mqtt_host` | `str`       | Host extracted from `mqtt_broker_url`                   |
-| `mqtt_port` | `int`       | Port extracted from `mqtt_broker_url` (default: `1883`) |
+| Property   | Return Type | Description                        |
+| :--------- | :---------- | :--------------------------------- |
+| `is_edge`  | `bool`      | `True` when `service_mode == EDGE` |
+| `is_cloud` | `bool`      | `True` when `service_mode == CLOUD` |
 
 ---
 
@@ -400,6 +398,7 @@ Orchestrates startup and wiring of all components.
 
 ```text
 src/services/processing-service/
+├── .env                             # Environment variable overrides (local dev)
 ├── Dockerfile
 ├── main.py                          # CLI entry point (delegates to processing_service.main)
 ├── pyproject.toml                   # Dependencies & build config
@@ -428,6 +427,7 @@ src/services/processing-service/
 | `psycopg2-binary`   | PostgreSQL driver                                   |
 | `requests`          | HTTP PUT/GET for image upload/download              |
 | `boto3`             | S3-compatible object storage client                 |
+| `pydantic-settings` | Configuration parsing from env vars                 |
 
 ---
 
@@ -609,10 +609,10 @@ On `_handle_birth`, the handler parses the topic's `edge_id` / `camera_id` segme
 
 ---
 
-## 9. Graceful Degradation
+## 9. Error Handling
 
-| Component       | Failure Mode           | Behavior                                                                                                                                               |
-| :-------------- | :--------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **S3 Client**   | Initialization fails   | `s3` is set to `None`. Image features (upload commands, image retrieval) are disabled. All other functionality (DB persistence, MQTT relay) continues. |
-| **MQTT Broker** | Unreachable at startup | HTTP server starts anyway. MQTT features are unavailable until reconnection (paho-mqtt handles auto-reconnect).                                        |
-| **Database**    | Query fails            | Individual handler catches the exception and logs it. The message is effectively dropped but the service continues processing subsequent messages.     |
+| Component       | Failure Mode           | Behavior                                                                                                                                           |
+| :-------------- | :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **S3 Client**   | Initialization fails   | The service retries 3 times (10 s apart), then exits. S3 is a hard dependency.                                                                     |
+| **MQTT Broker** | Unreachable at startup | The service retries 3 times (10 s apart), then exits. MQTT is a hard dependency.                                                                   |
+| **Database**    | Query fails            | Individual handler catches the exception and logs it. The message is effectively dropped but the service continues processing subsequent messages. |

@@ -68,12 +68,17 @@ Frozen dataclass loaded from environment variables. Mirrors the camera-emulator 
 | `usb_camera_index`     | `int`   | `0`                           | OpenCV VideoCapture device index                                                                                                      |
 | `samples_dir`          | `str`   | `samples/`                    | Root directory for bundled sample assets                                                                                              |
 | `scenes_file`          | `str`   | `samples/scenes.json`         | Path to sample event scenes JSON file                                                                                                 |
-| `default_source`       | `str`   | `usb`                         | Initial video source (`usb` or `video`)                                                                                               |
-| `inference_fps`        | `int`   | `15`                          | Target inference framerate                                                                                                            |
-| `event_throttle_s`     | `float` | `5.0`                         | Minimum seconds between two published detection events                                                                                |
+| `default_source`       | `str`   | `video`                        | Initial video source (`usb` or `video`)                                                                                               |
+| `inference_fps`        | `int`   | `5`                           | Target inference framerate                                                                                                            |
+| `event_throttle_s`     | `float` | `1.0`                         | Minimum seconds between two published detection events                                                                                |
 | `image_dir`            | `str`   | `data/images/`                | Directory for saving captured frames (created on startup if missing)                                                                  |
 | `telemetry_interval_s` | `float` | `30.0`                        | Seconds between telemetry heartbeat publishes                                                                                         |
-| `birth_*` fields       | various | —                             | Camera registration defaults (edge_name, edge_location as plain string, camera_type, camera_coords, elevation, technical_params_json) |
+| `birth_edge_name` | `str` | `SAN_ROSSORE_PARK` | Edge name published in birth payload |
+| `birth_edge_location` | `str` | `San Rossore Park (PI, Italy)` | Edge location description in birth payload |
+| `birth_camera_type` | `str` | `EXTREME_EDGE_CAMERA_V8` | Camera model identifier in birth payload |
+| `birth_camera_coords` | `str` | `POINT(43.7233401, 10.3365951)` | WKT POINT in birth payload |
+| `birth_elevation` | `int` | `20` | Elevation in birth payload |
+| `birth_technical_params_json` | `str` | `{"res": "2568x1724"}` | JSON technical params in birth payload |
 
 **Helper:**
 
@@ -298,14 +303,13 @@ Reuses the same pattern from the emulator — thin wrapper around `paho.mqtt.cli
 
 ```json
 {
-  "edge_name": "SAN_ROSSORE_PACK_01",
-  "edge_location": "San Rossore Forest",
-  "camera_type": "BOAR_CAMERA_V3",
-  "camera_coords": "POINT(10.324982, 43.76797)",
-  "elevation": 30,
+  "edge_name": "SAN_ROSSORE_PARK",
+  "edge_location": "San Rossore Park (PI, Italy)",
+  "camera_type": "EXTREME_EDGE_CAMERA_V8",
+  "camera_coords": "POINT(10.3365951, 43.7233401)",
+  "elevation": 20,
   "technical_params_json": {
-    "iso": 800,
-    "res": "2160x3840"
+    "res": "2568x1724"
   }
 }
 ```
@@ -356,7 +360,7 @@ Serves the two HTML pages (**Homepage** and **Configuration**), the MJPEG live s
 | `GET`  | `/`              | Renders the Homepage template.                                                                                                                                                                                         |
 | `GET`  | `/configuration` | Renders the Configuration page template.                                                                                                                                                                               |
 | `GET`  | `/stream`        | MJPEG streaming response. Continuously yields the latest annotated frame from the Inference Engine as a `multipart/x-mixed-replace` stream. This is what the Homepage embeds as a live view via `<img src="/stream">`. |
-| `GET`  | `/api/status`    | Returns camera status JSON: `mqtt_connected`, `edge_id`, `camera_id`, `source_type`, `current_video`, `is_paused`, `inference_running`.                                                                                |
+| `GET`  | `/api/status`    | Returns camera status JSON: `mqtt_connected`, `edge_id`, `camera_id`, `execution_provider`, `source_type`, `current_video`, `is_paused`, `inference_running`.                                                          |
 | `GET`  | `/api/log`       | Returns the recent MQTT event log (same deque-based pattern as the emulator, capped at 200 entries).                                                                                                                   |
 
 #### MJPEG Stream Implementation
@@ -365,7 +369,7 @@ The `/stream` endpoint is a `StreamingResponse` with `media_type="multipart/x-mi
 
 1. Calls `InferenceEngine.get_latest_frame()` to get the latest JPEG-encoded annotated frame.
 2. Yields it as a MIME part.
-3. Sleeps briefly (targeting ~15 FPS for the stream, independent of inference FPS).
+3. Sleeps for `1.0 / inference_fps` seconds, matching the inference engine's update rate.
 4. Repeats until the client disconnects.
 
 This approach works universally in all browsers without JavaScript or WebSocket dependencies.
@@ -411,7 +415,7 @@ Three sections stacked vertically:
 
 | Section         | Content                                                                                                                                                       |
 | :-------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Status Bar**  | Connection badge (MQTT connected/disconnected), Edge ID, Camera ID, current video source indicator. Polled via `GET /api/status` on a short interval.         |
+| **Status Bar**  | Connection badge (MQTT connected/disconnected), Edge ID, Camera ID, MQTT broker endpoint, AI inference provider, current video source indicator. Polled via `GET /api/status` on a short interval. |
 | **Live View**   | An `<img>` tag with `src="/stream"`. Displays the real-time annotated inference output. No JavaScript needed — the browser handles the MJPEG stream natively. |
 | **System Logs** | Scrollable log panel showing MQTT events (direction, topic, payload, timestamp). Polled via `GET /api/log`. Same presentation as the camera-emulator.         |
 
@@ -422,7 +426,7 @@ Four card sections:
 | Section              | Controls                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Software Restart** | A single "Restart Camera Software" button. Calls `POST /api/restart`. Shows a brief "Restarting..." indicator.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **MQTT Connection**  | "Disconnect" and "Reconnect" buttons. Reflects current state. Calls `POST /api/mqtt/disconnect` and `POST /api/mqtt/reconnect`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **MQTT Connection**  | "Disconnect" and "Reconnect" buttons. Calls `POST /api/mqtt/disconnect` and `POST /api/mqtt/reconnect`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **Video Source**     | Radio toggle: `USB Camera` / `Pre-recorded Video`. On switch, calls `POST /api/source/switch`. When `video` is selected, shows: (1) a **dropdown to select which sample video** to play (populated from `GET /api/source/videos`), (2) a Play/Pause toggle button, and (3) a range slider (timestamp scrubber) displaying current position and total duration. The scrubber is only interactive when paused. Position and duration are polled from `GET /api/source/info`. Seeking calls `POST /api/source/seek`. Changing the video dropdown calls `POST /api/source/switch` with the new `video_name`. |
 | **Inject Event**     | A **dropdown of sample event scenes** (populated from `GET /api/scenes`, loaded from the bundled `scenes.json`). Each scene has a name, description, and predefined detection payload — same structure as the camera-emulator's scenes. Selecting a scene and clicking "Send" calls `POST /api/event/inject {"scene_index": N}`. Below the dropdown, there is also an expandable **custom event form** allowing manual entry of `count` and detections (`animal_type`, `distance`, `size_estimate`, `confidence`). Also includes manual Birth and Telemetry publishing forms.                            |
 
@@ -462,6 +466,7 @@ Orchestrates startup and wiring of all components.
 
 ```text
 src/services/camera/
+├── .env                            # Environment variable overrides (local dev)
 ├── Dockerfile
 ├── main.py                          # Entry point (same pattern as emulator)
 ├── pyproject.toml
@@ -485,6 +490,7 @@ src/services/camera/
     ├── mqtt_client.py
     ├── web.py
     ├── api.py
+    ├── tailwind.py                  # Tailwind CSS local caching
     └── templates/
         ├── homepage.html
         └── configuration.html
@@ -504,6 +510,8 @@ src/services/camera/
 | `opencv-python`     | Video capture (USB + file) and frame manipulation |
 | `numpy`             | Image array operations                            |
 | `onnxruntime`       | YOLOv9t model inference                           |
+| `python-dotenv`     | `.env` file loading                               |
+| `pydantic-settings` | Configuration parsing from env vars               |
 
 ---
 
@@ -611,7 +619,7 @@ The Docker image ships with all assets needed to operate without external depend
 | :---------------------- | :---------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **ONNX Model**          | `model/best_yolov9t_aug.onnx` | YOLOv9t model trained for wildlife detection (Wild Boar, Wolf, Deer). Small enough to bundle directly (~15 MB).                                                                                                                                                                                                                          |
 | **Sample Videos**       | `samples/videos/*.mp4`        | One or more pre-recorded video files of wildlife scenes. Used as an alternative to the USB camera input for demo, testing, and diagnostics. The user selects which video to play from the Configuration page dropdown.                                                                                                                   |
-| **Sample Event Scenes** | `samples/scenes.json`         | A JSON array of predefined detection events for diagnostics injection, following the same structure as the camera-emulator's `demo_scenes/scenes.json`. Each scene contains a `name`, `description`, `count`, and a `detections` array. The user selects a scene from the Configuration page dropdown and publishes it as an MQTT event. |
+| **Sample Event Scenes** | `samples/scenes.json`         | A JSON array of predefined detection events for diagnostics injection, following the same structure as the camera-emulator's `demo_scenes/scenes.json`. Each scene contains a `name`, `description`, `count`, an optional `photo`, and a `detections` array. The user selects a scene from the Configuration page dropdown and publishes it as an MQTT event. |
 
 ### `scenes.json` Format
 
@@ -620,6 +628,7 @@ The Docker image ships with all assets needed to operate without external depend
   {
     "name": "Demo scene 1",
     "description": "One large boar",
+    "photo": "samples/1.jpg",
     "count": 1,
     "detections": [
       {
@@ -633,7 +642,7 @@ The Docker image ships with all assets needed to operate without external depend
 ]
 ```
 
-Scenes do **not** include a `photo` field (unlike the emulator) — the camera stores the actual inference frame for any `cmd/upload` request, so sample events don't need pre-baked images.
+Each scene may optionally include a `photo` field (e.g. `"photo": "samples/1.jpg"`) referencing a bundled sample image exposed via `GET /api/scenes`. When present, the Configuration page can display it as a visual reference for the scene.
 
 ---
 

@@ -20,7 +20,7 @@ It ingests MQTT messages from the Camera Service, persists data in PostgreSQL, m
       ▼
  MQTTClient ──► Handlers ──► Database (PostgreSQL)
                    │               │
-                   │        S3Client (MinIO / S3)
+                   │        S3Client (RustFS / S3)
                    │
                    └──► relay ──► MQTT (cloud/#)
                                        │
@@ -88,7 +88,7 @@ Minimal `.env` example:
 SERVICE_MODE=EDGE
 MQTT_HOST=mqtt.example.com
 DATABASE_URL=postgresql://watchedge:watchedge@db:5432/watchedge-db
-OBJECT_STORAGE_URL=http://minio:9000
+OBJECT_STORAGE_URL=http://rustfs:9000
 ```
 
 ## Running
@@ -99,8 +99,8 @@ OBJECT_STORAGE_URL=http://minio:9000
 # Install dependencies (Python 3.14.3+)
 uv sync
 
-# Create .env (requires PostgreSQL, Mosquitto, and an S3-compatible storage instance)
-cp .env.example .env   # or write it manually
+# Edit .env with your local PostgreSQL, Mosquitto, and object storage endpoints
+# (A default .env is provided in the repository)
 
 uv run processing-service
 ```
@@ -114,7 +114,7 @@ docker run --rm \
   -e SERVICE_MODE=EDGE \
   -e MQTT_HOST=mqtt.example.com \
   -e DATABASE_URL=postgresql://watchedge:watchedge@db:5432/watchedge-db \
-  -e OBJECT_STORAGE_URL=http://minio:9000 \
+  -e OBJECT_STORAGE_URL=http://rustfs:9000 \
   -p 8000:8000 \
   watchedge-processing-service
 ```

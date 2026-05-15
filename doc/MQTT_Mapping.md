@@ -20,14 +20,13 @@ Extreme-Edge devices publish raw events and telemetry to the local Edge MQTT Bro
 
   ```json
   {
-    "edge_name": "SAN_ROSSORE_PACK_01",
-    "edge_location": "San Rossore Forest",
-    "camera_type": "BOAR_CAMERA_V3",
-    "camera_coords": "POINT(10.324982, 43.76797)",
-    "elevation": 30,
+    "edge_name": "SAN_ROSSORE_PARK",
+    "edge_location": "San Rossore Park (PI, Italy)",
+    "camera_type": "EXTREME_EDGE_CAMERA_V8",
+    "camera_coords": "POINT(10.3365951, 43.7233401)",
+    "elevation": 20,
     "technical_params_json": {
-      "iso": 800,
-      "res": "2160x3840"
+      "res": "2568x1724"
     }
   }
   ```
