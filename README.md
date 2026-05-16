@@ -88,3 +88,14 @@ docker compose up -d
 | Edge Grafana  | `http://<edge-host>:3000`         | `watchedge` / `watchedge` |
 | Cloud Grafana | `http://<cloud-host>:3001`        | `watchedge` / `watchedge` |
 | Cloud API     | `http://<cloud-host>:8001/health` | —                         |
+
+## Authors and Acknowledgments
+
+**Authors:**
+- [@lorenzo-cmyk](https://github.com/lorenzo-cmyk)
+- [@TeoFranken](https://github.com/TeoFranken)
+- [@pierluigigrossi](https://github.com/pierluigigrossi)
+- [@foglii](https://github.com/foglii)
+
+**Acknowledgments:**
+This project was developed in collaboration with the [Bonsai Lab team (Politecnico di Milano)](https://www.bonsai.deib.polimi.it/), who worked alongside us and provided the custom fine-tuned YOLO weights used for animal identification.
