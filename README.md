@@ -99,3 +99,5 @@ docker compose up -d
 
 **Acknowledgments:**
 This project was developed in collaboration with the [Bonsai Lab team (Politecnico di Milano)](https://www.bonsai.deib.polimi.it/), who worked alongside us and provided the custom fine-tuned YOLO weights used for animal identification.
+
+This work is part of the conference paper: J. P. Asdikian, G. Sguotti, L. Chiroli, M. Franken, P. Grossi, C. Puggelli, M. Beccari, S. Troia, M. Marcon, M. Del Frate, F. Bianchi, A. Salvatore, A. Albanese, and G. Maier, "Event Management in a Far-Edge/Edge/Cloud Monitoring System for Rural Environments," to appear in *2026 International Conference on Transparent Optical Networks (ICTON)*, 2026.
