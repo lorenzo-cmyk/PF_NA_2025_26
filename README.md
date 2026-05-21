@@ -92,6 +92,7 @@ docker compose up -d
 ## Authors and Acknowledgments
 
 **Authors:**
+
 - [@lorenzo-cmyk](https://github.com/lorenzo-cmyk)
 - [@TeoFranken](https://github.com/TeoFranken)
 - [@pierluigigrossi](https://github.com/pierluigigrossi)
